@@ -2,7 +2,7 @@
 
 ## 安装与启动
 
-项目要求 macOS 13 或更高版本、Xcode Command Line Tools，以及已登录的 Codex CLI 或 Codex Desktop。
+项目要求 macOS 13 或更高版本、Xcode Command Line Tools，以及已登录的 Codex CLI 或 Codex Desktop。macOS 13 使用窗口几何估算；macOS 14 及更高版本在已授权屏幕录制时可使用像素级宠物定位。
 
 ```bash
 zsh scripts/build-app.sh

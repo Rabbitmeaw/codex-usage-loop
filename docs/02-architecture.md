@@ -43,5 +43,5 @@ flowchart LR
 
 ## 待澄清
 
-- 最低支持版本目前为 macOS 13，而 ScreenCaptureKit 精确定位路径要求 macOS 14；需在兼容性验收批次决定是否调整宣传口径或实现 macOS 13 等价路径。
+- macOS 13 继续使用窗口几何估算；macOS 14+ 才启用 ScreenCaptureKit 精确定位。公开说明已明确这一能力差异，不承诺 macOS 13 的像素级定位。
 - 选择开源许可证、官方 Release 托管位置与校验和发布流程。

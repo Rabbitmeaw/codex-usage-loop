@@ -99,6 +99,11 @@
 - 执行的操作：从活动监视器和 `sample`／`ps` 证实应用持续占用一个 CPU 核；定位为 app-server stdout 与 stderr 在 EOF 后仍保留可读回调，导致 `NSFileHandle.fd_monitoring` 忙等。EOF 现会移除回调。
 - 验证：新增 EOF 输出策略测试；`swift test` 19 项通过。修复后重启实例，12 秒 CPU 时间 0.24 秒、约 0.6% CPU。5 分钟真实能耗采样仍列在 B03。
 
+### 阶段 18：B03 能耗验收
+
+- **状态：** complete（能耗项）
+- 验证：修复后实例连续运行 5 分 53 秒，累计 CPU 时间 2.90 秒，当前 CPU 为 0.0%。能耗项已通过；其余涉及 Codex Desktop 实际宠物、屏幕录制权限和多显示器的交互项仍待验收。
+
 ### 阶段 17：B04 开源 Release 发布
 
 - **状态：** complete

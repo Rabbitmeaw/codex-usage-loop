@@ -19,7 +19,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 
 ## 构建与启动
 
-要求 macOS 13+、Xcode Command Line Tools，以及已登录的 Codex CLI 或 Codex Desktop：
+要求 macOS 13+、Xcode Command Line Tools，以及已登录的 Codex CLI 或 Codex Desktop。macOS 13 使用窗口几何估算；macOS 14+ 在已授予屏幕录制权限时可进一步使用像素级宠物定位：
 
 ```bash
 zsh scripts/build-app.sh
@@ -69,7 +69,7 @@ A macOS companion overlay that places Codex usage rings beside the Codex pet and
 
 ## Build and run
 
-Requires macOS 13+, Xcode Command Line Tools, and a signed-in Codex CLI or Codex Desktop installation:
+Requires macOS 13+, Xcode Command Line Tools, and a signed-in Codex CLI or Codex Desktop installation. macOS 13 uses window-geometry estimation; macOS 14+ can additionally use pixel-level pet detection when Screen Recording permission is granted:
 
 ```bash
 zsh scripts/build-app.sh
