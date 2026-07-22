@@ -38,7 +38,7 @@ open "dist/CodexUsageLoop.app"
 zsh scripts/package-release.sh 0.1.0
 ```
 
-脚本会生成 ZIP、SHA-256 和构建元数据。下载者应只从官方 Release 下载、核对校验和与 tag，并且不要关闭 Gatekeeper。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
+脚本会生成 ZIP、SHA-256 和构建元数据。下载者应只从[官方 GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)下载、核对校验和与 tag，并且不要关闭 Gatekeeper。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
 
 ## 文档
 
@@ -88,7 +88,7 @@ The project is licensed under the [MIT License](LICENSE). Releases do not have a
 zsh scripts/package-release.sh 0.1.0
 ```
 
-The script creates a ZIP, SHA-256 checksum, and build metadata. Download only from official Releases, verify the checksum and tag, and do not disable Gatekeeper. See the [release security guide](docs/RELEASE_SECURITY.md).
+The script creates a ZIP, SHA-256 checksum, and build metadata. Download only from the [official GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases), verify the checksum and tag, and do not disable Gatekeeper. See the [release security guide](docs/RELEASE_SECURITY.md).
 
 ## Documentation
 

@@ -54,6 +54,12 @@
 
 将限额字典映射抽离为 `RateLimitParser`，不依赖进程或 UI。客户端保留 JSON-RPC 传输与发布职责，测试直接覆盖解析成功、边界和值无效的情况。
 
+## D-014 · MIT 许可与 GitHub Release 托管
+
+日期：2026-07-23
+
+项目采用 MIT License。官方公开仓库为 `Rabbitmeaw/codex-usage-loop`，首个 Release 是 `v0.1.0`，包含应用 ZIP、SHA-256 清单与构建元数据；仍不提供 Developer ID 签名或 Apple 公证。
+
 ## D-007 · 常驻卡片位置与双环演示互斥
 
 日期：2026-07-22

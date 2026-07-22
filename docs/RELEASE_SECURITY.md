@@ -40,4 +40,4 @@ zsh scripts/package-release.sh 0.1.0
 
 ## 发布前待决事项
 
-已选择 MIT License；官方 Release 将托管在 GitHub 的 `Rabbitmeaw/codex-usage-loop` 仓库。发布前请确认目标 tag 指向已审阅的提交，并上传脚本生成的三个工件。
+项目采用 [MIT License](../LICENSE)，官方 Release 已托管在 [Rabbitmeaw/codex-usage-loop Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)。每次发布前请确认目标 tag 指向已审阅的提交，并上传脚本生成的三个工件。

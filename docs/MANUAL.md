@@ -52,4 +52,4 @@ open "dist/CodexUsageLoop.app"
 
 本项目的开源 Release 不做 Developer ID 签名或 Apple 公证。请只从官方 Release 下载，核对 SHA-256 和发布标签；确认来源后在“系统设置 → 隐私与安全性”选择“仍要打开”。不要关闭 Gatekeeper，也不要运行来历不明的绕过脚本。详见 [Release 安全说明](RELEASE_SECURITY.md)。
 
-项目使用 MIT License；官方 Release 位于 GitHub 的 `Rabbitmeaw/codex-usage-loop`。
+项目使用 MIT License；官方 Release 位于 GitHub 的 [Rabbitmeaw/codex-usage-loop Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)。
