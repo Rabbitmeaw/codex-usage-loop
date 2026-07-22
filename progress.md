@@ -93,6 +93,12 @@
 - 验证：`swift test` 18 项通过；`swift build -c release` 无 Swift 并发警告；RC 工件 SHA-256、ad-hoc 签名和 Info.plist 校验通过。
 - 待决：B04 的开源许可证、官方 Release 托管位置与维护者身份仍需项目所有者确认。
 
+### 阶段 16：EOF 忙等能耗修复
+
+- **状态：** complete（短样本）
+- 执行的操作：从活动监视器和 `sample`／`ps` 证实应用持续占用一个 CPU 核；定位为 app-server stdout 与 stderr 在 EOF 后仍保留可读回调，导致 `NSFileHandle.fd_monitoring` 忙等。EOF 现会移除回调。
+- 验证：新增 EOF 输出策略测试；`swift test` 19 项通过。修复后重启实例，12 秒 CPU 时间 0.24 秒、约 0.6% CPU。5 分钟真实能耗采样仍列在 B03。
+
 ## 测试结果
 
 | 测试 | 输入 | 预期结果 | 实际结果 | 状态 |

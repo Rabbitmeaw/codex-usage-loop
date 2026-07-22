@@ -40,5 +40,4 @@ zsh scripts/package-release.sh 0.1.0
 
 ## 发布前待决事项
 
-- 选择开源许可证并提交 `LICENSE` 文件。
-- 确定官方 Release 托管位置与维护者身份。
+已选择 MIT License；官方 Release 将托管在 GitHub 的 `Rabbitmeaw/codex-usage-loop` 仓库。发布前请确认目标 tag 指向已审阅的提交，并上传脚本生成的三个工件。

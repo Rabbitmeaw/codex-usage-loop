@@ -1,47 +1,101 @@
+<p align="right">
+  <a href="#中文">中文</a> · <a href="#english">English</a>
+</p>
+
+<a id="中文"></a>
+
 # CodexUsageLoop for macOS
 
-macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显示在 Codex 宠物旁边，并提供菜单栏开关让悬浮窗常驻。
+macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显示在 Codex 宠物旁，并通过菜单栏提供控制。
 
-## 行为
+## 功能
 
-- 默认模式：检测到 Codex 的小型宠物窗口时，透明双环持续跟随并覆盖在宠物外圈；围绕 pet 时信息卡片显示在圆环右侧，两者属于同一个悬浮层。
-- 常驻模式：点击菜单栏双环图标 → `始终显示用量卡片`，用量卡片将固定在圆环旁；即使宠物隐藏也保留整个悬浮层。
-- 卡片位置：圆环围绕 pet 时，卡片显示在圆环右侧；圆环在 pet 左侧或右侧时，卡片显示在圆环正下方。
-- 真实用量同时返回两个窗口时自动显示双环；此时“演示双环”会被禁用，避免覆盖真实数据。
-- 菜单栏双环图标 → `菜单栏图标` 可切换原色蓝绿图标与单色系统图标；单色模式会随 macOS 菜单栏自动显示白色或黑色。
-- 菜单栏双环图标 → `圆环颜色` 可分别自定义外环和内环颜色；颜色以 sRGB 保存，并可恢复默认蓝绿。
-- 自由移动：点击菜单栏双环图标 → `自由拖动位置`，然后拖动整个悬浮层；关闭后恢复跟随 pet。
-- 悬浮层点击穿透，不抢占 Codex 或其他应用焦点。
-- 用量每 30 秒刷新，宠物位置每 1 秒检查；用户已在系统设置授予屏幕录制权限后，会从 Codex 宠物窗口的实际画面识别宠物边界，因此移动到屏幕下方也不会被容器边界截停。
-- 菜单栏双环图标 → `重新检测宠物位置/大小` 可在 Codex 设置中调整宠物大小后立即重新校准。
+- 围绕 pet 或固定在 pet 左右侧显示用量圆环；常驻卡片在围绕模式位于圆环右侧、在左右侧模式位于圆环正下方。
+- 真实用量返回两个窗口时显示双环，并禁用“演示双环”以避免覆盖真实数据。
+- 支持自由拖动、立即刷新、重新检测宠物位置／大小，以及原色和单色菜单栏图标。
+- 可分别自定义外环和内环颜色；颜色以 sRGB 持久化，并支持恢复默认蓝绿。
+- 无全局右键监听；不读取认证文件，不上传用量或屏幕画面。
+- 用量每 30 秒刷新；宠物位置每 1 秒检查。成功位置会缓存，截图失败按 5 秒退避。
 
-## 构建
+## 构建与启动
 
-要求 macOS 13+、Xcode Command Line Tools 和已登录的 Codex CLI 或 Codex Desktop：
+要求 macOS 13+、Xcode Command Line Tools，以及已登录的 Codex CLI 或 Codex Desktop：
 
 ```bash
 zsh scripts/build-app.sh
 open "dist/CodexUsageLoop.app"
 ```
 
-发布者可使用 `zsh scripts/package-release.sh 0.1.0` 生成 ZIP、SHA-256 和构建元数据；发布安全要求见下文链接。
+## 权限与隐私
 
-## 数据与隐私
+用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，请在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权；图像只在本机内存中分析，不保存、不上传。未授权时应用回退到窗口几何估算。
 
-用量通过本机已安装的 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。为识别透明窗口内的宠物实际位置，应用仅在用户已在系统设置授予 macOS“屏幕录制”权限后使用画面；画面只在本机内存中分析，不保存、不上传。`codex app-server` 属于实验性接口，Codex 更新后可能需要兼容适配。
+## 开源 Release
 
-## 当前边界
+项目采用 [MIT License](LICENSE)，Release 不提供 Developer ID 签名或 Apple 公证。发布者可执行：
 
-macOS Codex Desktop 的宠物窗口命名和窗口层级可能随版本变化。本实现优先选择 Codex/ChatGPT 的可见小型窗口，并在常驻模式下即使找不到宠物也显示在屏幕左下角。
+```bash
+zsh scripts/package-release.sh 0.1.0
+```
 
-## 工程文档
+脚本会生成 ZIP、SHA-256 和构建元数据。下载者应只从官方 Release 下载、核对校验和与 tag，并且不要关闭 Gatekeeper。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
 
-- [执行入口](EXECUTION.md)
-- [架构骨架](docs/02-architecture.md)
-- [数据模型与本机状态](docs/03-data-model.md)
-- [交付路线图](docs/execution/PROGRESS.md)
-- [真实环境验收矩阵](docs/execution/MANUAL_ACCEPTANCE.md)
-- [决策日志](docs/execution/DECISIONS.md)
-- [开源 Release 与安全使用说明](docs/RELEASE_SECURITY.md)
+## 文档
+
 - [用户手册](docs/MANUAL.md)
 - [变更记录](CHANGELOG.md)
+- [执行路线图](docs/execution/PROGRESS.md)
+- [真实环境验收矩阵](docs/execution/MANUAL_ACCEPTANCE.md)
+- [架构](docs/02-architecture.md)
+
+<p align="right"><a href="#english">English ↓</a></p>
+
+---
+
+<a id="english"></a>
+
+# CodexUsageLoop for macOS
+
+A macOS companion overlay that places Codex usage rings beside the Codex pet and exposes controls from the menu bar.
+
+## Features
+
+- Shows usage rings around the pet or at its left/right; the persistent card sits to the ring’s right in around-pet mode and directly below it in side modes.
+- Displays real dual rings when two usage windows are available and disables the demo mode so simulated data never replaces real usage.
+- Supports free dragging, immediate refresh, pet position/size recalibration, plus color and monochrome menu-bar icons.
+- Lets you customize outer and inner ring colors independently; sRGB values persist and can be reset to the default blue/green palette.
+- Uses no global right-click listener; never reads authentication files or uploads usage or screen imagery.
+- Refreshes usage every 30 seconds and pet geometry every second. Successful geometry is cached; failed captures back off for five seconds.
+
+## Build and run
+
+Requires macOS 13+, Xcode Command Line Tools, and a signed-in Codex CLI or Codex Desktop installation:
+
+```bash
+zsh scripts/build-app.sh
+open "dist/CodexUsageLoop.app"
+```
+
+## Permissions and privacy
+
+Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, grant Screen Recording in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. Without permission, the app falls back to window-geometry estimation.
+
+## Open-source releases
+
+The project is licensed under the [MIT License](LICENSE). Releases do not have a Developer ID signature or Apple notarization. Maintainers can run:
+
+```bash
+zsh scripts/package-release.sh 0.1.0
+```
+
+The script creates a ZIP, SHA-256 checksum, and build metadata. Download only from official Releases, verify the checksum and tag, and do not disable Gatekeeper. See the [release security guide](docs/RELEASE_SECURITY.md).
+
+## Documentation
+
+- [User manual](docs/MANUAL.md)
+- [Changelog](CHANGELOG.md)
+- [Delivery roadmap](docs/execution/PROGRESS.md)
+- [Manual acceptance matrix](docs/execution/MANUAL_ACCEPTANCE.md)
+- [Architecture](docs/02-architecture.md)
+
+<p align="right"><a href="#中文">中文 ↑</a></p>

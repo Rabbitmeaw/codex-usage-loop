@@ -2,6 +2,11 @@ import XCTest
 @testable import CodexPetUsageMac
 
 final class RateLimitParserTests: XCTestCase {
+    func testEOFStopsAppServerOutputMonitoring() {
+        XCTAssertFalse(AppServerOutputPolicy.shouldKeepMonitoring(after: Data()))
+        XCTAssertTrue(AppServerOutputPolicy.shouldKeepMonitoring(after: Data([0x7B])))
+    }
+
     func testParserMapsUsedAndRemainingPercentIntoTwoWindows() {
         let observedAt = Date(timeIntervalSince1970: 1_800_000_000)
         let snapshot = RateLimitParser.snapshot(

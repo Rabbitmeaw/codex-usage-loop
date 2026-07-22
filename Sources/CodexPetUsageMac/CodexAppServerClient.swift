@@ -1,5 +1,11 @@
 import Foundation
 
+enum AppServerOutputPolicy {
+    static func shouldKeepMonitoring(after data: Data) -> Bool {
+        !data.isEmpty
+    }
+}
+
 enum RateLimitParser {
     static func snapshot(from limits: [String: Any],
                          observedAt: Date = Date(),
@@ -97,10 +103,23 @@ final class CodexAppServerClient {
 
         stdout.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
-            guard !data.isEmpty else { return }
+            guard AppServerOutputPolicy.shouldKeepMonitoring(after: data) else {
+                // EOF remains readable forever. Leaving this handler installed
+                // turns a closed app-server pipe into a CPU busy loop.
+                handle.readabilityHandler = nil
+                return
+            }
             self?.queue.async { self?.consume(data) }
         }
-        stderr.fileHandleForReading.readabilityHandler = { _ in }
+        stderr.fileHandleForReading.readabilityHandler = { handle in
+            // stderr is intentionally not surfaced in the compact overlay,
+            // but it must still be drained and detached at EOF. An empty
+            // pipe remains readable and otherwise spins the monitoring queue.
+            let data = handle.availableData
+            if !AppServerOutputPolicy.shouldKeepMonitoring(after: data) {
+                handle.readabilityHandler = nil
+            }
+        }
         process.terminationHandler = { [weak self] terminated in
             guard let self else { return }
             self.queue.async {

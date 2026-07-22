@@ -45,4 +45,4 @@
 |------|---------|
 | release 构建对 `ScreenCaptureMascotLocator` 报告 `Sendable` 与异步上下文锁的迁移警告 | 这些是既有代码的 Swift 6 兼容性技术债；本轮不扩大范围修改并发定位逻辑。应用仍成功构建、签名并通过测试。 |
 | 在其他应用右键时悬浮层出现异常 | 根因是全局 `.rightMouseDown` 监听；已移除右键菜单能力。 |
-| 异常能耗 | ScreenCaptureKit 在没有得到有效宠物边界时每 0.5 秒重试，且定位器会尝试所有候选窗口；悬浮层也在每轮询周期强制置顶。 |
+| 异常能耗 | 初次优化后仍检测到持续 100% CPU。进程采样确认 app-server stdout／stderr 在 EOF 后保留 `readabilityHandler`，导致 fd monitoring 队列忙等；EOF 时清除两条回调后，新实例短样本降至约 0.6% CPU。 |
