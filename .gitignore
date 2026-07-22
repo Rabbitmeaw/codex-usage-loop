@@ -1,0 +1,21 @@
+# Swift Package Manager / Xcode
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Generated application artifacts
+dist/
+*.dSYM
+*.xcarchive
+
+# Local editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local logs and temporary files
+*.log
+.tmp/
