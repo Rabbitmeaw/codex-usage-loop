@@ -51,6 +51,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 
-codesign --force --deep --sign - "$APP" >/dev/null
+SIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
+codesign --force --deep --sign "$SIGN_IDENTITY" "$APP" >/dev/null
 
 echo "Built: $APP"

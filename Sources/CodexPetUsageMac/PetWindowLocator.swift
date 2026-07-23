@@ -6,6 +6,8 @@ import ScreenCaptureKit
 struct PetWindow {
     let windowID: CGWindowID
     let frame: CGRect
+    let geometrySource: PetGeometrySource
+    let mascotSize: CGSize?
     let displayID: CGDirectDisplayID
     let placement: String?
     let owner: String
@@ -13,6 +15,10 @@ struct PetWindow {
 }
 
 final class PetWindowLocator {
+    private struct PersistedOverlay {
+        let state: [String: Any]
+        let isOpen: Bool
+    }
     private struct Candidate {
         let score: Int
         let window: PetWindow
@@ -21,14 +27,24 @@ final class PetWindowLocator {
     }
 
     private let contentLocator = ScreenCaptureMascotLocator()
+    private var lastMeasuredPet: PetWindow?
 
     func reset() {
         contentLocator.reset()
     }
 
+    func requestScreenRecordingAuthorization() {
+        contentLocator.requestScreenRecordingAuthorization()
+    }
+
     func locate() -> PetWindow? {
         let windows = (CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]) ?? []
-        let persistedState = persistedOverlayState()
+        let persistedOverlay = persistedOverlayState()
+        let persistedState = persistedOverlay?.state
+        if persistedOverlay?.isOpen == false {
+            lastMeasuredPet = nil
+            return nil
+        }
         let overlayOrigin = codexOverlayOrigin(from: persistedState)
         let placement = codexPlacement(from: persistedState)
         let candidates: [Candidate] = windows.compactMap { info in
@@ -43,9 +59,16 @@ final class PetWindowLocator {
             let title = info[kCGWindowName as String] as? String ?? ""
             let container = CGRect(x: x, y: y, width: width, height: height)
             let displayID = displayID(for: container)
-            let estimatedFrame = PetGeometry.estimatedMascotFrame(in: container,
-                                                                   displayBounds: CGDisplayBounds(displayID),
-                                                                   placement: placement)
+            let mascotSize = PersistedPetGeometry.mascotSize(from: persistedState ?? [:], displayID: displayID)
+            let centeredEstimate = PetGeometry.estimatedMascotFrame(in: container,
+                                                                      displayBounds: CGDisplayBounds(displayID),
+                                                                      placement: placement)
+            // The persisted anchor follows the pet itself, including the
+            // intentional in-container shift Codex applies at a screen edge.
+            // It is only an expectation: ScreenCaptureKit replaces its size
+            // and final boundary when permission is available.
+            let estimatedFrame = PetGeometry.anchoredMascotFrame(anchor: overlayOrigin,
+                                                                   fallback: centeredEstimate)
             let score = PetWindowCandidateScoring.score(owner: owner,
                                                         title: title,
                                                         container: container,
@@ -53,6 +76,8 @@ final class PetWindowLocator {
             return Candidate(score: score,
                              window: PetWindow(windowID: windowID,
                                                frame: estimatedFrame,
+                                               geometrySource: .anchoredFallback,
+                                               mascotSize: mascotSize,
                                                displayID: displayID,
                                                placement: placement,
                                                owner: owner,
@@ -61,21 +86,38 @@ final class PetWindowLocator {
                              estimatedFrame: estimatedFrame)
         }
         guard let candidate = candidates.max(by: { $0.score < $1.score }) else {
-            return fallbackPet(from: persistedState)
+            // A live window can disappear for a frame while Codex rebuilds a
+            // task card. Do not replace an already measured pet with a less
+            // accurate persisted estimate during that transient.
+            return lastMeasuredPet ?? fallbackPet(from: persistedState, isOpen: persistedOverlay?.isOpen ?? false)
         }
-        let frame = contentLocator.frame(for: candidate.window.windowID,
-                                         container: candidate.container,
-                                         estimatedFrame: candidate.estimatedFrame)
-        return PetWindow(windowID: candidate.window.windowID,
-                         frame: frame,
-                         displayID: candidate.window.displayID,
-                         placement: candidate.window.placement,
-                         owner: candidate.window.owner,
-                         title: candidate.window.title)
+        let resolution = contentLocator.frame(for: candidate.window.windowID,
+                                              container: candidate.container,
+                                              estimatedFrame: candidate.estimatedFrame,
+                                              layoutSignature: layoutSignature(
+                                            overlayOrigin: overlayOrigin,
+                                            placement: placement
+                                              ))
+        let resolvedPet = PetWindow(windowID: candidate.window.windowID,
+                                    frame: resolution.frame,
+                                    geometrySource: resolution.source,
+                                    mascotSize: candidate.window.mascotSize,
+                                    displayID: candidate.window.displayID,
+                                    placement: candidate.window.placement,
+                                    owner: candidate.window.owner,
+                                    title: candidate.window.title)
+        if resolution.source == .measured {
+            lastMeasuredPet = resolvedPet
+            return resolvedPet
+        }
+        if let lastMeasuredPet, lastMeasuredPet.windowID == candidate.window.windowID {
+            return lastMeasuredPet
+        }
+        return resolvedPet
     }
 
-    private func fallbackPet(from state: [String: Any]?) -> PetWindow? {
-        guard let state,
+    private func fallbackPet(from state: [String: Any]?, isOpen: Bool) -> PetWindow? {
+        guard isOpen, let state,
               let geometry = PersistedPetGeometry.geometry(from: state),
               let displayBounds = persistedDisplayBounds(from: state),
               !geometry.container.intersection(displayBounds).isNull,
@@ -83,18 +125,21 @@ final class PetWindowLocator {
               !geometry.mascot.intersection(CGDisplayBounds(displayID)).isNull else { return nil }
         return PetWindow(windowID: 0,
                          frame: geometry.mascot,
+                         geometrySource: .persistedFallback,
+                         mascotSize: geometry.mascot.size,
                          displayID: displayID,
                          placement: geometry.placement,
                          owner: "Codex persisted state",
                          title: "Pet state fallback")
     }
 
-    private func persistedOverlayState() -> [String: Any]? {
+    private func persistedOverlayState() -> PersistedOverlay? {
         let path = NSHomeDirectory() + "/.codex/.codex-global-state.json"
         guard let data = FileManager.default.contents(atPath: path),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let state = root["electron-avatar-overlay-bounds"] as? [String: Any] else { return nil }
-        return state
+        return PersistedOverlay(state: state,
+                                isOpen: PetOverlayVisibility.isOpen(root["electron-avatar-overlay-open"]))
     }
 
     private func codexPlacement(from state: [String: Any]?) -> String? {
@@ -104,6 +149,17 @@ final class PetWindowLocator {
     private func codexOverlayOrigin(from state: [String: Any]?) -> CGPoint? {
         guard let state, let x = number(state["x"]), let y = number(state["y"]) else { return nil }
         return CGPoint(x: x, y: y)
+    }
+
+    private func layoutSignature(overlayOrigin: CGPoint?, placement: String?) -> String {
+        let anchor: String
+        if let overlayOrigin {
+            anchor = "\(Int(overlayOrigin.x.rounded())):\(Int(overlayOrigin.y.rounded()))"
+        } else {
+            anchor = "missing"
+        }
+        let resolvedPlacement = placement ?? "unknown"
+        return "\(resolvedPlacement)|\(anchor)"
     }
 
     private func persistedDisplayBounds(from state: [String: Any]) -> CGRect? {

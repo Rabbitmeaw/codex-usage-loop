@@ -23,6 +23,12 @@ final class PetLocationTests: XCTestCase {
         XCTAssertGreaterThan(petScore, plainScore)
     }
 
+    func testPersistedOverlayVisibilityDefaultsToOpenForOlderCodexState() {
+        XCTAssertTrue(PetOverlayVisibility.isOpen(nil))
+        XCTAssertTrue(PetOverlayVisibility.isOpen(true))
+        XCTAssertFalse(PetOverlayVisibility.isOpen(false))
+    }
+
     func testEstimatedMascotFrameFollowsPersistedPlacement() {
         let container = CGRect(x: 100, y: 200, width: 356, height: 320)
         let display = CGRect(x: 0, y: 0, width: 1_440, height: 900)
@@ -32,6 +38,17 @@ final class PetLocationTests: XCTestCase {
 
         XCTAssertEqual(top, CGRect(x: 218.5, y: 391, width: 119, height: 129))
         XCTAssertEqual(bottom, CGRect(x: 218.5, y: 200, width: 119, height: 129))
+    }
+
+    func testPersistedPetAnchorOverridesOnlyTheExpectedFrameOrigin() {
+        let fallback = CGRect(x: 300, y: 600, width: 119, height: 129)
+        let anchored = PetGeometry.anchoredMascotFrame(
+            anchor: CGPoint(x: 12, y: 640),
+            fallback: fallback
+        )
+
+        XCTAssertEqual(anchored, CGRect(x: 12, y: 640, width: 119, height: 129))
+        XCTAssertEqual(PetGeometry.anchoredMascotFrame(anchor: nil, fallback: fallback), fallback)
     }
 
     func testPersistedOverlayFallbackEstimatesMascotWithoutLiveWindow() {
@@ -74,6 +91,39 @@ final class PetLocationTests: XCTestCase {
         XCTAssertNil(PersistedPetGeometry.geometry(from: state))
     }
 
+    func testPersistedMascotSizeUsesTheCurrentDisplayRecord() {
+        let state: [String: Any] = [
+            "displayId": 79,
+            "byDisplayId": [
+                "78": ["mascot": ["width": 119, "height": 129]],
+                "79": ["mascot": ["width": 168, "height": 182]]
+            ]
+        ]
+
+        XCTAssertEqual(PersistedPetGeometry.mascotSize(from: state, displayID: 79),
+                       CGSize(width: 168, height: 182))
+    }
+
+    func testPersistedMascotSizeDoesNotUseAnotherDisplayHistory() {
+        let state: [String: Any] = [
+            "displayId": 2,
+            "byDisplayId": [
+                "79": ["mascot": ["width": 168, "height": 182]]
+            ]
+        ]
+
+        XCTAssertNil(PersistedPetGeometry.mascotSize(from: state, displayID: 2))
+    }
+
+    func testPersistedMascotSizeChangesRingReferenceFrameWithoutMovingItsOrigin() {
+        let resized = PetGeometry.applyingMascotSize(
+            CGSize(width: 168, height: 182),
+            to: CGRect(x: 500, y: 300, width: 119, height: 129)
+        )
+
+        XCTAssertEqual(resized, CGRect(x: 500, y: 300, width: 168, height: 182))
+    }
+
     func testCGFrameConvertsToAppKitScreenCoordinates() {
         let converted = PetGeometry.appKitFrame(
             cgFrame: CGRect(x: 120, y: 100, width: 80, height: 60),
@@ -84,12 +134,12 @@ final class PetLocationTests: XCTestCase {
         XCTAssertEqual(converted, CGRect(x: 120, y: 740, width: 80, height: 60))
     }
 
-    func testRingPlacementCenterUsesTopTaskCardCorrection() {
+    func testAroundRingCenterUsesMeasuredPetCenterRegardlessOfTaskCard() {
         let pet = CGRect(x: 400, y: 300, width: 100, height: 120)
 
         let around = OverlayRingPlacement.center(
             for: pet,
-            ringSize: 200,
+            ringSize: 180,
             placement: .around,
             codexPlacement: "top-end"
         )
@@ -100,8 +150,23 @@ final class PetLocationTests: XCTestCase {
             codexPlacement: "top-end"
         )
 
-        XCTAssertEqual(around, CGPoint(x: 464, y: 320))
+        XCTAssertEqual(around, CGPoint(x: 450, y: 360))
         XCTAssertEqual(right, CGPoint(x: 612, y: 270))
+    }
+
+    func testAroundRingLayoutScalesDiameterAndCenterWithPetSize() {
+        let smallPet = CGRect(x: 400, y: 300, width: 100, height: 120)
+        let largePet = CGRect(x: 800, y: 600, width: 200, height: 240)
+
+        let smallDiameter = AroundPetRingLayout.diameter(for: smallPet, scale: 1)
+        let largeDiameter = AroundPetRingLayout.diameter(for: largePet, scale: 1)
+        XCTAssertEqual(smallDiameter, 180.790697674, accuracy: 0.001)
+        XCTAssertEqual(largeDiameter, 361.581395349, accuracy: 0.001)
+        let largeCenter = AroundPetRingLayout.center(for: largePet,
+                                                     ringDiameter: largeDiameter,
+                                                     taskCardAbove: true)
+        XCTAssertEqual(largeCenter.x, 900, accuracy: 0.001)
+        XCTAssertEqual(largeCenter.y, 720, accuracy: 0.001)
     }
 
     func testPixelLocatorFindsOpaqueMascotOnTransparentBackground() {
@@ -116,7 +181,7 @@ final class PetLocationTests: XCTestCase {
             return XCTFail("Expected a mascot rectangle")
         }
         XCTAssertEqual(detected.origin.x, 164, accuracy: 3)
-        XCTAssertEqual(detected.origin.y, 296, accuracy: 3)
+        XCTAssertEqual(detected.origin.y, 204, accuracy: 3)
         XCTAssertEqual(detected.width, 80, accuracy: 3)
         XCTAssertEqual(detected.height, 100, accuracy: 3)
     }

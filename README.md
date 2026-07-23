@@ -65,7 +65,9 @@ zsh scripts/install.sh --with-login-agent
 
 用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。
 
-未授权时应用仍可通过宠物容器的窗口几何估算进行基本跟随，不会主动弹出授权请求；但在非默认布局、宠物实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的像素边界进行定位，以获得更准确的贴合效果。
+应用不会在启动时自动弹出屏幕录制授权。需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍可通过宠物容器的窗口几何估算进行基本跟随，但在非默认布局、pet 实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的像素边界进行定位，以获得更准确的贴合效果。
+
+菜单会显示当前进程实际检测到的“屏幕录制：已授权（像素级定位）”或“未授权（使用估算）”。若系统设置中的开关显示已开启、菜单仍显示未授权，请关闭再重新开启该开关，然后重启应用。
 
 ## 已知定位边界
 
@@ -129,7 +131,9 @@ zsh scripts/install.sh --with-login-agent
 
 Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded.
 
-Without permission, the app still follows the pet using an estimated window geometry and never prompts for access automatically. The ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access enables pixel-level detection of the current window for a closer fit.
+The app never requests Screen Recording automatically at launch. When precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet using estimated window geometry, but the ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access enables pixel-level detection of the current window for a closer fit.
+
+The menu reports the permission seen by the current process: **Screen Recording: Authorized (pixel-level positioning)** or **Not authorized (estimated positioning)**. If System Settings shows its switch as enabled while the menu still reports not authorized, turn the switch off and on again, then restart the app.
 
 ## Known positioning boundary
 

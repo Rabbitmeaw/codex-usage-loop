@@ -1,6 +1,12 @@
 import CoreGraphics
 import Foundation
 
+enum PetGeometrySource: String, Equatable {
+    case measured
+    case anchoredFallback
+    case persistedFallback
+}
+
 enum PetWindowCandidateScoring {
     static func score(owner: String,
                       title: String,
@@ -20,7 +26,22 @@ enum PetWindowCandidateScoring {
     }
 }
 
+enum PetOverlayVisibility {
+    static func isOpen(_ value: Any?) -> Bool {
+        value as? Bool ?? true
+    }
+}
+
 enum PetGeometry {
+    /// Recent Codex Desktop builds persist the visible pet's top-left anchor.
+    /// Use it as the screenshot detector's expected location and as a
+    /// permission-denied fallback; the screenshot result still supplies the
+    /// final visible frame and size when available.
+    static func anchoredMascotFrame(anchor: CGPoint?, fallback: CGRect) -> CGRect {
+        guard let anchor, anchor.x.isFinite, anchor.y.isFinite else { return fallback }
+        return CGRect(origin: anchor, size: fallback.size)
+    }
+
     static func estimatedMascotFrame(in container: CGRect,
                                      displayBounds: CGRect,
                                      placement: String?) -> CGRect {
@@ -53,6 +74,11 @@ enum PetGeometry {
             width: cgFrame.width,
             height: cgFrame.height
         )
+    }
+
+    static func applyingMascotSize(_ size: CGSize, to frame: CGRect) -> CGRect {
+        guard size.width > 0, size.height > 0 else { return frame }
+        return CGRect(origin: frame.origin, size: size)
     }
 }
 
@@ -101,6 +127,29 @@ enum PersistedPetGeometry {
         return Geometry(container: container, mascot: mascot, placement: placement)
     }
 
+    static func mascotSize(from state: [String: Any], displayID: CGDirectDisplayID) -> CGSize? {
+        let displayRecord = (state["byDisplayId"] as? [String: Any])?[String(displayID)] as? [String: Any]
+        if let size = mascotSize(from: displayRecord) { return size }
+
+        guard let stateDisplayID = number(state["displayId"]),
+              CGDirectDisplayID(stateDisplayID) == displayID else { return nil }
+        return mascotSize(from: state)
+    }
+
+    private static func mascotSize(from record: [String: Any]?) -> CGSize? {
+        guard let record else { return nil }
+        let mascot = record["mascot"] as? [String: Any]
+        let anchor = record["anchor"] as? [String: Any]
+        for source in [mascot, anchor] {
+            guard let source,
+                  let width = number(source["width"]), let height = number(source["height"]),
+                  width.isFinite, height.isFinite,
+                  width >= 16, height >= 16, width <= 700, height <= 700 else { continue }
+            return CGSize(width: width, height: height)
+        }
+        return nil
+    }
+
     private static func number(_ value: Any?) -> CGFloat? {
         if let value = value as? NSNumber { return CGFloat(truncating: value) }
         if let value = value as? CGFloat { return value }
@@ -117,10 +166,9 @@ enum OverlayRingPlacement {
         let taskCardAbove = codexPlacement?.localizedCaseInsensitiveContains("top") == true
         switch placement {
         case .around:
-            let offset = ringSize * 0.07
-            let verticalCorrection = taskCardAbove ? ringSize * 0.27 : 0
-            return CGPoint(x: petFrame.midX + offset,
-                           y: petFrame.midY + offset - verticalCorrection)
+            return AroundPetRingLayout.center(for: petFrame,
+                                              ringDiameter: ringSize,
+                                              taskCardAbove: taskCardAbove)
         case .left:
             return CGPoint(x: petFrame.minX - ringSize * 0.56,
                            y: petFrame.midY - (taskCardAbove ? ringSize * 0.45 : 0))
@@ -128,5 +176,26 @@ enum OverlayRingPlacement {
             return CGPoint(x: petFrame.maxX + ringSize * 0.56,
                            y: petFrame.midY - (taskCardAbove ? ringSize * 0.45 : 0))
         }
+    }
+}
+
+/// The accepted visual relationship between the ring and the visible mascot.
+/// Every value is a ratio so changing the mascot's size preserves the layout.
+enum AroundPetRingLayout {
+    /// Exact ratio derived from the accepted standard 129pt mascot and its
+    /// established 194.35pt around-ring diameter.
+    static let diameterToPetPrimaryDimension: CGFloat = 194.35 / 129
+    static func diameter(for petFrame: CGRect, scale: CGFloat) -> CGFloat {
+        max(petFrame.width, petFrame.height)
+            * diameterToPetPrimaryDimension
+            * AroundRingScale.clamped(scale)
+    }
+
+    static func center(for petFrame: CGRect,
+                       ringDiameter: CGFloat,
+                       taskCardAbove: Bool) -> CGPoint {
+        // The task card has its own layout. It must never shift an around-pet
+        // ring away from the measured visible mascot.
+        CGPoint(x: petFrame.midX, y: petFrame.midY)
     }
 }

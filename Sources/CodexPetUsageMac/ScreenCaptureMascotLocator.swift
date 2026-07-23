@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 import Foundation
+import OSLog
 import ScreenCaptureKit
 
 enum MascotCaptureRefreshPolicy {
@@ -18,6 +19,14 @@ enum MascotCaptureRefreshPolicy {
     }
 }
 
+enum ScreenRecordingAuthorizationStatus {
+    static func menuTitle(hasPermission: Bool) -> String {
+        hasPermission
+            ? "屏幕录制：已授权（像素级定位）"
+            : "屏幕录制：未授权（使用估算）"
+    }
+}
+
 enum MascotCaptureResultValidation {
     static func isPlausible(_ detected: CGRect,
                             estimatedFrame: CGRect,
@@ -28,11 +37,15 @@ enum MascotCaptureResultValidation {
         let centerDistance = hypot(detected.midX - estimatedFrame.midX,
                                    detected.midY - estimatedFrame.midY)
         let maximumCenterDistance = max(container.width, container.height) * 0.28
-        let widthRatio = detected.width / estimatedFrame.width
-        let heightRatio = detected.height / estimatedFrame.height
+        let aspectRatio = detected.width / detected.height
+        let fillsTransparentWindow = detected.width >= container.width * 0.85
+            || detected.height >= container.height * 0.85
+        // Pet scale is user-controlled, so default-size ratios are not a
+        // validity check. The task card is wide; an accidental whole-window
+        // capture fills the transparent container. Both are rejected here.
         return centerDistance <= maximumCenterDistance
-            && (0.55...1.7).contains(widthRatio)
-            && (0.55...1.7).contains(heightRatio)
+            && (0.35...1.25).contains(aspectRatio)
+            && !fillsTransparentWindow
     }
 }
 
@@ -43,6 +56,9 @@ enum MascotCaptureResultValidation {
 /// use the actual rendered content as the source of truth instead of guessing
 /// which edge of the container the mascot occupies.
 final class ScreenCaptureMascotLocator: @unchecked Sendable {
+    private static let logger = Logger(subsystem: "com.codexusageloop.mac", category: "petGeometry")
+    private static let measurementSampleCount = 3
+    private static let measurementSampleDelay: TimeInterval = 0.06
     private struct Result {
         let frame: CGRect
         let container: CGRect
@@ -52,12 +68,14 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
     private let lock = NSLock()
     private var results: [CGWindowID: Result] = [:]
     private var pending: Set<CGWindowID> = []
-    private var lastInputs: [CGWindowID: (container: CGRect, estimate: CGRect)] = [:]
+    private var lastInputs: [CGWindowID: (container: CGRect, estimate: CGRect, layoutSignature: String)] = [:]
     private var lastAttempts: [CGWindowID: TimeInterval] = [:]
     private var generation: UInt = 0
     private var shareableContentTask: Task<Void, Never>?
     private var windowsByID: [CGWindowID: SCWindow] = [:]
     private var lastContentQuery: TimeInterval = 0
+    private var screenRecordingUnavailable = false
+    private var screenRecordingAuthorizationRequested = false
 
     func reset() {
         lock.lock()
@@ -66,25 +84,53 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         pending.removeAll()
         lastInputs.removeAll()
         lastAttempts.removeAll()
+        screenRecordingUnavailable = false
         lock.unlock()
     }
 
-    func frame(for windowID: CGWindowID, container: CGRect, estimatedFrame: CGRect) -> CGRect {
-        guard windowID != 0 else { return estimatedFrame }
+    func requestScreenRecordingAuthorization() {
+        guard !CGPreflightScreenCaptureAccess() else { return }
+        let shouldRequest = synchronized {
+            guard !screenRecordingAuthorizationRequested else { return false }
+            screenRecordingAuthorizationRequested = true
+            return true
+        }
+        guard shouldRequest else { return }
+        // Consent is never requested automatically. It only follows an
+        // explicit menu action, so it cannot compete with System Settings'
+        // required quit-and-reopen flow.
+        DispatchQueue.main.async {
+            let grantedImmediately = CGRequestScreenCaptureAccess()
+            Self.logger.notice("pet capture authorization userInitiated grantedImmediately=\(grantedImmediately, privacy: .public)")
+        }
+    }
+
+    func frame(for windowID: CGWindowID,
+               container: CGRect,
+               estimatedFrame: CGRect,
+               layoutSignature: String) -> (frame: CGRect, source: PetGeometrySource) {
+        guard windowID != 0 else { return (estimatedFrame, .anchoredFallback) }
         let now = Date.timeIntervalSinceReferenceDate
 
         lock.lock()
         let cached = results[windowID]
         let previousInput = lastInputs[windowID]
         let lastAttempt = lastAttempts[windowID]
+        let captureUnavailable = screenRecordingUnavailable
         let inputChanged: Bool
         if let previous = lastInputs[windowID] {
-            inputChanged = !approximatelyEqual(previous.container, container)
-                || !approximatelyEqual(previous.estimate, estimatedFrame)
+            inputChanged = Self.inputChanged(
+                previousContainer: previous.container,
+                previousEstimate: previous.estimate,
+                previousLayoutSignature: previous.layoutSignature,
+                container: container,
+                estimate: estimatedFrame,
+                layoutSignature: layoutSignature
+            )
         } else {
             inputChanged = true
         }
-        let shouldRefresh = MascotCaptureRefreshPolicy.shouldCapture(
+        let shouldRefresh = !captureUnavailable && MascotCaptureRefreshPolicy.shouldCapture(
             hasCachedResult: cached != nil,
             inputChanged: inputChanged,
             lastAttempt: lastAttempt,
@@ -94,7 +140,7 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         let requestGeneration: UInt?
         if shouldRefresh && !isPending {
             pending.insert(windowID)
-            lastInputs[windowID] = (container, estimatedFrame)
+            lastInputs[windowID] = (container, estimatedFrame, layoutSignature)
             lastAttempts[windowID] = now
             requestGeneration = generation
         } else {
@@ -103,6 +149,8 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         lock.unlock()
 
         if let requestGeneration {
+            let reason = cached == nil ? "noCachedMeasurement" : "layoutInputChanged"
+            Self.logger.debug("pet capture requested reason=\(reason, privacy: .public) window=\(windowID, privacy: .public)")
             refresh(windowID: windowID,
                     container: container,
                     estimatedFrame: estimatedFrame,
@@ -113,12 +161,12 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         // movement instead, so pet dragging remains smooth and the diameter
         // stays stable.
         if let cached {
-            guard inputChanged, previousInput != nil else { return cached.frame }
-            return Self.projectedFrame(cached.frame,
-                                       from: cached.container,
-                                       to: container)
+            guard inputChanged, previousInput != nil else { return (cached.frame, .measured) }
+            return (Self.projectedFrame(cached.frame,
+                                        from: cached.container,
+                                        to: container), .measured)
         }
-        return estimatedFrame
+        return (estimatedFrame, .anchoredFallback)
     }
 
     static func projectedFrame(_ frame: CGRect,
@@ -133,7 +181,18 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         )
     }
 
-    private func approximatelyEqual(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+    static func inputChanged(previousContainer: CGRect,
+                             previousEstimate: CGRect,
+                             previousLayoutSignature: String,
+                             container: CGRect,
+                             estimate: CGRect,
+                             layoutSignature: String) -> Bool {
+        !approximatelyEqual(previousContainer, container)
+            || !approximatelyEqual(previousEstimate, estimate)
+            || previousLayoutSignature != layoutSignature
+    }
+
+    private static func approximatelyEqual(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
         abs(lhs.minX - rhs.minX) < 1
             && abs(lhs.minY - rhs.minY) < 1
             && abs(lhs.width - rhs.width) < 1
@@ -144,14 +203,15 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
                          container: CGRect,
                          estimatedFrame: CGRect,
                          generation: UInt) {
-        // This check is non-interactive. Refresh/recalibrate must never show a
-        // fresh system consent dialog; without existing permission, fall back
-        // to the normal window geometry path.
-        guard CGPreflightScreenCaptureAccess() else {
+        let hasScreenRecordingPermission = CGPreflightScreenCaptureAccess()
+        if !hasScreenRecordingPermission {
+            synchronized { screenRecordingUnavailable = true }
+            Self.logger.notice("pet capture unavailable reason=screenRecordingNotAuthorized")
             finish(windowID: windowID, generation: generation)
             return
         }
         guard #available(macOS 14.0, *) else {
+            Self.logger.notice("pet capture unavailable reason=unsupportedMacOS")
             finish(windowID: windowID, generation: generation)
             return
         }
@@ -160,6 +220,7 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
             guard let self else { return }
             let window = await self.window(withID: windowID)
             guard let window else {
+                Self.logger.notice("pet capture unavailable reason=windowNotShareable window=\(windowID, privacy: .public)")
                 self.finish(windowID: windowID, generation: generation)
                 return
             }
@@ -174,24 +235,66 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
             configuration.capturesAudio = false
             configuration.ignoreShadowsSingleWindow = true
 
-            SCScreenshotManager.captureImage(contentFilter: filter, configuration: configuration) { [weak self] image, _ in
-                guard let self, let image else {
-                    self?.finish(windowID: windowID, generation: generation)
-                    return
-                }
-                let detected = Self.detectMascot(in: image,
-                                                 container: container,
-                                                 estimatedFrame: estimatedFrame)
-                if let detected,
-                   MascotCaptureResultValidation.isPlausible(detected,
-                                                             estimatedFrame: estimatedFrame,
-                                                             container: container) {
-                    self.store(detected,
+            self.captureMeasurementSamples(
+                contentFilter: filter,
+                configuration: configuration,
+                container: container,
+                estimatedFrame: estimatedFrame,
+                windowID: windowID,
+                generation: generation,
+                remainingSamples: Self.measurementSampleCount,
+                samples: []
+            )
+        }
+    }
+
+    @available(macOS 14.0, *)
+    private func captureMeasurementSamples(contentFilter: SCContentFilter,
+                                           configuration: SCStreamConfiguration,
+                                           container: CGRect,
+                                           estimatedFrame: CGRect,
+                                           windowID: CGWindowID,
+                                           generation: UInt,
+                                           remainingSamples: Int,
+                                           samples: [CGRect]) {
+        SCScreenshotManager.captureImage(contentFilter: contentFilter, configuration: configuration) { [weak self] image, _ in
+            guard let self else { return }
+            var nextSamples = samples
+            if let image,
+               let detected = Self.detectMascot(in: image,
+                                                container: container,
+                                                estimatedFrame: estimatedFrame),
+               MascotCaptureResultValidation.isPlausible(detected,
+                                                         estimatedFrame: estimatedFrame,
+                                                         container: container) {
+                nextSamples.append(detected)
+            }
+
+            guard remainingSamples > 1 else {
+                if let measured = Self.stabilizedFrame(from: nextSamples) {
+                    self.store(measured,
                                container: container,
+                               sampleCount: nextSamples.count,
                                for: windowID,
                                generation: generation)
+                } else {
+                    Self.logger.notice("pet capture unavailable reason=detectorRejected window=\(windowID, privacy: .public)")
                 }
                 self.finish(windowID: windowID, generation: generation)
+                return
+            }
+
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + Self.measurementSampleDelay) { [weak self] in
+                self?.captureMeasurementSamples(
+                    contentFilter: contentFilter,
+                    configuration: configuration,
+                    container: container,
+                    estimatedFrame: estimatedFrame,
+                    windowID: windowID,
+                    generation: generation,
+                    remainingSamples: remainingSamples - 1,
+                    samples: nextSamples
+                )
             }
         }
     }
@@ -213,6 +316,7 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
 
     private func store(_ frame: CGRect,
                        container: CGRect,
+                       sampleCount: Int,
                        for windowID: CGWindowID,
                        generation: UInt) {
         synchronized {
@@ -222,12 +326,14 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
             results[windowID] = Result(frame: frame,
                                        container: container,
                                        timestamp: Date.timeIntervalSinceReferenceDate)
+            Self.logger.debug("pet measurement accepted samples=\(sampleCount, privacy: .public) x=\(frame.minX, privacy: .public) y=\(frame.minY, privacy: .public) w=\(frame.width, privacy: .public) h=\(frame.height, privacy: .public)")
         }
     }
 
     private func cachedWindow(withID windowID: CGWindowID) -> SCWindow? {
         synchronized { windowsByID[windowID] }
     }
+
 
     @available(macOS 14.0, *)
     private func startContentQueryIfNeeded(now: TimeInterval) {
@@ -270,6 +376,20 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         completionGeneration == currentGeneration
     }
 
+    static func stabilizedFrame(from samples: [CGRect]) -> CGRect? {
+        guard !samples.isEmpty else { return nil }
+        func median(_ values: [CGFloat]) -> CGFloat {
+            let sorted = values.sorted()
+            return sorted[sorted.count / 2]
+        }
+        return CGRect(
+            x: median(samples.map(\.minX)),
+            y: median(samples.map(\.minY)),
+            width: median(samples.map(\.width)),
+            height: median(samples.map(\.height))
+        )
+    }
+
     static func detectMascot(in image: CGImage,
                              container: CGRect,
                              estimatedFrame: CGRect) -> CGRect? {
@@ -299,15 +419,10 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
                 let y = min(height - 1, gy * step)
                 let offset = (y * width + x) * 4
                 let alpha = pixels[offset + 3]
-                let r = pixels[offset]
-                let g = pixels[offset + 1]
-                let b = pixels[offset + 2]
-                // Transparent mascot windows expose real alpha. The color
-                // fallback also handles opaque captures by rejecting a smooth
-                // background sampled from the four corners.
-                let alphaHit = alpha > 24
-                let colorHit = max(r, max(g, b)) - min(r, min(g, b)) > 28
-                active[gy * gridWidth + gx] = alphaHit || colorHit
+                // The desktop-independent window capture preserves the pet
+                // overlay alpha. Restricting detection to it prevents a task
+                // card or desktop background from becoming the pet frame.
+                active[gy * gridWidth + gx] = alpha > 24
             }
         }
 
@@ -316,9 +431,7 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
                                    width: estimatedFrame.width,
                                    height: estimatedFrame.height)
         let expectedCenter = CGPoint(x: expectedLocal.midX / container.width,
-                                     // CGImage pixel rows are bottom-origin;
-                                     // CGWindow bounds are top-origin.
-                                     y: 1 - expectedLocal.midY / container.height)
+                                     y: expectedLocal.midY / container.height)
         var visited = [Bool](repeating: false, count: active.count)
         var candidates: [(rect: CGRect, area: Int)] = []
 
@@ -352,9 +465,11 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
                               y: CGFloat(minY * step),
                               width: CGFloat((maxX - minX + 1) * step),
                               height: CGFloat((maxY - minY + 1) * step))
-            if area >= 50, rect.width >= 35, rect.height >= 45,
+            let aspectRatio = rect.height > 0 ? rect.width / rect.height : .infinity
+            if area >= 20, rect.width >= 12, rect.height >= 16,
                rect.width < CGFloat(width) * 0.85,
-               rect.height < CGFloat(height) * 0.85 {
+               rect.height < CGFloat(height) * 0.85,
+               (0.35...1.25).contains(aspectRatio) {
                 candidates.append((rect, area))
             }
         }
@@ -381,8 +496,9 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         }
 
         let x = container.minX + mascotRect.minX / CGFloat(width) * container.width
-        let y = container.minY
-            + (CGFloat(height) - mascotRect.maxY) / CGFloat(height) * container.height
+        // SCScreenshotManager's pixel rows match the top-origin CG window
+        // bounds. Do not flip this coordinate a second time.
+        let y = container.minY + mascotRect.minY / CGFloat(height) * container.height
         let w = mascotRect.width / CGFloat(width) * container.width
         let h = mascotRect.height / CGFloat(height) * container.height
         return CGRect(x: x, y: y, width: w, height: h)

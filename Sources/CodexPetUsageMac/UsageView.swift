@@ -81,6 +81,11 @@ struct UsageRingsView: View {
                          sideStroke: compactRing)
                 }
             }
+            // GeometryReader places a child at its top-leading origin unless
+            // the child explicitly consumes the proposed size. Without this
+            // frame, the inset outer circle was shifted by exactly 9pt from
+            // the pet-derived panel center.
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .background(Color.clear)
         .allowsHitTesting(false)

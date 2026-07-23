@@ -59,6 +59,17 @@ final class OverlayBehaviorTests: XCTestCase {
         ))
     }
 
+    func testScreenRecordingMenuStatusReportsTheActualAuthorizationState() {
+        XCTAssertEqual(
+            ScreenRecordingAuthorizationStatus.menuTitle(hasPermission: true),
+            "屏幕录制：已授权（像素级定位）"
+        )
+        XCTAssertEqual(
+            ScreenRecordingAuthorizationStatus.menuTitle(hasPermission: false),
+            "屏幕录制：未授权（使用估算）"
+        )
+    }
+
     func testCachedMascotOnlyRecapturesAfterGeometryChanges() {
         XCTAssertFalse(MascotCaptureRefreshPolicy.shouldCapture(
             hasCachedResult: true,
@@ -72,6 +83,47 @@ final class OverlayBehaviorTests: XCTestCase {
             lastAttempt: 100,
             now: 101
         ))
+    }
+
+    func testMascotCaptureInputChangesWhenPetMovesInsideSameContainer() {
+        let container = CGRect(x: 100, y: 200, width: 408, height: 400)
+        let estimate = CGRect(x: 236, y: 439, width: 136, height: 161)
+
+        XCTAssertFalse(ScreenCaptureMascotLocator.inputChanged(
+            previousContainer: container,
+            previousEstimate: estimate,
+            previousLayoutSignature: "top-end|700:400",
+            container: container,
+            estimate: estimate,
+            layoutSignature: "top-end|700:400"
+        ))
+        XCTAssertTrue(ScreenCaptureMascotLocator.inputChanged(
+            previousContainer: container,
+            previousEstimate: estimate,
+            previousLayoutSignature: "top-end|700:400",
+            container: container,
+            estimate: estimate,
+            layoutSignature: "top-end|8:400"
+        ))
+    }
+
+    func testCachedMascotNeverRecapturesWithoutAnInputChange() {
+        XCTAssertFalse(MascotCaptureRefreshPolicy.shouldCapture(
+            hasCachedResult: true,
+            inputChanged: false,
+            lastAttempt: 100,
+            now: 10_000
+        ))
+    }
+
+    func testEventMeasurementUsesMedianFrameAcrossAnimationSamples() {
+        let stabilized = ScreenCaptureMascotLocator.stabilizedFrame(from: [
+            CGRect(x: 100, y: 200, width: 96, height: 110),
+            CGRect(x: 102, y: 198, width: 102, height: 98),
+            CGRect(x: 101, y: 199, width: 100, height: 104)
+        ])
+
+        XCTAssertEqual(stabilized, CGRect(x: 101, y: 199, width: 100, height: 104))
     }
 
     func testPixelResultMustStayNearExpectedMascotAndSize() {
@@ -88,7 +140,26 @@ final class OverlayBehaviorTests: XCTestCase {
             estimatedFrame: estimate,
             container: container
         ))
+        XCTAssertTrue(MascotCaptureResultValidation.isPlausible(
+            CGRect(x: 180, y: 100, width: 220, height: 300),
+            estimatedFrame: estimate,
+            container: container
+        ))
         XCTAssertFalse(MascotCaptureResultValidation.isPlausible(
+            // A task card is wide even if it is near the expected anchor.
+            CGRect(x: 150, y: 100, width: 250, height: 160),
+            estimatedFrame: estimate,
+            container: container
+        ))
+        XCTAssertFalse(MascotCaptureResultValidation.isPlausible(
+            // A nearly full transparent window is not a pet bounding box.
+            CGRect(x: 120, y: 120, width: 350, height: 340),
+            estimatedFrame: estimate,
+            container: container
+        ))
+        XCTAssertFalse(MascotCaptureResultValidation.isPlausible(
+            // A transparent 259pt subwindow was being accepted as a 250pt
+            // mascot. It must remain rejected even though its center matches.
             CGRect(x: 210, y: 100, width: 250, height: 160),
             estimatedFrame: estimate,
             container: container

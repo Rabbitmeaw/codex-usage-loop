@@ -1,4 +1,6 @@
 import AppKit
+import CoreGraphics
+import OSLog
 import SwiftUI
 
 final class AppController: NSObject, NSApplicationDelegate {
@@ -17,6 +19,8 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var codexIsRunning = false
     private var clientIsRunning = false
     private var hasCompletedStartupOverlayPresentation = false
+    private let geometryLogger = Logger(subsystem: "com.codexusageloop.mac", category: "petGeometry")
+    private var lastLoggedGeometry: (frame: CGRect, center: CGPoint, diameter: CGFloat, source: PetGeometrySource)?
 
     private enum RingColorTarget {
         case outer
@@ -186,6 +190,20 @@ final class AppController: NSObject, NSApplicationDelegate {
         let recalibrate = NSMenuItem(title: "重新检测宠物位置/大小", action: #selector(recalibrate), keyEquivalent: "")
         recalibrate.target = self
         menu.addItem(recalibrate)
+        let screenRecordingStatus = NSMenuItem(
+            title: ScreenRecordingAuthorizationStatus.menuTitle(
+                hasPermission: CGPreflightScreenCaptureAccess()
+            ),
+            action: nil,
+            keyEquivalent: ""
+        )
+        screenRecordingStatus.isEnabled = false
+        menu.addItem(screenRecordingStatus)
+        let requestScreenRecording = NSMenuItem(title: "启用像素级定位…", action: #selector(requestScreenRecordingAuthorization), keyEquivalent: "")
+        requestScreenRecording.target = self
+        requestScreenRecording.isEnabled = !CGPreflightScreenCaptureAccess()
+        requestScreenRecording.toolTip = "仅在你主动选择后请求 macOS 屏幕录制权限；系统可能要求退出并重新打开应用。"
+        menu.addItem(requestScreenRecording)
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -388,6 +406,10 @@ final class AppController: NSObject, NSApplicationDelegate {
         locator.reset()
         updateOverlay()
     }
+
+    @objc private func requestScreenRecordingAuthorization() {
+        locator.requestScreenRecordingAuthorization()
+    }
     @objc private func quit() { NSApp.terminate(nil) }
 
     private func updateOverlay() {
@@ -419,6 +441,10 @@ final class AppController: NSObject, NSApplicationDelegate {
                                                          placement: store.ringPlacement,
                                                          codexPlacement: pet.placement)
             lastRingCenter = ringCenter
+            logGeometryIfChanged(petFrame: petFrame,
+                                 ringCenter: ringCenter,
+                                 ringDiameter: baseRingSize,
+                                 source: pet.geometrySource)
 
             let hovered = hypot(NSEvent.mouseLocation.x - ringCenter.x, NSEvent.mouseLocation.y - ringCenter.y) <= store.ringSize / 2 + 12
             let shouldShowCard = store.alwaysVisible || hovered
@@ -500,6 +526,25 @@ final class AppController: NSObject, NSApplicationDelegate {
         return NSScreen.screens.min {
             screenDistance($0, to: cgBounds) < screenDistance($1, to: cgBounds)
         }
+    }
+
+    private func logGeometryIfChanged(petFrame: CGRect,
+                                      ringCenter: CGPoint,
+                                      ringDiameter: CGFloat,
+                                      source: PetGeometrySource) {
+        if let previous = lastLoggedGeometry,
+           previous.source == source,
+           abs(previous.frame.minX - petFrame.minX) < 1,
+           abs(previous.frame.minY - petFrame.minY) < 1,
+           abs(previous.frame.width - petFrame.width) < 1,
+           abs(previous.frame.height - petFrame.height) < 1,
+           abs(previous.center.x - ringCenter.x) < 1,
+           abs(previous.center.y - ringCenter.y) < 1,
+           abs(previous.diameter - ringDiameter) < 1 {
+            return
+        }
+        lastLoggedGeometry = (petFrame, ringCenter, ringDiameter, source)
+        geometryLogger.info("pet geometry source=\(source.rawValue, privacy: .public) pet=[\(petFrame.minX, privacy: .public),\(petFrame.minY, privacy: .public),\(petFrame.width, privacy: .public),\(petFrame.height, privacy: .public)] ringCenter=[\(ringCenter.x, privacy: .public),\(ringCenter.y, privacy: .public)] ringDiameter=\(ringDiameter, privacy: .public)")
     }
 
     private func screenDistance(_ screen: NSScreen, to cgBounds: CGRect) -> CGFloat {

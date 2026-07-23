@@ -22,19 +22,19 @@
 
 日期：2026-07-22
 
-先通过 CGWindowList 取得候选窗口，再在已有屏幕录制权限时用 ScreenCaptureKit 细化宠物边界。权限不可用时必须回退到窗口几何估算。
+先通过 CGWindowList 取得候选窗口，再在 macOS 屏幕录制授权可用时用 ScreenCaptureKit 细化宠物边界。仅在用户明确选择“启用像素级定位”时发起系统授权请求；权限不可用时必须回退到窗口几何估算。
 
 ## D-005 · 最小数据与最小权限
 
 日期：2026-07-22
 
-不上传数据、不保存截图、不主动要求屏幕录制权限。屏幕捕获仅为本机内存中的定位手段，不能成为应用可用性的硬依赖。
+不上传数据、不保存截图。屏幕捕获仅为本机内存中的定位手段，不能成为应用可用性的硬依赖。不得在启动时自动弹出授权或应用内模态窗口；仅由用户明确触发屏幕录制请求，避免与 macOS 的退出并重新打开流程冲突。
 
 ## D-006 · 本地开发使用 ad-hoc 签名
 
 日期：2026-07-22
 
-构建脚本使用 ad-hoc 签名使本机应用包可验证。开源 Release 不采用 Developer ID 签名或 Apple 公证；改为发布校验和、源码提交 ID 和安全使用说明，具体见 `docs/RELEASE_SECURITY.md`。
+构建脚本对开源 Release 使用 ad-hoc 签名使应用包可验证。`install.sh` 在本机存在 Apple Development 身份时优先使用它，以维持同一 Bundle ID 的 macOS 隐私授权；这不是 Developer ID 分发签名，也不改变 Release 的未公证策略。改为发布校验和、源码提交 ID 和安全使用说明，具体见 `docs/RELEASE_SECURITY.md`。
 
 ## D-011 · 开源 Release 不提供 Developer ID 签名或公证
 

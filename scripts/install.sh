@@ -24,7 +24,20 @@ DESTINATION_DIR="${DESTINATION_DIR:A}"
 APP_SOURCE="${ROOT}/dist/CodexUsageLoop.app"
 APP_DESTINATION="${DESTINATION_DIR}/CodexUsageLoop.app"
 
-zsh "${ROOT}/scripts/build-app.sh"
+# A local Apple Development identity keeps macOS privacy approvals tied to the
+# same bundle and team across rebuilds. This is not Developer ID distribution
+# signing and is intentionally optional for open-source users.
+LOCAL_SIGN_IDENTITY="${CODESIGN_IDENTITY:-}"
+if [[ -z "$LOCAL_SIGN_IDENTITY" ]]; then
+  LOCAL_SIGN_IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F '"' '/Apple Development:/ { print $2; exit }')"
+fi
+if [[ -n "$LOCAL_SIGN_IDENTITY" ]]; then
+  CODESIGN_IDENTITY="$LOCAL_SIGN_IDENTITY" zsh "${ROOT}/scripts/build-app.sh"
+  print "本机安装使用稳定的 Apple Development 签名，以保留 macOS 隐私授权。"
+else
+  zsh "${ROOT}/scripts/build-app.sh"
+  print "未发现本机 Apple Development 签名；将使用临时签名，macOS 隐私授权可能在更新后需要重新确认。"
+fi
 mkdir -p "$DESTINATION_DIR"
 rm -rf "$APP_DESTINATION"
 ditto "$APP_SOURCE" "$APP_DESTINATION"
