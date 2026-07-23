@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 440" role="img" aria-labelledby="title desc">
+  <title id="title">CodexUsageLoop 双环用量展示示意</title>
+  <desc id="desc">深色桌面背景上，宠物旁显示蓝绿双环和用量信息卡。</desc>
+  <rect width="960" height="440" rx="30" fill="#0B1220"/>
+  <rect x="48" y="48" width="864" height="344" rx="22" fill="#111C30" stroke="#263956" stroke-width="2"/>
+  <text x="84" y="96" fill="#A9BCD9" font-family="Arial" font-size="22">CodexUsageLoop · 本地用量伴随层</text>
+  <circle cx="310" cy="226" r="110" fill="none" stroke="#203653" stroke-width="22"/>
+  <circle cx="310" cy="226" r="110" fill="none" stroke="#146FE8" stroke-width="22" stroke-linecap="round" stroke-dasharray="505 186" transform="rotate(-92 310 226)"/>
+  <circle cx="310" cy="226" r="76" fill="none" stroke="#1B453E" stroke-width="18"/>
+  <circle cx="310" cy="226" r="76" fill="none" stroke="#36E1A5" stroke-width="18" stroke-linecap="round" stroke-dasharray="305 173" transform="rotate(-88 310 226)"/>
+  <circle cx="310" cy="226" r="40" fill="#EAF2FF"/>
+  <circle cx="295" cy="218" r="5" fill="#0E203A"/>
+  <circle cx="325" cy="218" r="5" fill="#0E203A"/>
+  <path d="M295 242c9 8 21 8 30 0" fill="none" stroke="#0E203A" stroke-width="5" stroke-linecap="round"/>
+  <rect x="485" y="151" width="330" height="150" rx="18" fill="#17263E" stroke="#314969" stroke-width="2"/>
+  <circle cx="526" cy="201" r="7" fill="#146FE8"/>
+  <text x="548" y="208" fill="#F3F7FF" font-family="Arial" font-size="22">5 小时　63% 剩余</text>
+  <circle cx="526" cy="255" r="7" fill="#36E1A5"/>
+  <text x="548" y="262" fill="#F3F7FF" font-family="Arial" font-size="22">7 天　81% 剩余</text>
+  <text x="485" y="335" fill="#8FA8CC" font-family="Arial" font-size="18">双窗口额度自动显示为双环</text>
+</svg>

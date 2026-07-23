@@ -8,6 +8,33 @@
 
 macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显示在 Codex 宠物旁，并通过菜单栏提供控制。
 
+## 界面示意
+
+<p align="center">
+  <img src="docs/images/single-ring.png" alt="单环用量显示在 Codex 宠物周围" width="260">
+  <img src="docs/images/dual-ring.png" alt="双环同时显示两个用量窗口" width="280">
+</p>
+
+<p align="center">
+  <em>左：单窗口用量；右：双窗口用量。截图右上角的浅蓝“1”为说明标记，不属于应用界面。</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/usage-card.png" alt="常驻用量详情卡显示剩余比例和重置时间" width="620">
+</p>
+
+<p align="center">
+  <em>常驻详情卡会显示剩余比例、重置时间与最近更新时间；浅蓝“1”为说明标记，不属于应用界面。</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/left-layout.png" alt="圆环固定在 Codex 宠物左侧，详情卡显示在下方" width="540">
+</p>
+
+<p align="center">
+  <em>左侧布局示例：圆环与宠物分离，详情卡位于圆环下方。浅蓝“2”为说明标记，不属于应用界面。</em>
+</p>
+
 ## 功能
 
 - 围绕 pet 或固定在 pet 左右侧显示用量圆环；常驻卡片在围绕模式位于圆环右侧、在左右侧模式位于圆环正下方。

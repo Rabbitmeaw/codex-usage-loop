@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" role="img" aria-labelledby="title desc">
+  <title id="title">CodexUsageLoop 本地优先流程示意</title>
+  <desc id="desc">本机 Codex app-server 和窗口信息流向本地菜单栏应用，应用显示用量圆环，不向网络发送数据。</desc>
+  <rect width="960" height="320" rx="30" fill="#0B1220"/>
+  <text x="54" y="62" fill="#F3F7FF" font-family="Arial" font-size="26" font-weight="700">本地优先：不读取认证文件，不上传屏幕或用量</text>
+  <g font-family="Arial">
+    <rect x="58" y="118" width="220" height="126" rx="18" fill="#17263E" stroke="#314969" stroke-width="2"/>
+    <text x="88" y="168" fill="#F3F7FF" font-size="22">Codex app-server</text>
+    <text x="88" y="202" fill="#9DB4D5" font-size="18">只读用量接口</text>
+    <rect x="370" y="118" width="220" height="126" rx="18" fill="#123A58" stroke="#2174B9" stroke-width="2"/>
+    <text x="414" y="168" fill="#F3F7FF" font-size="22">本地菜单栏应用</text>
+    <text x="430" y="202" fill="#A9D9FF" font-size="18">内存中处理</text>
+    <rect x="682" y="118" width="220" height="126" rx="18" fill="#143A34" stroke="#2B9477" stroke-width="2"/>
+    <text x="728" y="168" fill="#F3F7FF" font-size="22">宠物旁用量圆环</text>
+    <text x="746" y="202" fill="#A4E9D2" font-size="18">可见、可控</text>
+  </g>
+  <path d="M288 181h64" stroke="#65B9FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M342 171l16 10-16 10" fill="#65B9FF"/>
+  <path d="M600 181h64" stroke="#55D7AC" stroke-width="5" stroke-linecap="round"/>
+  <path d="M654 171l16 10-16 10" fill="#55D7AC"/>
+</svg>

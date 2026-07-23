@@ -93,7 +93,7 @@ struct UsageRingsView: View {
         let lineWidth = max(2, min(sideStroke ? 6 : 5, diameter * (sideStroke ? 0.055 : 0.045)))
         return ZStack {
             Circle()
-                .stroke(color.opacity(0.42), lineWidth: lineWidth)
+                .stroke(color.opacity(0.24), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: CGFloat((percent ?? 0) / 100))
                 .stroke(color.opacity(0.95), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))

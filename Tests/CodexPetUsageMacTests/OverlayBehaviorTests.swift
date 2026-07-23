@@ -73,4 +73,40 @@ final class OverlayBehaviorTests: XCTestCase {
             now: 101
         ))
     }
+
+    func testPixelResultMustStayNearExpectedMascotAndSize() {
+        let container = CGRect(x: 100, y: 100, width: 400, height: 400)
+        let estimate = CGRect(x: 235, y: 100, width: 130, height: 160)
+
+        XCTAssertTrue(MascotCaptureResultValidation.isPlausible(
+            CGRect(x: 242, y: 108, width: 126, height: 154),
+            estimatedFrame: estimate,
+            container: container
+        ))
+        XCTAssertFalse(MascotCaptureResultValidation.isPlausible(
+            CGRect(x: 120, y: 320, width: 130, height: 160),
+            estimatedFrame: estimate,
+            container: container
+        ))
+        XCTAssertFalse(MascotCaptureResultValidation.isPlausible(
+            CGRect(x: 210, y: 100, width: 250, height: 160),
+            estimatedFrame: estimate,
+            container: container
+        ))
+    }
+
+    func testCachedMascotFrameProjectsWithContainerMovement() {
+        let projected = ScreenCaptureMascotLocator.projectedFrame(
+            CGRect(x: 140, y: 160, width: 100, height: 80),
+            from: CGRect(x: 100, y: 100, width: 400, height: 300),
+            to: CGRect(x: 500, y: 200, width: 800, height: 600)
+        )
+
+        XCTAssertEqual(projected, CGRect(x: 580, y: 320, width: 200, height: 160))
+    }
+
+    func testResetGenerationRejectsStaleCaptureCompletion() {
+        XCTAssertTrue(ScreenCaptureMascotLocator.accepts(completionGeneration: 3, currentGeneration: 3))
+        XCTAssertFalse(ScreenCaptureMascotLocator.accepts(completionGeneration: 3, currentGeneration: 4))
+    }
 }

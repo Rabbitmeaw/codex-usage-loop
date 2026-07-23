@@ -16,6 +16,7 @@ chmod +x "$APP/Contents/MacOS/CodexUsageLoop"
 ICONSET="${ROOT}/.build/AppIcon.iconset"
 ICON_SOURCE="${ROOT}/Resources/AppIcon.png"
 if [[ -f "$ICON_SOURCE" ]]; then
+  cp "$ICON_SOURCE" "$APP/Contents/Resources/AppIcon.png"
   rm -rf "$ICONSET"
   mkdir -p "$ICONSET"
   ICON_TOOL="$(command -v magick || command -v convert || true)"

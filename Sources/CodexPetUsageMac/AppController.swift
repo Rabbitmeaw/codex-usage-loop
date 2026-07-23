@@ -52,6 +52,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         // state reads and unnecessary fallback captures.
         locatorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.updateOverlay() }
         client.refresh()
+        updateOverlay()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -99,7 +100,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private func updateStatusIcon() {
         if let button = statusItem.button {
             button.toolTip = "CodexUsageLoop"
-            if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "icns"),
+            if let url = Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
                let image = NSImage(contentsOf: url) {
                 image.isTemplate = store.statusIconMode == .monochrome
                 image.size = NSSize(width: 18, height: 18)
@@ -235,7 +236,14 @@ final class AppController: NSObject, NSApplicationDelegate {
                               alpha: 1)
         panel.setTarget(self)
         panel.setAction(#selector(changeRingColor(_:)))
-        panel.orderFront(nil)
+        panel.isContinuous = true
+        // A status-item menu closes after the action returns. Defer panel
+        // presentation until then so an accessory app can make it key.
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            panel.makeKeyAndOrderFront(nil)
+            panel.center()
+        }
     }
 
     @objc private func changeRingColor(_ sender: NSColorPanel) {
