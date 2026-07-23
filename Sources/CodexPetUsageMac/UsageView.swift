@@ -56,7 +56,7 @@ struct UsageRingsView: View {
     var body: some View {
         let shortWindow = store.displaySnapshot?.windows.first(where: { !$0.isWeekly })
         let weeklyWindow = store.displaySnapshot?.windows.first(where: { $0.isWeekly })
-        let outerWindow = shortWindow ?? weeklyWindow
+        let outerPercent = RingPresentation.outerPercent(snapshot: store.displaySnapshot)
         let compactRing = store.ringPlacement != .around
         let hasDualRing = shortWindow != nil && weeklyWindow != nil
         let outerInset: CGFloat = 9
@@ -65,13 +65,11 @@ struct UsageRingsView: View {
             : 0
         GeometryReader { geometry in
             ZStack {
-                if let outerWindow {
-                    ring(percent: outerWindow.remainingPercent,
-                         color: Color(ringColor: store.outerRingColor),
-                         inset: outerInset,
-                         size: geometry.size,
-                         sideStroke: compactRing)
-                }
+                ring(percent: outerPercent,
+                     color: Color(ringColor: store.outerRingColor),
+                     inset: outerInset,
+                     size: geometry.size,
+                     sideStroke: compactRing)
                 if let weeklyWindow, shortWindow != nil {
                     ring(percent: weeklyWindow.remainingPercent,
                          color: Color(ringColor: store.innerRingColor),

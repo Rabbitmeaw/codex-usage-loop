@@ -34,6 +34,46 @@ final class PetLocationTests: XCTestCase {
         XCTAssertEqual(bottom, CGRect(x: 218.5, y: 200, width: 119, height: 129))
     }
 
+    func testPersistedOverlayFallbackEstimatesMascotWithoutLiveWindow() {
+        let state: [String: Any] = [
+            "x": 1_142,
+            "y": 636,
+            "placement": "top-end"
+        ]
+
+        let geometry = PersistedPetGeometry.geometry(from: state)
+
+        XCTAssertEqual(geometry?.container, CGRect(x: 1_142, y: 636, width: 119, height: 129))
+        XCTAssertEqual(geometry?.mascot, CGRect(x: 1_142, y: 636, width: 119, height: 129))
+    }
+
+    func testPersistedOverlayFallbackUsesExactStoredMascot() {
+        let state: [String: Any] = [
+            "x": 1_142,
+            "y": 636,
+            "width": 356,
+            "height": 320,
+            "placement": "top-end",
+            "mascot": ["left": 209, "top": 183, "width": 119, "height": 129]
+        ]
+
+        let geometry = PersistedPetGeometry.geometry(from: state)
+
+        XCTAssertEqual(geometry?.mascot, CGRect(x: 1_351, y: 819, width: 119, height: 129))
+    }
+
+    func testPersistedOverlayFallbackRejectsMascotOutsideContainer() {
+        let state: [String: Any] = [
+            "x": 100,
+            "y": 200,
+            "width": 356,
+            "height": 320,
+            "mascot": ["left": 300, "top": 183, "width": 119, "height": 129]
+        ]
+
+        XCTAssertNil(PersistedPetGeometry.geometry(from: state))
+    }
+
     func testCGFrameConvertsToAppKitScreenCoordinates() {
         let converted = PetGeometry.appKitFrame(
             cgFrame: CGRect(x: 120, y: 100, width: 80, height: 60),

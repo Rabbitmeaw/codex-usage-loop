@@ -2,6 +2,10 @@ import XCTest
 @testable import CodexPetUsageMac
 
 final class UsageModelTests: XCTestCase {
+    func testOuterRingHasNoUsageArcBeforeTheFirstSnapshot() {
+        XCTAssertNil(RingPresentation.outerPercent(snapshot: nil))
+    }
+
     func testUsageWindowKeepsRemainingPercentageAndResetDate() {
         let reset = Date(timeIntervalSince1970: 1_800_000_000)
         let window = UsageWindow(label: "5 小时", remainingPercent: 63, resetsAt: reset)

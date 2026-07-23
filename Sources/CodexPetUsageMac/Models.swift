@@ -63,6 +63,14 @@ enum SnapshotOverlayRefreshPolicy {
     }
 }
 
+enum RingPresentation {
+    static func outerPercent(snapshot: UsageSnapshot?) -> Double? {
+        let windows = snapshot?.windows ?? []
+        return windows.first(where: { !$0.isWeekly })?.remainingPercent
+            ?? windows.first?.remainingPercent
+    }
+}
+
 enum UsageCardLayout {
     static func origin(ringCenter: CGPoint,
                        ringSize: CGFloat,
