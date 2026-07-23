@@ -31,9 +31,27 @@ final class UsageModelTests: XCTestCase {
         XCTAssertTrue(SnapshotOverlayRefreshPolicy.shouldRefresh(lastRefresh: 1, now: 2))
     }
 
+    func testCodexLaunchModeOnlyRunsClientWhileCodexIsRunning() {
+        XCTAssertFalse(PetVisibilityLaunchPolicy.shouldRunClient(enabled: true, codexIsRunning: false))
+        XCTAssertTrue(PetVisibilityLaunchPolicy.shouldRunClient(enabled: true, codexIsRunning: true))
+        XCTAssertTrue(PetVisibilityLaunchPolicy.shouldRunClient(enabled: false, codexIsRunning: false))
+    }
+
+    func testAroundRingScaleStaysWithinSupportedRange() {
+        XCTAssertEqual(AroundRingScale.clamped(0.2), AroundRingScale.minimum)
+        XCTAssertEqual(AroundRingScale.clamped(2), AroundRingScale.maximum)
+        XCTAssertEqual(AroundRingScale.clamped(1.25), 1.25)
+    }
+
+    func testCodexDesktopProcessMatchingPrefersKnownBundleIdentifier() {
+        XCTAssertTrue(CodexDesktopProcessMatching.matches(bundleIdentifier: "com.openai.codex", localizedName: nil))
+        XCTAssertTrue(CodexDesktopProcessMatching.matches(bundleIdentifier: nil, localizedName: "Codex"))
+        XCTAssertFalse(CodexDesktopProcessMatching.matches(bundleIdentifier: "com.example.other", localizedName: "Other"))
+    }
+
     func testStorePersistsDisplayPreferences() {
         let defaults = UserDefaults.standard
-        let keys = ["alwaysVisible", "manualMoveV2", "ringPlacementV2", "statusIconModeV1"]
+        let keys = ["alwaysVisible", "manualMoveV2", "ringPlacementV2", "statusIconModeV1", "launchWithCodexPetV1", "aroundRingScaleV1"]
         keys.forEach(defaults.removeObject(forKey:))
         defer { keys.forEach(defaults.removeObject(forKey:)) }
 
@@ -42,11 +60,15 @@ final class UsageModelTests: XCTestCase {
         store.manualMove = true
         store.ringPlacement = .right
         store.statusIconMode = .monochrome
+        store.launchWithCodexPet = true
+        store.aroundRingScale = 1.25
 
         XCTAssertTrue(defaults.bool(forKey: "alwaysVisible"))
         XCTAssertTrue(defaults.bool(forKey: "manualMoveV2"))
         XCTAssertEqual(defaults.string(forKey: "ringPlacementV2"), RingPlacement.right.rawValue)
         XCTAssertEqual(defaults.string(forKey: "statusIconModeV1"), StatusIconMode.monochrome.rawValue)
+        XCTAssertTrue(defaults.bool(forKey: "launchWithCodexPetV1"))
+        XCTAssertEqual(defaults.double(forKey: "aroundRingScaleV1"), 1.25)
     }
 
     func testStorePersistsCustomRingColorsAndRestoresDefaults() {

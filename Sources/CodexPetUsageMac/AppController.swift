@@ -5,6 +5,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private let store = UsageStore()
     private let client = CodexAppServerClient()
     private let locator = PetWindowLocator()
+    private let codexPresenceMonitor = CodexDesktopPresenceMonitor()
     private var panel: NSPanel!
     private var cardPanel: NSPanel!
     private var statusItem: NSStatusItem!
@@ -13,6 +14,8 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var lastRingCenter = NSPoint(x: 200, y: 200)
     private var lastSnapshotOverlayRefresh: TimeInterval = 0
     private var activeRingColorTarget: RingColorTarget?
+    private var codexIsRunning = false
+    private var clientIsRunning = false
 
     private enum RingColorTarget {
         case outer
@@ -46,20 +49,19 @@ final class AppController: NSObject, NSApplicationDelegate {
             self.updateOverlayForSnapshot()
         }
         client.onError = { [weak self] error in self?.store.errorMessage = error.localizedDescription }
-        client.start()
-
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in self?.client.refresh() }
-        // Pet geometry is persisted by Codex and does not need a high-rate
-        // polling loop. Keep the overlay responsive while avoiding repeated
-        // state reads and unnecessary fallback captures.
-        locatorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.updateOverlay() }
-        client.refresh()
-        updateOverlay()
+        codexPresenceMonitor.onPresenceChanged = { [weak self] isRunning in
+            guard let self else { return }
+            self.codexIsRunning = isRunning
+            self.updateClientLifecycle()
+        }
+        codexPresenceMonitor.start()
+        updateClientLifecycle()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         locatorTimer?.invalidate()
         refreshTimer?.invalidate()
+        codexPresenceMonitor.stop()
         client.stop()
     }
 
@@ -141,6 +143,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         placement.submenu = placementMenu
         menu.addItem(placement)
+        let aroundSize = NSMenuItem(title: "围绕 pet 的圆环大小", action: nil, keyEquivalent: "")
+        aroundSize.submenu = makeAroundSizeMenu()
+        menu.addItem(aroundSize)
         let colors = NSMenuItem(title: "圆环颜色", action: nil, keyEquivalent: "")
         let colorsMenu = NSMenu()
         let outerColor = NSMenuItem(title: "外环颜色…", action: #selector(selectOuterRingColor), keyEquivalent: "")
@@ -166,6 +171,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         iconMode.submenu = iconModeMenu
         menu.addItem(iconMode)
+        let launchWithPet = NSMenuItem(title: "随 Codex 宠物启动", action: #selector(toggleLaunchWithCodexPet), keyEquivalent: "")
+        launchWithPet.target = self
+        launchWithPet.state = store.launchWithCodexPet ? .on : .off
+        launchWithPet.toolTip = "开启后，Codex 退出时暂停用量读取；宠物隐藏时仅隐藏悬浮层，重新展示会自动恢复。"
+        menu.addItem(launchWithPet)
         let demo = NSMenuItem(title: "演示双环", action: #selector(toggleDualRingDemo), keyEquivalent: "")
         demo.target = self
         demo.isEnabled = store.isDualRingDemoAvailable
@@ -205,6 +215,43 @@ final class AppController: NSObject, NSApplicationDelegate {
         store.ringPlacement = placement
         rebuildMenu()
         updateOverlay()
+    }
+
+    private func makeAroundSizeMenu() -> NSMenu {
+        let menu = NSMenu()
+        let slider = NSSlider(value: Double(store.aroundRingScale),
+                              minValue: Double(AroundRingScale.minimum),
+                              maxValue: Double(AroundRingScale.maximum),
+                              target: self,
+                              action: #selector(changeAroundRingScale(_:)))
+        slider.numberOfTickMarks = 7
+        slider.allowsTickMarkValuesOnly = false
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 36))
+        slider.frame = NSRect(x: 12, y: 8, width: 196, height: 20)
+        container.addSubview(slider)
+        let sliderItem = NSMenuItem()
+        sliderItem.view = container
+        menu.addItem(sliderItem)
+        let reset = NSMenuItem(title: "恢复默认（100%）", action: #selector(resetAroundRingScale), keyEquivalent: "")
+        reset.target = self
+        menu.addItem(reset)
+        return menu
+    }
+
+    @objc private func changeAroundRingScale(_ sender: NSSlider) {
+        store.aroundRingScale = AroundRingScale.clamped(CGFloat(sender.doubleValue))
+        updateOverlay()
+    }
+
+    @objc private func resetAroundRingScale() {
+        store.aroundRingScale = AroundRingScale.default
+        updateOverlay()
+    }
+
+    @objc private func toggleLaunchWithCodexPet(_ sender: NSMenuItem) {
+        store.launchWithCodexPet.toggle()
+        sender.state = store.launchWithCodexPet ? .on : .off
+        updateClientLifecycle()
     }
 
     @objc private func selectStatusIconMode(_ sender: NSMenuItem) {
@@ -282,6 +329,29 @@ final class AppController: NSObject, NSApplicationDelegate {
         updateOverlay()
     }
 
+    private func updateClientLifecycle() {
+        let shouldRun = PetVisibilityLaunchPolicy.shouldRunClient(enabled: store.launchWithCodexPet,
+                                                                   codexIsRunning: codexIsRunning)
+        guard shouldRun != clientIsRunning else { return }
+        clientIsRunning = shouldRun
+        if shouldRun {
+            client.start()
+            refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in self?.client.refresh() }
+            // Pet geometry is checked only while the companion is active.
+            locatorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.updateOverlay() }
+            client.refresh()
+            updateOverlay()
+        } else {
+            refreshTimer?.invalidate()
+            refreshTimer = nil
+            locatorTimer?.invalidate()
+            locatorTimer = nil
+            cardPanel.orderOut(nil)
+            panel.orderOut(nil)
+            client.stop()
+        }
+    }
+
     @objc private func refresh() {
         client.refresh()
         recalibrate()
@@ -300,14 +370,16 @@ final class AppController: NSObject, NSApplicationDelegate {
             let scale = max(1, screen(for: pet.displayID)?.backingScaleFactor ?? 1)
             let petRingSize = max(104, (max(petFrame.width, petFrame.height) / scale + 40) * 1.15)
             let baseRingSize = store.ringPlacement == .around
-                ? petRingSize
+                ? petRingSize * store.aroundRingScale
                 // Side placement keeps its established compact single-ring
                 // diameter. Dual-ring space is added outside this baseline.
                 : max(48, petRingSize * 0.30)
             let hasDualRing = (store.displaySnapshot?.windows.count ?? 0) > 1
             // Preserve the single-ring diameter as the dual-ring inner track.
             // Only the outer track receives additional canvas around it.
-            let dualExpansion: CGFloat = store.ringPlacement == .around ? 22 : 14
+            let dualExpansion: CGFloat = store.ringPlacement == .around
+                ? 22 * store.aroundRingScale
+                : 14
             let ringSize = baseRingSize + (hasDualRing ? dualExpansion : 0)
             if store.ringSize != ringSize { store.ringSize = ringSize }
             let ringCenter = OverlayRingPlacement.center(for: petFrame,

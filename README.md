@@ -42,6 +42,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 - 真实用量返回两个窗口时显示双环，并禁用“演示双环”以避免覆盖真实数据。
 - 支持自由拖动、立即刷新、重新检测宠物位置／大小，以及原色和单色菜单栏图标。
 - 可分别自定义外环和内环颜色；颜色以 sRGB 持久化，并支持恢复默认蓝绿。
+- 可选地随 Codex 宠物待命；还可实时调整围绕 pet 的圆环尺寸，双环比例保持不变。
 - 无全局右键监听；不读取认证文件，不上传用量或屏幕画面。
 - 用量每 30 秒刷新；宠物位置每 1 秒检查。成功位置会缓存，截图失败按 5 秒退避。
 
@@ -52,6 +53,12 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 ```bash
 zsh scripts/build-app.sh
 open "dist/CodexUsageLoop.app"
+```
+
+可选：安装登录 companion 后，在菜单开启“随 Codex 宠物启动”。它会等待 Codex Desktop，Codex 退出时暂停用量读取；宠物隐藏时隐藏圆环，重新显示后自动恢复：
+
+```bash
+zsh scripts/install.sh --with-login-agent
 ```
 
 ## 权限与隐私
@@ -99,6 +106,7 @@ A macOS companion overlay that places Codex usage rings beside the Codex pet and
 - Displays real dual rings when two usage windows are available and disables the demo mode so simulated data never replaces real usage.
 - Supports free dragging, immediate refresh, pet position/size recalibration, plus color and monochrome menu-bar icons.
 - Lets you customize outer and inner ring colors independently; sRGB values persist and can be reset to the default blue/green palette.
+- Optionally waits with the Codex pet, and lets you resize around-pet rings while preserving the dual-ring proportions.
 - Uses no global right-click listener; never reads authentication files or uploads usage or screen imagery.
 - Refreshes usage every 30 seconds and pet geometry every second. Successful geometry is cached; failed captures back off for five seconds.
 
@@ -109,6 +117,12 @@ Requires macOS 13+, Xcode Command Line Tools, and a signed-in Codex CLI or Codex
 ```bash
 zsh scripts/build-app.sh
 open "dist/CodexUsageLoop.app"
+```
+
+Optional: install the login companion and enable **Start with Codex pet** from the menu. It waits for Codex Desktop, pauses usage reads when Codex quits, hides the ring while the pet is hidden, and restores it when the pet returns:
+
+```bash
+zsh scripts/install.sh --with-login-agent
 ```
 
 ## Permissions and privacy

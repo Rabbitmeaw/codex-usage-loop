@@ -63,6 +63,22 @@ enum SnapshotOverlayRefreshPolicy {
     }
 }
 
+enum PetVisibilityLaunchPolicy {
+    static func shouldRunClient(enabled: Bool, codexIsRunning: Bool) -> Bool {
+        !enabled || codexIsRunning
+    }
+}
+
+enum AroundRingScale {
+    static let minimum: CGFloat = 0.75
+    static let maximum: CGFloat = 1.50
+    static let `default`: CGFloat = 1
+
+    static func clamped(_ value: CGFloat) -> CGFloat {
+        min(maximum, max(minimum, value))
+    }
+}
+
 enum RingPresentation {
     static func outerPercent(snapshot: UsageSnapshot?) -> Double? {
         let windows = snapshot?.windows ?? []
@@ -129,6 +145,19 @@ final class UsageStore: ObservableObject {
     @Published var statusIconMode: StatusIconMode {
         didSet { UserDefaults.standard.set(statusIconMode.rawValue, forKey: "statusIconModeV1") }
     }
+    @Published var launchWithCodexPet: Bool {
+        didSet { UserDefaults.standard.set(launchWithCodexPet, forKey: "launchWithCodexPetV1") }
+    }
+    @Published var aroundRingScale: CGFloat {
+        didSet {
+            let clamped = AroundRingScale.clamped(aroundRingScale)
+            if clamped != aroundRingScale {
+                aroundRingScale = clamped
+                return
+            }
+            UserDefaults.standard.set(aroundRingScale, forKey: "aroundRingScaleV1")
+        }
+    }
     @Published var outerRingColor: RingColor {
         didSet { outerRingColor.save(to: .standard, key: "outerRingColorV1") }
     }
@@ -159,6 +188,8 @@ final class UsageStore: ObservableObject {
         manualMove = UserDefaults.standard.bool(forKey: "manualMoveV2")
         ringPlacement = RingPlacement(rawValue: UserDefaults.standard.string(forKey: "ringPlacementV2") ?? "") ?? .around
         statusIconMode = StatusIconMode(rawValue: UserDefaults.standard.string(forKey: "statusIconModeV1") ?? "") ?? .color
+        launchWithCodexPet = UserDefaults.standard.bool(forKey: "launchWithCodexPetV1")
+        aroundRingScale = AroundRingScale.clamped(CGFloat((UserDefaults.standard.object(forKey: "aroundRingScaleV1") as? NSNumber)?.doubleValue ?? Double(AroundRingScale.default)))
         outerRingColor = RingColor.load(from: .standard, key: "outerRingColorV1", fallback: .defaultOuter)
         innerRingColor = RingColor.load(from: .standard, key: "innerRingColorV1", fallback: .defaultInner)
     }

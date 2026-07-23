@@ -39,4 +39,4 @@ launchctl bootout "gui/${USER_ID}" "$PLIST_PATH" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/${USER_ID}" "$PLIST_PATH"
 
 print "已安装登录 companion：$PLIST_PATH"
-print "它只在 Codex/ChatGPT Desktop 运行期间启用用量读取和宠物定位；退出 Codex 后会停止这些定时任务。"
+print "在应用菜单开启“随 Codex 宠物启动”后，Codex 退出时会暂停用量读取和宠物定位。"
