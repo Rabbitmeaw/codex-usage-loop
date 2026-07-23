@@ -21,6 +21,12 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(UsageStore().statusIconMode, .color)
     }
 
+    func testSnapshotOverlayRefreshIsLimitedToOncePerSecond() {
+        XCTAssertTrue(SnapshotOverlayRefreshPolicy.shouldRefresh(lastRefresh: 0, now: 1))
+        XCTAssertFalse(SnapshotOverlayRefreshPolicy.shouldRefresh(lastRefresh: 1, now: 1.9))
+        XCTAssertTrue(SnapshotOverlayRefreshPolicy.shouldRefresh(lastRefresh: 1, now: 2))
+    }
+
     func testStorePersistsDisplayPreferences() {
         let defaults = UserDefaults.standard
         let keys = ["alwaysVisible", "manualMoveV2", "ringPlacementV2", "statusIconModeV1"]

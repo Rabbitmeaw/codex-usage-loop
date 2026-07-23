@@ -57,6 +57,12 @@ struct RingColor: Equatable {
     }
 }
 
+enum SnapshotOverlayRefreshPolicy {
+    static func shouldRefresh(lastRefresh: TimeInterval, now: TimeInterval) -> Bool {
+        now - lastRefresh >= 1
+    }
+}
+
 enum UsageCardLayout {
     static func origin(ringCenter: CGPoint,
                        ringSize: CGFloat,

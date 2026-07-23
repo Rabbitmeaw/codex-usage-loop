@@ -11,6 +11,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var locatorTimer: Timer?
     private var refreshTimer: Timer?
     private var lastRingCenter = NSPoint(x: 200, y: 200)
+    private var lastSnapshotOverlayRefresh: TimeInterval = 0
     private var activeRingColorTarget: RingColorTarget?
 
     private enum RingColorTarget {
@@ -42,6 +43,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             self.store.errorMessage = nil
             if self.store.hasRealDualRing { self.store.demoDualRing = false }
             self.rebuildMenu()
+            self.updateOverlayForSnapshot()
         }
         client.onError = { [weak self] error in self?.store.errorMessage = error.localizedDescription }
         client.start()
@@ -271,6 +273,13 @@ final class AppController: NSObject, NSApplicationDelegate {
     private func applyInteractionMode() {
         panel.ignoresMouseEvents = !store.manualMove
         panel.isMovableByWindowBackground = store.manualMove
+    }
+
+    private func updateOverlayForSnapshot() {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard SnapshotOverlayRefreshPolicy.shouldRefresh(lastRefresh: lastSnapshotOverlayRefresh, now: now) else { return }
+        lastSnapshotOverlayRefresh = now
+        updateOverlay()
     }
 
     @objc private func refresh() {

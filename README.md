@@ -55,7 +55,9 @@ open "dist/CodexUsageLoop.app"
 
 ## 权限与隐私
 
-用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，请在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权；图像只在本机内存中分析，不保存、不上传。未授权时应用回退到窗口几何估算。
+用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。
+
+未授权时应用仍可通过宠物容器的窗口几何估算进行基本跟随，不会主动弹出授权请求；但在非默认布局、宠物实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的像素边界进行定位，以获得更准确的贴合效果。
 
 ## 开源 Release
 
@@ -105,7 +107,9 @@ open "dist/CodexUsageLoop.app"
 
 ## Permissions and privacy
 
-Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, grant Screen Recording in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. Without permission, the app falls back to window-geometry estimation.
+Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded.
+
+Without permission, the app still follows the pet using an estimated window geometry and never prompts for access automatically. The ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access enables pixel-level detection of the current window for a closer fit.
 
 ## Open-source releases
 
