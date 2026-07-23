@@ -31,6 +31,10 @@ final class UsageModelTests: XCTestCase {
         XCTAssertTrue(SnapshotOverlayRefreshPolicy.shouldRefresh(lastRefresh: 1, now: 2))
     }
 
+    func testStartupOverlayRetriesAreShortAndBounded() {
+        XCTAssertEqual(StartupOverlayRetryPolicy.delays, [0.1, 0.5, 1, 2])
+    }
+
     func testCodexLaunchModeOnlyRunsClientWhileCodexIsRunning() {
         XCTAssertFalse(PetVisibilityLaunchPolicy.shouldRunClient(enabled: true, codexIsRunning: false))
         XCTAssertTrue(PetVisibilityLaunchPolicy.shouldRunClient(enabled: true, codexIsRunning: true))
@@ -43,9 +47,17 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(AroundRingScale.clamped(1.25), 1.25)
     }
 
+    func testAroundRingScaleKeepsDualRingGapProportional() {
+        XCTAssertEqual(RingSizing.dualExpansion(hasDualRing: true, placement: .around, baseDiameter: 145.7625), 16.5, accuracy: 0.001)
+        XCTAssertEqual(RingSizing.dualExpansion(hasDualRing: true, placement: .around, baseDiameter: 291.525), 33, accuracy: 0.001)
+        XCTAssertEqual(RingSizing.dualExpansion(hasDualRing: true, placement: .left, baseDiameter: 291.525), 14)
+        XCTAssertEqual(RingSizing.dualExpansion(forCanvasDiameter: 216.35, hasDualRing: true, placement: .around), 22, accuracy: 0.001)
+    }
+
     func testCodexDesktopProcessMatchingPrefersKnownBundleIdentifier() {
         XCTAssertTrue(CodexDesktopProcessMatching.matches(bundleIdentifier: "com.openai.codex", localizedName: nil))
         XCTAssertTrue(CodexDesktopProcessMatching.matches(bundleIdentifier: nil, localizedName: "Codex"))
+        XCTAssertFalse(CodexDesktopProcessMatching.matches(bundleIdentifier: nil, localizedName: "ChatGPT"))
         XCTAssertFalse(CodexDesktopProcessMatching.matches(bundleIdentifier: "com.example.other", localizedName: "Other"))
     }
 

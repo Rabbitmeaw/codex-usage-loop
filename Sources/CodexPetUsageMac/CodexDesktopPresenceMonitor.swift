@@ -4,7 +4,6 @@ enum CodexDesktopProcessMatching {
     static func matches(bundleIdentifier: String?, localizedName: String?) -> Bool {
         if bundleIdentifier == "com.openai.codex" { return true }
         return localizedName?.localizedCaseInsensitiveCompare("Codex") == .orderedSame
-            || localizedName?.localizedCaseInsensitiveCompare("ChatGPT") == .orderedSame
     }
 }
 

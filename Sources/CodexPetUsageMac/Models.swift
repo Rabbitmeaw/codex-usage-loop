@@ -63,6 +63,10 @@ enum SnapshotOverlayRefreshPolicy {
     }
 }
 
+enum StartupOverlayRetryPolicy {
+    static let delays: [TimeInterval] = [0.1, 0.5, 1, 2]
+}
+
 enum PetVisibilityLaunchPolicy {
     static func shouldRunClient(enabled: Bool, codexIsRunning: Bool) -> Bool {
         !enabled || codexIsRunning
@@ -76,6 +80,31 @@ enum AroundRingScale {
 
     static func clamped(_ value: CGFloat) -> CGFloat {
         min(maximum, max(minimum, value))
+    }
+}
+
+enum RingSizing {
+    /// At the historically accepted default mascot size, the extra dual-ring
+    /// canvas was 22pt for a 194.35pt around ring. Keep that relationship as a
+    /// ratio so a resized mascot preserves both tracks' spacing.
+    static let aroundDualExpansionToBaseDiameter: CGFloat = 22 / 194.35
+
+    static func dualExpansion(hasDualRing: Bool,
+                              placement: RingPlacement,
+                              baseDiameter: CGFloat) -> CGFloat {
+        guard hasDualRing else { return 0 }
+        return placement == .around
+            ? baseDiameter * aroundDualExpansionToBaseDiameter
+            : 14
+    }
+
+    static func dualExpansion(forCanvasDiameter canvasDiameter: CGFloat,
+                              hasDualRing: Bool,
+                              placement: RingPlacement) -> CGFloat {
+        guard hasDualRing else { return 0 }
+        guard placement == .around else { return 14 }
+        return canvasDiameter * aroundDualExpansionToBaseDiameter
+            / (1 + aroundDualExpansionToBaseDiameter)
     }
 }
 

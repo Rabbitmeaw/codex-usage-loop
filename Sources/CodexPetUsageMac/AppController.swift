@@ -16,6 +16,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var activeRingColorTarget: RingColorTarget?
     private var codexIsRunning = false
     private var clientIsRunning = false
+    private var hasCompletedStartupOverlayPresentation = false
 
     private enum RingColorTarget {
         case outer
@@ -49,13 +50,9 @@ final class AppController: NSObject, NSApplicationDelegate {
             self.updateOverlayForSnapshot()
         }
         client.onError = { [weak self] error in self?.store.errorMessage = error.localizedDescription }
-        codexPresenceMonitor.onPresenceChanged = { [weak self] isRunning in
-            guard let self else { return }
-            self.codexIsRunning = isRunning
-            self.updateClientLifecycle()
-        }
-        codexPresenceMonitor.start()
-        updateClientLifecycle()
+        startClientLifecycle()
+        updateOverlay()
+        scheduleStartupOverlayRetries()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -251,7 +248,8 @@ final class AppController: NSObject, NSApplicationDelegate {
     @objc private func toggleLaunchWithCodexPet(_ sender: NSMenuItem) {
         store.launchWithCodexPet.toggle()
         sender.state = store.launchWithCodexPet ? .on : .off
-        updateClientLifecycle()
+        if hasCompletedStartupOverlayPresentation { updateClientLifecycle() }
+        rebuildMenu()
     }
 
     @objc private func selectStatusIconMode(_ sender: NSMenuItem) {
@@ -329,19 +327,38 @@ final class AppController: NSObject, NSApplicationDelegate {
         updateOverlay()
     }
 
+    private func scheduleStartupOverlayRetries() {
+        for delay in StartupOverlayRetryPolicy.delays {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                self?.updateOverlay()
+            }
+        }
+        let startupDelay = (StartupOverlayRetryPolicy.delays.max() ?? 0) + 0.1
+        DispatchQueue.main.asyncAfter(deadline: .now() + startupDelay) { [weak self] in
+            self?.activatePetLaunchPolicy()
+        }
+    }
+
+    private func activatePetLaunchPolicy() {
+        guard !hasCompletedStartupOverlayPresentation else { return }
+        hasCompletedStartupOverlayPresentation = true
+        codexPresenceMonitor.onPresenceChanged = { [weak self] isRunning in
+            guard let self else { return }
+            self.codexIsRunning = isRunning
+            self.updateClientLifecycle()
+        }
+        codexPresenceMonitor.start()
+    }
+
     private func updateClientLifecycle() {
-        let shouldRun = PetVisibilityLaunchPolicy.shouldRunClient(enabled: store.launchWithCodexPet,
-                                                                   codexIsRunning: codexIsRunning)
+        let shouldRun = !hasCompletedStartupOverlayPresentation
+            || PetVisibilityLaunchPolicy.shouldRunClient(enabled: store.launchWithCodexPet,
+                                                         codexIsRunning: codexIsRunning)
         guard shouldRun != clientIsRunning else { return }
-        clientIsRunning = shouldRun
         if shouldRun {
-            client.start()
-            refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in self?.client.refresh() }
-            // Pet geometry is checked only while the companion is active.
-            locatorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.updateOverlay() }
-            client.refresh()
-            updateOverlay()
+            startClientLifecycle()
         } else {
+            clientIsRunning = false
             refreshTimer?.invalidate()
             refreshTimer = nil
             locatorTimer?.invalidate()
@@ -350,6 +367,16 @@ final class AppController: NSObject, NSApplicationDelegate {
             panel.orderOut(nil)
             client.stop()
         }
+    }
+
+    private func startClientLifecycle() {
+        guard !clientIsRunning else { return }
+        clientIsRunning = true
+        client.start()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in self?.client.refresh() }
+        locatorTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.updateOverlay() }
+        client.refresh()
+        updateOverlay()
     }
 
     @objc private func refresh() {
@@ -368,18 +395,23 @@ final class AppController: NSObject, NSApplicationDelegate {
         if let pet {
             let petFrame = appKitFrame(for: pet)
             let scale = max(1, screen(for: pet.displayID)?.backingScaleFactor ?? 1)
-            let petRingSize = max(104, (max(petFrame.width, petFrame.height) / scale + 40) * 1.15)
+            // Around-pet layout is derived directly from the measured mascot
+            // frame. Do not divide its AppKit points by backing scale or add a
+            // fixed diameter: both made resized pets use the wrong ring size.
+            let aroundRingSize = AroundPetRingLayout.diameter(for: petFrame,
+                                                              scale: store.aroundRingScale)
+            let sideReferenceRingSize = max(104, (max(petFrame.width, petFrame.height) / scale + 40) * 1.15)
             let baseRingSize = store.ringPlacement == .around
-                ? petRingSize * store.aroundRingScale
+                ? aroundRingSize
                 // Side placement keeps its established compact single-ring
                 // diameter. Dual-ring space is added outside this baseline.
-                : max(48, petRingSize * 0.30)
+                : max(48, sideReferenceRingSize * 0.30)
             let hasDualRing = (store.displaySnapshot?.windows.count ?? 0) > 1
             // Preserve the single-ring diameter as the dual-ring inner track.
             // Only the outer track receives additional canvas around it.
-            let dualExpansion: CGFloat = store.ringPlacement == .around
-                ? 22 * store.aroundRingScale
-                : 14
+            let dualExpansion = RingSizing.dualExpansion(hasDualRing: hasDualRing,
+                                                          placement: store.ringPlacement,
+                                                          baseDiameter: baseRingSize)
             let ringSize = baseRingSize + (hasDualRing ? dualExpansion : 0)
             if store.ringSize != ringSize { store.ringSize = ringSize }
             let ringCenter = OverlayRingPlacement.center(for: petFrame,
@@ -399,7 +431,7 @@ final class AppController: NSObject, NSApplicationDelegate {
                                      y: ringCenter.y - canvasSize / 2)
                 if panel.frame.origin != origin { panel.setFrameOrigin(origin) }
             }
-            if !panel.isVisible { panel.orderFrontRegardless() }
+            showOverlayPanelIfNeeded()
             if shouldShowCard {
                 updateCardPanel(ringCenter: ringCenter, ringSize: ringSize)
             } else {
@@ -413,7 +445,7 @@ final class AppController: NSObject, NSApplicationDelegate {
                 panel.setFrameOrigin(NSPoint(x: 24, y: 24))
                 lastRingCenter = NSPoint(x: 24 + 105, y: 24 + 105)
             }
-            if !panel.isVisible { panel.orderFrontRegardless() }
+            showOverlayPanelIfNeeded()
             updateCardPanel(ringCenter: lastRingCenter, ringSize: store.ringSize)
         } else {
             if store.showCard { store.showCard = false }
@@ -438,6 +470,18 @@ final class AppController: NSObject, NSApplicationDelegate {
         if cardPanel.contentView?.bounds.size != size { cardPanel.setContentSize(size) }
         if cardPanel.frame.origin != origin { cardPanel.setFrameOrigin(origin) }
         if !cardPanel.isVisible { cardPanel.orderFrontRegardless() }
+    }
+
+    private func showOverlayPanelIfNeeded() {
+        if !panel.isVisible {
+            // Recreate the host after the first measured pet frame is known.
+            // This avoids an accessory NSPanel occasionally presenting its
+            // initial transparent SwiftUI tree without a first draw pass.
+            panel.contentView = NSHostingView(rootView: OverlayView(store: store))
+            panel.orderFrontRegardless()
+        }
+        panel.contentView?.needsDisplay = true
+        panel.displayIfNeeded()
     }
 
     private func screen(for displayID: CGDirectDisplayID) -> NSScreen? {
@@ -467,6 +511,9 @@ final class AppController: NSObject, NSApplicationDelegate {
     private func appKitFrame(for pet: PetWindow) -> NSRect {
         let cgScreen = CGDisplayBounds(pet.displayID)
         let nsScreen = screen(for: pet.displayID) ?? NSScreen.main!
+        // `pet.frame` is the current rendered mascot frame whenever screen
+        // capture is authorized. Do not overwrite it with Codex's persisted
+        // size: that value can describe a previous pet scale.
         return PetGeometry.appKitFrame(cgFrame: pet.frame,
                                        displayBounds: cgScreen,
                                        screenFrame: nsScreen.frame)

@@ -52,7 +52,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 
 ```bash
 zsh scripts/build-app.sh
-open "dist/CodexUsageLoop.app"
+zsh scripts/restart-app.sh
 ```
 
 可选：安装登录 companion 后，在菜单开启“随 Codex 宠物启动”。它会等待 Codex Desktop，Codex 退出时暂停用量读取；宠物隐藏时隐藏圆环，重新显示后自动恢复：
@@ -116,7 +116,7 @@ Requires macOS 13+, Xcode Command Line Tools, and a signed-in Codex CLI or Codex
 
 ```bash
 zsh scripts/build-app.sh
-open "dist/CodexUsageLoop.app"
+zsh scripts/restart-app.sh
 ```
 
 Optional: install the login companion and enable **Start with Codex pet** from the menu. It waits for Codex Desktop, pauses usage reads when Codex quits, hides the ring while the pet is hidden, and restores it when the pet returns:

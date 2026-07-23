@@ -60,10 +60,10 @@ struct UsageRingsView: View {
         let compactRing = store.ringPlacement != .around
         let hasDualRing = shortWindow != nil && weeklyWindow != nil
         let outerInset: CGFloat = 9
-        let dualExpansion: CGFloat = hasDualRing
-            ? (compactRing ? 14 : 22)
-            : 0
         GeometryReader { geometry in
+            let dualExpansion = RingSizing.dualExpansion(forCanvasDiameter: geometry.size.width,
+                                                          hasDualRing: hasDualRing,
+                                                          placement: store.ringPlacement)
             ZStack {
                 ring(percent: outerPercent,
                      color: Color(ringColor: store.outerRingColor),
