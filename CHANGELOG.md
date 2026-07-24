@@ -4,6 +4,24 @@
 
 ## Unreleased
 
+### 已新增
+
+- 新增 Windows 10 22H2 / Windows 11 x64 原生伴随应用，使用 .NET 10 与
+  Win32 分层窗口实现圆环、用量卡片、通知区域菜单、点击穿透和自由拖动。
+- 新增独立的 Windows 核心模型、额度解析和几何测试，以及 app-server、
+  分层窗口和正常退出的生命周期集成测试。
+- CI 新增 Windows 构建、测试和单文件发布验证，同时保留 macOS 测试与
+  Release 构建。
+- 新增 [Windows 构建、运行与限制](docs/WINDOWS.md)，说明 DPI、依赖、
+  打包、诊断和系统 DLL。
+
+### 已知限制
+
+- Windows 版本当前仅提供 x64、依赖 .NET 10 Runtime 的单文件发布。
+- Windows 商店版 Codex GUI 的内置 CLI 没有外部执行入口；实时额度需要独立
+  安装官方 Codex CLI 或设置 `CODEX_EXECUTABLE`。
+- 混合 DPI 多显示器定位仍需补充更多拓扑测试。
+
 ## 0.1.1 — 2026-07-24
 
 ### 已新增

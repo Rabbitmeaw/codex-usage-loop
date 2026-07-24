@@ -89,15 +89,16 @@
 日期：2026-07-24
 
 保留现有 SwiftPM/macOS target，不对 AppKit 与 ScreenCaptureKit 实现做跨平台
-重构。Windows 版本使用独立的 CMake target 和 C++20 源码目录，以 Win32
-窗口、User32、GDI+、Shell API 和注册表实现平台层；透明叠加层采用
+重构。Windows 版本使用独立的 .NET 10 / C# 项目，以 Win32 窗口、User32、
+GDI+、Shell API 和注册表实现平台层；透明叠加层采用
 `WS_EX_LAYERED` 与 `UpdateLayeredWindow` 的预乘 Alpha 位图，不使用颜色键，
 也不引入 WinUI、WPF、WinForms、Electron、Qt 或第三方 GUI/JSON 库。
 
 Windows 进程使用 Per-Monitor V2 DPI awareness，内部几何统一采用物理像素。
-Codex pet 优先通过 `.codex-global-state.json` 中的公开 GUI 几何状态与顶层窗口
-交叉校验定位；此文件只读取 pet 布局键，不读取、解析或上传任何认证文件。
-配置使用当前用户注册表，实时额度和捕获图像仍只存在于内存。
+Codex pet 优先通过 `.codex-global-state.json` 中的 GUI 几何状态定位，状态
+不可读时回退到 Codex / ChatGPT 可见小窗口；状态文件只读取 pet 布局键，
+不读取、解析或上传任何认证文件。配置使用当前用户注册表，实时额度只存在于
+内存。
 
 ## 待澄清
 
