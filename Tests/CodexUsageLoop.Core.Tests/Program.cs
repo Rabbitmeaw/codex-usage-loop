@@ -49,17 +49,36 @@ var card = UsageGeometry.CardOrigin(
 Check("card constrained to work area", card.X == 802 && card.Y == 465);
 Check(
     "card size follows 250 percent DPI",
-    UsageGeometry.CardSize(hasDualRing: true, dpiScale: 2.5) == new SizeD(475, 175));
+    UsageGeometry.CardSize(hasDualRing: true, dpiScale: 2.5) == new SizeD(475, 185));
 var scaledCard = UsageGeometry.CardOrigin(
     new PointD(2_350, 1_300),
     500,
     RingPlacement.Around,
     UsageGeometry.CardSize(hasDualRing: true, dpiScale: 2.5),
     new RectD(0, 0, 2_400, 1_350),
-    dpiScale: 2.5);
+    dpiScale: 2.5,
+    bottomPadding: 10);
 Check(
     "scaled card uses scaled work-area margin",
-    scaledCard == new PointD(1_905, 1_155));
+    scaledCard == new PointD(1_905, 1_145));
+var originalCardOrigin = UsageGeometry.CardOrigin(
+    new PointD(1_000, 700),
+    500,
+    RingPlacement.Around,
+    new SizeD(475, 175),
+    new RectD(0, 0, 2_400, 1_350),
+    dpiScale: 2.5);
+var extendedCardOrigin = UsageGeometry.CardOrigin(
+    new PointD(1_000, 700),
+    500,
+    RingPlacement.Around,
+    new SizeD(475, 185),
+    new RectD(0, 0, 2_400, 1_350),
+    dpiScale: 2.5,
+    bottomPadding: 10);
+Check(
+    "extra bottom padding preserves the card top anchor",
+    extendedCardOrigin == originalCardOrigin);
 Check(
     "card border is 25 percent thicker and follows DPI",
     UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_621).BorderWidth == 3.125);
@@ -77,6 +96,12 @@ Check(
 Check(
     "card text alignment offset follows DPI",
     cardStyle250.PrimaryTextTopOffset == 7.5);
+Check(
+    "card bottom padding follows DPI",
+    cardStyle250.BottomPaddingExtension == 10);
+Check(
+    "extra card height preserves the status text position",
+    UsageCardStyle.StatusTextTop(cardHeight: 185, dpiScale: 2.5) == 127.5);
 Check(
     "card secondary text uses a clearer 70-percent white",
     UsageCardStyle.SecondaryTextColor == 0xB3FFFFFF);
@@ -98,5 +123,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 20 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 23 checks passed");
 return 0;

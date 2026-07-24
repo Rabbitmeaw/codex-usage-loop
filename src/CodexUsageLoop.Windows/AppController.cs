@@ -644,7 +644,8 @@ internal sealed class AppController : IDisposable
             _state.RingPlacement,
             new SizeD(width, height),
             workArea,
-            dpiScale);
+            dpiScale,
+            bottomPadding: UsageCardStyle.BottomPaddingExtension * Math.Max(1, dpiScale));
         _renderer.RenderCard(
             _cardWindow,
             (int)Math.Round(origin.X),

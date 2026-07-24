@@ -231,7 +231,7 @@ internal sealed class LayeredRenderer
             surface.Graphics,
             status,
             10 * scale,
-            height - 19 * scale,
+            (float)UsageCardStyle.StatusTextTop(height, dpiScale),
             width - 20 * scale,
             14 * scale,
             (float)metrics.SecondaryTextSize,

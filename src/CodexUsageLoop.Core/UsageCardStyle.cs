@@ -5,7 +5,8 @@ public readonly record struct UsageCardMetrics(
     double CornerRadius,
     double PrimaryTextSize,
     double SecondaryTextSize,
-    double PrimaryTextTopOffset);
+    double PrimaryTextTopOffset,
+    double BottomPaddingExtension);
 
 public static class UsageCardStyle
 {
@@ -15,6 +16,8 @@ public static class UsageCardStyle
     public const double PrimaryTextSize = 14;
     public const double SecondaryTextSize = 11;
     public const double PrimaryTextTopOffset = 3;
+    public const double BottomPaddingExtension = 4;
+    public const double StatusTextBottomInset = 19;
     public const uint SecondaryTextColor = 0xB3FFFFFF;
     public const string PrimaryFontFamily = "DengXian";
     public const string SecondaryFontFamily = "Microsoft YaHei UI";
@@ -30,6 +33,13 @@ public static class UsageCardStyle
                 : 0,
             PrimaryTextSize * scale,
             SecondaryTextSize * scale,
-            PrimaryTextTopOffset * scale);
+            PrimaryTextTopOffset * scale,
+            BottomPaddingExtension * scale);
+    }
+
+    public static double StatusTextTop(double cardHeight, double dpiScale)
+    {
+        var scale = Math.Max(1, dpiScale);
+        return cardHeight - (StatusTextBottomInset + BottomPaddingExtension) * scale;
     }
 }

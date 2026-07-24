@@ -79,7 +79,7 @@ public static class UsageGeometry
         var scale = Math.Max(1, dpiScale);
         return new SizeD(
             190 * scale,
-            (hasDualRing ? 70 : 54) * scale);
+            (hasDualRing ? 74 : 58) * scale);
     }
 
     public static PointD RingCenter(
@@ -110,15 +110,17 @@ public static class UsageGeometry
         RingPlacement placement,
         SizeD cardSize,
         RectD workArea,
-        double dpiScale = 1)
+        double dpiScale = 1,
+        double bottomPadding = 0)
     {
         var scale = Math.Max(1, dpiScale);
         var gap = 12 * scale;
         var margin = 8 * scale;
+        var anchoredHeight = Math.Max(0, cardSize.Height - Math.Max(0, bottomPadding));
         var proposed = placement == RingPlacement.Around
             ? new PointD(
                 ringCenter.X + ringSize / 2 + gap,
-                ringCenter.Y - cardSize.Height / 2)
+                ringCenter.Y - anchoredHeight / 2)
             : new PointD(
                 ringCenter.X - cardSize.Width / 2,
                 ringCenter.Y + ringSize / 2 + gap);

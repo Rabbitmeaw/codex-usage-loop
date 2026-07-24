@@ -115,7 +115,7 @@ public static class CodexUsageLoopTestWindow {
         190 * $dpi / 96.0,
         [MidpointRounding]::AwayFromZero)
     $expectedCardHeight = [int][Math]::Round(
-        70 * $dpi / 96.0,
+        74 * $dpi / 96.0,
         [MidpointRounding]::AwayFromZero)
     $cardWidth = $cardRect.Right - $cardRect.Left
     $cardHeight = $cardRect.Bottom - $cardRect.Top
