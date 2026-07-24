@@ -34,9 +34,11 @@
 | B29 | Windows 圆环描边二次收窄 | 已完成 | 将 B28 的整数像素描边缩小到 85% 并再次取整；100%/240 DPI 为 7/16 px；19 项核心检查、240 DPI 集成与实机视觉验收通过 |
 | B30 | Windows 卡片小字字体 | 已完成 | 状态小字首选 Microsoft YaHei UI；主文字保留 DengXian，回落仍为 Segoe UI；20 项核心检查、240 DPI 集成与实机视觉验收通过 |
 | B31 | Windows 卡片底部留白 | 已完成 | 只向卡片底部增加 4 DIP，小字及其他内容保持原位；窗口高度、约束和 DPI 同步调整；23 项核心检查、240 DPI 集成与分层表面视觉验收通过 |
+| B32 | Windows CI 单文件发布 restore | 已完成 | publish 使用与 `win-x64`、`PublishSingleFile` 参数一致的隐式 restore；空 NuGet 缓存单文件发布、23 项核心检查和 DPI 归一化原生集成测试通过 |
 
 ## 当前批次
 
-B31 已完成。Windows 用量卡片只在底部增加 4 DIP 留白，小字和上方内容
-保持原来的相对及屏幕位置；240 DPI 下卡片由 475×175 增至 475×185。
-新高度、屏幕边界约束和留白均随 DPI 缩放。macOS 实现保持不变。
+B32 已完成。Windows 发布脚本不再用普通 restore 的资产图执行
+`PublishSingleFile --no-restore`；publish 会按自身的 `win-x64`、单文件和
+framework-dependent 参数补齐 runtime pack。已使用全新临时 NuGet 缓存
+验证 runtime pack 下载和单文件发布，并通过原生集成测试。macOS 实现保持不变。

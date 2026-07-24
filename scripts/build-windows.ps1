@@ -23,7 +23,6 @@ if ($Publish) {
         -c $Configuration `
         -r win-x64 `
         --self-contained false `
-        --no-restore `
         -p:PublishSingleFile=true `
         -p:DebugType=None `
         -o $output

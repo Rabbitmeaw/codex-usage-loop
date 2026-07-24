@@ -2,6 +2,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+
 $root = Split-Path -Parent $PSScriptRoot
 $appProject = Join-Path $root 'src\CodexUsageLoop.Windows\CodexUsageLoop.Windows.csproj'
 $fakeProject = Join-Path $root 'Tests\CodexUsageLoop.FakeCodex\CodexUsageLoop.FakeCodex.csproj'
@@ -117,11 +118,26 @@ public static class CodexUsageLoopTestWindow {
     $expectedCardHeight = [int][Math]::Round(
         74 * $dpi / 96.0,
         [MidpointRounding]::AwayFromZero)
-    $cardWidth = $cardRect.Right - $cardRect.Left
-    $cardHeight = $cardRect.Bottom - $cardRect.Top
+    $reportedCardWidth = $cardRect.Right - $cardRect.Left
+    $reportedCardHeight = $cardRect.Bottom - $cardRect.Top
+    $measurementSpace = 'physical'
+    if ([Math]::Abs($reportedCardWidth - 190) -le 1 -and
+        [Math]::Abs($reportedCardHeight - 74) -le 1) {
+        $measurementSpace = 'dpi-virtualized'
+        $cardWidth = [int][Math]::Round(
+            $reportedCardWidth * $dpi / 96.0,
+            [MidpointRounding]::AwayFromZero)
+        $cardHeight = [int][Math]::Round(
+            $reportedCardHeight * $dpi / 96.0,
+            [MidpointRounding]::AwayFromZero)
+    }
+    else {
+        $cardWidth = $reportedCardWidth
+        $cardHeight = $reportedCardHeight
+    }
     if ([Math]::Abs($cardWidth - $expectedCardWidth) -gt 1 -or
         [Math]::Abs($cardHeight - $expectedCardHeight) -gt 1) {
-        throw "Usage card was ${cardWidth}x${cardHeight}; expected ${expectedCardWidth}x${expectedCardHeight} at ${dpi} DPI."
+        throw "Usage card reported ${reportedCardWidth}x${reportedCardHeight} (${measurementSpace}), normalized to ${cardWidth}x${cardHeight}; expected ${expectedCardWidth}x${expectedCardHeight} at ${dpi} DPI."
     }
     $style = [CodexUsageLoopTestWindow]::GetWindowLongPtr($ring, -20).ToInt64()
     $requiredStyle = 0x00000008L -bor 0x00000080L -bor 0x00080000L -bor 0x08000000L

@@ -126,6 +126,12 @@ powershell -NoProfile -ExecutionPolicy Bypass `
   -File scripts/build-windows.ps1 -Configuration Release -Publish
 ```
 
+发布阶段会保留 `dotnet publish` 的隐式 restore，使 `win-x64`、
+`PublishSingleFile=true` 与 framework-dependent 参数使用同一份 NuGet
+资产图。除非前置 restore 明确使用完全相同的发布参数，否则不要为该步骤
+添加 `--no-restore`，否则干净 CI runner 会因缺少 runtime pack 报
+`NETSDK1112`。
+
 完整 app-server / 分层 UI / 正常退出集成检查：
 
 ```powershell
