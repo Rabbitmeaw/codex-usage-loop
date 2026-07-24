@@ -71,12 +71,12 @@ Check(
     UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_000).CornerRadius == 20);
 var cardStyle250 = UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_621);
 Check(
-    "card text is 10 percent larger and follows DPI",
-    Math.Abs(cardStyle250.PrimaryTextSize - 30.25) < 0.001
-        && Math.Abs(cardStyle250.SecondaryTextSize - 24.75) < 0.001);
+    "card text uses rounded 15-percent-larger base sizes and follows DPI",
+    cardStyle250.PrimaryTextSize == 35
+        && cardStyle250.SecondaryTextSize == 27.5);
 Check(
     "card text alignment offset follows DPI",
-    cardStyle250.PrimaryTextTopOffset == 10);
+    cardStyle250.PrimaryTextTopOffset == 7.5);
 
 if (failures.Count > 0)
 {
