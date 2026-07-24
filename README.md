@@ -4,7 +4,14 @@
 
 <a id="中文"></a>
 
-# CodexUsageLoop for macOS
+# CodexUsageLoop
+
+> 平台：macOS 13+ 与 Windows 10 22H2 / Windows 11 x64。
+> macOS 使用 AppKit/SwiftUI；Windows 使用原生 Win32 分层窗口，不使用
+> WinUI、WPF 或 WinForms。
+
+Windows 的构建、运行、依赖、DLL 清单和商店版 Codex CLI 限制见
+[`docs/WINDOWS.md`](docs/WINDOWS.md)。
 
 macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显示在 Codex 宠物旁，并通过菜单栏提供控制。
 

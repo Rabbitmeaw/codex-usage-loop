@@ -16,6 +16,25 @@ flowchart LR
   Preferences["UserDefaults"] <--> Store
 ```
 
+## 平台目录
+
+项目现有 SwiftPM target 仍是完整的 macOS 实现。Windows 版本位于独立的
+`src/CodexUsageLoop.Core` 与 `src/CodexUsageLoop.Windows`，不会让 AppKit、
+ScreenCaptureKit 或 Win32 条件判断扩散到另一平台。
+
+```mermaid
+flowchart TB
+  Contract["共同的行为契约<br/>额度模型 / JSON-RPC / 几何比例"]
+  Contract --> Swift["macOS · SwiftPM"]
+  Contract --> Core["Windows · CodexUsageLoop.Core"]
+  Swift --> AppKit["AppKit / SwiftUI / ScreenCaptureKit"]
+  Core --> Win32["User32 / GDI+ / Shell API"]
+```
+
+两套语言实现共享经过测试的协议和几何语义，而不是强行建立跨 Swift/C# ABI。
+这保留了现有 macOS 源码和发布流程，也让 Windows 平台层只依赖原生系统 API。
+Windows 详细设计和构建方式见 `docs/WINDOWS.md`。
+
 ## 依赖与数据流
 
 - `AppController` 启动 app-server 客户端，以 30 秒频率刷新用量、以 1 秒频率轻量检查宠物窗口几何；它是唯一可以操作 `NSPanel`、菜单和计时器的模块。
