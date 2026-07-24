@@ -81,11 +81,11 @@ Check(
     "card secondary text uses a clearer 70-percent white",
     UsageCardStyle.SecondaryTextColor == 0xB3FFFFFF);
 Check(
-    "around ring stroke is 75 percent of the previous width and rounded",
-    UsageRingStyle.LineWidth(194.35, compact: false, dpiScale: 1) == 8);
+    "around ring stroke is 85 percent of the current aligned width",
+    UsageRingStyle.LineWidth(194.35, compact: false, dpiScale: 1) == 7);
 Check(
-    "around ring stroke follows 250 percent DPI on whole pixels",
-    UsageRingStyle.LineWidth(485.875, compact: false, dpiScale: 2.5) == 19);
+    "thinner ring stroke follows 250 percent DPI on whole pixels",
+    UsageRingStyle.LineWidth(485.875, compact: false, dpiScale: 2.5) == 16);
 
 if (failures.Count > 0)
 {
