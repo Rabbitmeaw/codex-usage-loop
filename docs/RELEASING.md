@@ -19,7 +19,7 @@ zsh scripts/package-release.sh <version>
 例如：
 
 ```bash
-zsh scripts/package-release.sh 0.1.0
+zsh scripts/package-release.sh 0.1.1
 ```
 
 脚本会构建应用、校验其 ad-hoc 签名，并在 `dist/` 中生成：
