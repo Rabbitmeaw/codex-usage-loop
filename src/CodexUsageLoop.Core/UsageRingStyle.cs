@@ -2,7 +2,8 @@ namespace CodexUsageLoop.Core;
 
 public static class UsageRingStyle
 {
-    public const double StrokeMultiplier = 2;
+    public const double PreviousStrokeMultiplier = 2;
+    public const double StrokeScale = 0.75;
 
     public static double LineWidth(double physicalDiameter, bool compact, double dpiScale)
     {
@@ -11,6 +12,10 @@ public static class UsageRingStyle
         var originalWidth = Math.Max(
             2,
             Math.Min(compact ? 6 : 5, logicalDiameter * (compact ? 0.055 : 0.045)));
-        return originalWidth * StrokeMultiplier * scale;
+        return Math.Max(
+            1,
+            Math.Round(
+                originalWidth * PreviousStrokeMultiplier * StrokeScale * scale,
+                MidpointRounding.AwayFromZero));
     }
 }
