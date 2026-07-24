@@ -80,6 +80,12 @@ Check(
 Check(
     "card secondary text uses a clearer 70-percent white",
     UsageCardStyle.SecondaryTextColor == 0xB3FFFFFF);
+Check(
+    "around ring stroke is twice the original base width",
+    UsageRingStyle.LineWidth(194.35, compact: false, dpiScale: 1) == 10);
+Check(
+    "around ring stroke follows 250 percent DPI",
+    UsageRingStyle.LineWidth(485.875, compact: false, dpiScale: 2.5) == 25);
 
 if (failures.Count > 0)
 {
@@ -87,5 +93,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 17 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 19 checks passed");
 return 0;

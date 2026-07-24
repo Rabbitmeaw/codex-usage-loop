@@ -138,6 +138,7 @@ internal sealed class LayeredRenderer
         double totalRingDiameter,
         double dualExpansion,
         RingPlacement placement,
+        double dpiScale,
         double outerPercent,
         double? innerPercent,
         RingColor outerColor,
@@ -156,7 +157,8 @@ internal sealed class LayeredRenderer
             outerDiameter,
             outerPercent,
             outerColor,
-            compact);
+            compact,
+            dpiScale: dpiScale);
         if (innerPercent is not null)
         {
             DrawRing(
@@ -165,7 +167,8 @@ internal sealed class LayeredRenderer
                 Math.Max(1, outerDiameter - (float)dualExpansion),
                 innerPercent.Value,
                 innerColor,
-                compact);
+                compact,
+                dpiScale: dpiScale);
         }
 
         Present(hwnd, surface, x, y);
@@ -319,11 +322,11 @@ internal sealed class LayeredRenderer
         double percent,
         RingColor color,
         bool compact,
-        float? fixedLineWidth = null)
+        float? fixedLineWidth = null,
+        double dpiScale = 1)
     {
-        var lineWidth = fixedLineWidth ?? (float)Math.Max(
-            2,
-            Math.Min(compact ? 6 : 5, diameter * (compact ? 0.055 : 0.045)));
+        var lineWidth = fixedLineWidth
+            ?? (float)UsageRingStyle.LineWidth(diameter, compact, dpiScale);
         var x = center - diameter / 2;
         var y = center - diameter / 2;
         DrawArc(graphics, x, y, diameter, lineWidth, color, 61, -90, 360);

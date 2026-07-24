@@ -21,6 +21,7 @@ src/CodexUsageLoop.Core/
   Models.cs                 平台无关的额度、偏好与颜色模型
   Geometry.cs               pet、圆环和卡片的纯几何规则
   UsageCardStyle.cs          卡片描边与系统版本圆角度量
+  UsageRingStyle.cs          圆环描边与 DPI 度量
   RateLimitParser.cs        app-server 限额映射
 
 src/CodexUsageLoop.Windows/
@@ -62,7 +63,9 @@ macOS 打包脚本保持独立，不依赖 .NET 项目。
    `HTCAPTION`，由系统完成拖动；位置保存在当前用户注册表。
 6. 每秒读取一次 pet 布局和鼠标位置。只有几何、额度、颜色或动画帧变化时
    才重新提交圆环位图；额度变化时临时使用 16 ms 定时器平滑过渡，稳定后
-   立即停表。用量每 30 秒主动刷新，并同时接受 app-server 推送。
+   立即停表。用量每 30 秒主动刷新，并同时接受 app-server 推送。桌面
+   悬浮圆环使用原设计 2 倍的 10 DIP 最大描边，并按目标显示器 DPI
+   换算为物理像素；32×32 通知区域图标保留独立固定描边。
 7. 用量卡片以 96 DPI 下的 190×54/70 DIP 为基准，窗口尺寸、字体、圆点、
    圆角、描边、内边距和屏幕安全边距均按圆环所在显示器的有效 DPI 等比
    缩放；跨屏后下一次布局立即使用目标显示器缩放。卡片使用不透明
