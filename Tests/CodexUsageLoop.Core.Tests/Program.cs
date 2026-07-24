@@ -81,6 +81,11 @@ Check(
     "card secondary text uses a clearer 70-percent white",
     UsageCardStyle.SecondaryTextColor == 0xB3FFFFFF);
 Check(
+    "card fonts preserve primary and fallback while secondary uses YaHei UI",
+    UsageCardStyle.PrimaryFontFamily == "DengXian"
+        && UsageCardStyle.SecondaryFontFamily == "Microsoft YaHei UI"
+        && UsageCardStyle.FallbackFontFamily == "Segoe UI");
+Check(
     "around ring stroke is 85 percent of the current aligned width",
     UsageRingStyle.LineWidth(194.35, compact: false, dpiScale: 1) == 7);
 Check(
@@ -93,5 +98,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 19 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 20 checks passed");
 return 0;

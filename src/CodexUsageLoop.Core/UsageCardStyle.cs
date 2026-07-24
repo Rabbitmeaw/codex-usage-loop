@@ -16,6 +16,9 @@ public static class UsageCardStyle
     public const double SecondaryTextSize = 11;
     public const double PrimaryTextTopOffset = 3;
     public const uint SecondaryTextColor = 0xB3FFFFFF;
+    public const string PrimaryFontFamily = "DengXian";
+    public const string SecondaryFontFamily = "Microsoft YaHei UI";
+    public const string FallbackFontFamily = "Segoe UI";
 
     public static UsageCardMetrics Metrics(double dpiScale, int windowsBuild)
     {

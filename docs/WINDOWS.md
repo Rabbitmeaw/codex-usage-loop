@@ -70,8 +70,9 @@ macOS 打包脚本保持独立，不依赖 .NET 项目。
 7. 用量卡片以 96 DPI 下的 190×54/70 DIP 为基准，窗口尺寸、字体、圆点、
    圆角、描边、内边距和屏幕安全边距均按圆环所在显示器的有效 DPI 等比
    缩放；跨屏后下一次布局立即使用目标显示器缩放。卡片使用不透明
-   `#202020` WinUI 深色表面、1.25 DIP 描边和 DengXian 字体（不可用时
-   回落 Segoe UI）；Windows 10 为直角，Windows 11 按原生 overlay 规范
+   `#202020` WinUI 深色表面和 1.25 DIP 描边；主文字使用 DengXian，
+   状态小字使用 Microsoft YaHei UI，两者不可用时均回落 Segoe UI。
+   Windows 10 为直角，Windows 11 按原生 overlay 规范
    使用 8 DIP 圆角。主文字为 14 DIP，状态文字为 11 DIP；主文字按
    DengXian 的视觉边界下移 3 DIP，与左侧圆点垂直居中，三项度量均随
    目标显示器 DPI 缩放。状态文字使用约 70% 白，在保留次级视觉层级的

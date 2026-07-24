@@ -217,6 +217,7 @@ internal sealed class LayeredRenderer
                 18 * scale,
                 (float)metrics.PrimaryTextSize,
                 true,
+                UsageCardStyle.PrimaryFontFamily,
                 0xD9FFFFFF);
             yOffset += 19 * scale;
         }
@@ -235,6 +236,7 @@ internal sealed class LayeredRenderer
             14 * scale,
             (float)metrics.SecondaryTextSize,
             false,
+            UsageCardStyle.SecondaryFontFamily,
             UsageCardStyle.SecondaryTextColor);
         Present(hwnd, surface, x, y);
     }
@@ -389,14 +391,15 @@ internal sealed class LayeredRenderer
         float height,
         float size,
         bool bold,
+        string preferredFontFamily,
         uint color)
     {
         var status = NativeMethods.GdipCreateFontFamilyFromName(
-            "DengXian", 0, out var family);
+            preferredFontFamily, 0, out var family);
         if (status != 0)
         {
             GdiPlusRuntime.Check(NativeMethods.GdipCreateFontFamilyFromName(
-                "Segoe UI", 0, out family));
+                UsageCardStyle.FallbackFontFamily, 0, out family));
         }
         try
         {
