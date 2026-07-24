@@ -185,16 +185,17 @@ internal sealed class LayeredRenderer
         surface.Clear();
 
         var scale = (float)Math.Max(1, dpiScale);
-        var borderWidth = scale;
+        var metrics = UsageCardStyle.Metrics(dpiScale, WindowsVersion.BuildNumber);
+        var borderWidth = (float)metrics.BorderWidth;
         DrawRoundedRectangle(
             surface.Graphics,
             borderWidth / 2,
             borderWidth / 2,
             width - borderWidth,
             height - borderWidth,
-            16 * scale,
-            0x8F000000,
-            0x2FFFFFFF,
+            (float)metrics.CornerRadius,
+            0xFF202020,
+            0x18FFFFFF,
             borderWidth);
         var windows = state.DisplaySnapshot?.Windows ?? Array.Empty<UsageWindow>();
         var yOffset = 8 * scale;
@@ -388,7 +389,7 @@ internal sealed class LayeredRenderer
         uint color)
     {
         var status = NativeMethods.GdipCreateFontFamilyFromName(
-            "Microsoft YaHei UI", 0, out var family);
+            "DengXian", 0, out var family);
         if (status != 0)
         {
             GdiPlusRuntime.Check(NativeMethods.GdipCreateFontFamilyFromName(
@@ -441,11 +442,19 @@ internal sealed class LayeredRenderer
         GdiPlusRuntime.Check(NativeMethods.GdipCreatePath(0, out var path));
         try
         {
-            var diameter = radius * 2;
-            GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x, y, diameter, diameter, 180, 90));
-            GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x + width - diameter, y, diameter, diameter, 270, 90));
-            GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x + width - diameter, y + height - diameter, diameter, diameter, 0, 90));
-            GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x, y + height - diameter, diameter, diameter, 90, 90));
+            if (radius <= 0)
+            {
+                GdiPlusRuntime.Check(NativeMethods.GdipAddPathRectangle(
+                    path, x, y, width, height));
+            }
+            else
+            {
+                var diameter = radius * 2;
+                GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x, y, diameter, diameter, 180, 90));
+                GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x + width - diameter, y, diameter, diameter, 270, 90));
+                GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x + width - diameter, y + height - diameter, diameter, diameter, 0, 90));
+                GdiPlusRuntime.Check(NativeMethods.GdipAddPathArc(path, x, y + height - diameter, diameter, diameter, 90, 90));
+            }
             GdiPlusRuntime.Check(NativeMethods.GdipClosePathFigure(path));
 
             GdiPlusRuntime.Check(NativeMethods.GdipCreateSolidFill(fillColor, out var brush));

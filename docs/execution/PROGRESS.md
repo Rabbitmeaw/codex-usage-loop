@@ -25,9 +25,11 @@
 | B20 | `v0.1.1` 维护版本发布 | 已完成 | 应用版本已更新，Release 已包含已校验工件、Git tag 与 GitHub Release |
 | B21 | Windows 原生版本 | 已完成 | Windows 10 22H2 x64 Release 构建、单文件发布、pet 实机叠加、双额度集成、分层/置顶/穿透/拖动/退出验证通过；macOS 源码与构建配置未改 |
 | B22 | Windows 用量卡片 DPI 缩放 | 已完成 | 240 DPI 下卡片为 475×175 物理像素；窗口、字体、圆角、间距和屏幕约束等比缩放；视觉与集成回归通过 |
+| B23 | Windows 用量卡片原生深色样式 | 已完成 | 实心 WinUI 深色表面、DengXian／Segoe UI 字体回落、描边按 DPI 加粗 25%，Windows 10 直角与 Windows 11 8 DIP 圆角；14 项核心检查、240 DPI 集成与 Windows 10 实机视觉验收通过 |
 
 ## 当前批次
 
-B22 已完成。Windows 分层卡片现在从 96 DPI 设计度量统一换算到目标显示器
-物理像素，第一帧即使用 pet／手动拖动目标屏幕的缩放；圆环行为和 macOS
-实现保持不变。
+B23 已完成。Windows 分层卡片使用不透明 `#202020` WinUI 深色表面，
+通过 `RtlGetVersion` 按真实构建号选择 Windows 10 直角或 Windows 11
+原生 8 DIP 圆角；1.25 DIP 描边、圆角与字体继续跟随目标显示器 DPI。
+macOS 实现保持不变。

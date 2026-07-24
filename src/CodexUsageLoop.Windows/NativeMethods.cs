@@ -137,6 +137,23 @@ internal static class NativeMethods
         internal byte AlphaFormat;
     }
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct RTL_OSVERSIONINFOEX
+    {
+        internal uint dwOSVersionInfoSize;
+        internal uint dwMajorVersion;
+        internal uint dwMinorVersion;
+        internal uint dwBuildNumber;
+        internal uint dwPlatformId;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        internal string szCSDVersion;
+        internal ushort wServicePackMajor;
+        internal ushort wServicePackMinor;
+        internal ushort wSuiteMask;
+        internal byte wProductType;
+        internal byte wReserved;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct BITMAPINFOHEADER
     {
@@ -498,6 +515,10 @@ internal static class NativeMethods
         nint path, float x, float y, float width, float height, float start, float sweep);
 
     [DllImport("gdiplus.dll")]
+    internal static extern int GdipAddPathRectangle(
+        nint path, float x, float y, float width, float height);
+
+    [DllImport("gdiplus.dll")]
     internal static extern int GdipClosePathFigure(nint path);
 
     [DllImport("gdiplus.dll")]
@@ -505,4 +526,7 @@ internal static class NativeMethods
 
     [DllImport("gdiplus.dll")]
     internal static extern int GdipDrawPath(nint graphics, nint pen, nint path);
+
+    [DllImport("ntdll.dll")]
+    internal static extern int RtlGetVersion(ref RTL_OSVERSIONINFOEX versionInformation);
 }

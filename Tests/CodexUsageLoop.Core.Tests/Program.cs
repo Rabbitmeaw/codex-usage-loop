@@ -60,6 +60,15 @@ var scaledCard = UsageGeometry.CardOrigin(
 Check(
     "scaled card uses scaled work-area margin",
     scaledCard == new PointD(1_905, 1_155));
+Check(
+    "card border is 25 percent thicker and follows DPI",
+    UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_621).BorderWidth == 3.125);
+Check(
+    "Windows 10 card has square corners",
+    UsageCardStyle.Metrics(dpiScale: 1.5, windowsBuild: 19_045).CornerRadius == 0);
+Check(
+    "Windows 11 card uses an 8-DIP corner radius",
+    UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_000).CornerRadius == 20);
 
 if (failures.Count > 0)
 {
@@ -67,5 +76,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 11 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 14 checks passed");
 return 0;
