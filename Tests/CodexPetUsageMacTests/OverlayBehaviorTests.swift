@@ -2,6 +2,13 @@ import XCTest
 @testable import CodexPetUsageMac
 
 final class OverlayBehaviorTests: XCTestCase {
+    func testHiddenPetAlwaysKeepsRingButCardFollowsPreference() {
+        XCTAssertTrue(PetHiddenOverlayPolicy.shouldShowRing(clientIsRunning: true))
+        XCTAssertFalse(PetHiddenOverlayPolicy.shouldShowRing(clientIsRunning: false))
+        XCTAssertFalse(PetHiddenOverlayPolicy.shouldShowCard(alwaysVisible: false))
+        XCTAssertTrue(PetHiddenOverlayPolicy.shouldShowCard(alwaysVisible: true))
+    }
+
     func testAroundPlacementPinsCardToTheRightOfRing() {
         let origin = UsageCardLayout.origin(
             ringCenter: CGPoint(x: 500, y: 400),

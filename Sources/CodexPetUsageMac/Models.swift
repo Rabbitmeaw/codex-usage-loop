@@ -73,6 +73,19 @@ enum PetVisibilityLaunchPolicy {
     }
 }
 
+enum PetHiddenOverlayPolicy {
+    /// A hidden Codex pet must not make the usage indicator disappear. The
+    /// separate persistent-card preference controls only the detail card. A
+    /// stopped companion must still keep both panels hidden after Codex quits.
+    static func shouldShowRing(clientIsRunning: Bool) -> Bool {
+        clientIsRunning
+    }
+
+    static func shouldShowCard(alwaysVisible: Bool) -> Bool {
+        alwaysVisible
+    }
+}
+
 enum AroundRingScale {
     static let minimum: CGFloat = 0.75
     static let maximum: CGFloat = 1.50

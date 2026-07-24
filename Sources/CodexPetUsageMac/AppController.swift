@@ -175,7 +175,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         let launchWithPet = NSMenuItem(title: "随 Codex 宠物启动", action: #selector(toggleLaunchWithCodexPet), keyEquivalent: "")
         launchWithPet.target = self
         launchWithPet.state = store.launchWithCodexPet ? .on : .off
-        launchWithPet.toolTip = "开启后，Codex 退出时暂停用量读取；宠物隐藏时仅隐藏悬浮层，重新展示会自动恢复。"
+        launchWithPet.toolTip = "开启后，Codex 退出时暂停用量读取并隐藏悬浮层；pet 隐藏时圆环仍显示。"
         menu.addItem(launchWithPet)
         let demo = NSMenuItem(title: "演示双环", action: #selector(toggleDualRingDemo), keyEquivalent: "")
         demo.target = self
@@ -463,8 +463,9 @@ final class AppController: NSObject, NSApplicationDelegate {
             } else {
                 cardPanel.orderOut(nil)
             }
-        } else if store.alwaysVisible {
-            if !store.showCard { store.showCard = true }
+        } else if PetHiddenOverlayPolicy.shouldShowRing(clientIsRunning: clientIsRunning) {
+            let shouldShowCard = PetHiddenOverlayPolicy.shouldShowCard(alwaysVisible: store.alwaysVisible)
+            if store.showCard != shouldShowCard { store.showCard = shouldShowCard }
             if !panel.isVisible {
                 store.ringSize = 210
                 panel.setContentSize(NSSize(width: 210, height: 210))
@@ -472,7 +473,11 @@ final class AppController: NSObject, NSApplicationDelegate {
                 lastRingCenter = NSPoint(x: 24 + 105, y: 24 + 105)
             }
             showOverlayPanelIfNeeded()
-            updateCardPanel(ringCenter: lastRingCenter, ringSize: store.ringSize)
+            if shouldShowCard {
+                updateCardPanel(ringCenter: lastRingCenter, ringSize: store.ringSize)
+            } else {
+                cardPanel.orderOut(nil)
+            }
         } else {
             if store.showCard { store.showCard = false }
             cardPanel.orderOut(nil)
