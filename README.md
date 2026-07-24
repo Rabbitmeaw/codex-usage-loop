@@ -101,22 +101,21 @@ zsh scripts/install.sh --with-login-agent
 
 当宠物特别靠近屏幕左侧或右侧边缘时，圆环的自动跟随可能失效。请将宠物稍微向屏幕内侧移动，保持圆环中心到左右边缘至少约为半个任务卡片宽度的距离，再重新检测宠物位置／大小。
 
-## 开源 Release
+## 下载与安全
 
-项目采用 [MIT License](LICENSE)，Release 不提供 Developer ID 签名或 Apple 公证。发布者可执行：
-
-```bash
-zsh scripts/package-release.sh 0.1.0
-```
-
-脚本会生成 ZIP、SHA-256 和构建元数据。下载者应只从[官方 GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)下载、核对校验和与 tag，并且不要关闭 Gatekeeper。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
+项目采用 [MIT License](LICENSE)，Release 不提供 Developer ID 签名或 Apple 公证。请只从[官方 GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)下载，核对 SHA-256 校验和与 tag；确认来源后再按 macOS 提示打开应用，**不要关闭 Gatekeeper**。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
 
 ## 文档
 
+### 用户文档
+
 - [用户手册](docs/MANUAL.md)
 - [变更记录](CHANGELOG.md)
-- [执行路线图](docs/execution/PROGRESS.md)
-- [真实环境验收矩阵](docs/execution/MANUAL_ACCEPTANCE.md)
+- [Release 安全说明](docs/RELEASE_SECURITY.md)
+
+### 开发与维护
+
+- [发布流程](docs/RELEASING.md)
 - [架构](docs/02-architecture.md)
 
 <p align="right"><a href="#english">English ↓</a></p>
@@ -195,22 +194,21 @@ The menu reports the permission seen by the current process: **Screen Recording:
 
 Automatic ring tracking can fail when the pet is extremely close to the left or right edge of a display. Move the pet slightly inward so the ring center remains at least roughly half a task-card width from either side, then use **Re-detect pet position / size**.
 
-## Open-source releases
+## Downloads and security
 
-The project is licensed under the [MIT License](LICENSE). Releases do not have a Developer ID signature or Apple notarization. Maintainers can run:
-
-```bash
-zsh scripts/package-release.sh 0.1.0
-```
-
-The script creates a ZIP, SHA-256 checksum, and build metadata. Download only from the [official GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases), verify the checksum and tag, and do not disable Gatekeeper. See the [release security guide](docs/RELEASE_SECURITY.md).
+The project is licensed under the [MIT License](LICENSE). Releases do not have a Developer ID signature or Apple notarization. Download only from the [official GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases), verify the SHA-256 checksum and tag, and follow macOS only after confirming the source. **Do not disable Gatekeeper.** See the [release security guide](docs/RELEASE_SECURITY.md).
 
 ## Documentation
 
+### For users
+
 - [User manual](docs/MANUAL.md)
 - [Changelog](CHANGELOG.md)
-- [Delivery roadmap](docs/execution/PROGRESS.md)
-- [Manual acceptance matrix](docs/execution/MANUAL_ACCEPTANCE.md)
+- [Release security guide](docs/RELEASE_SECURITY.md)
+
+### For developers and maintainers
+
+- [Release process](docs/RELEASING.md)
 - [Architecture](docs/02-architecture.md)
 
 <p align="right"><a href="#中文">中文 ↑</a></p>
