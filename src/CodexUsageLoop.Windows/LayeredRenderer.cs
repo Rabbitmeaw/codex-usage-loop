@@ -209,10 +209,10 @@ internal sealed class LayeredRenderer
                 surface.Graphics,
                 $"{window.Label}  {window.RemainingPercent:0}% 剩余{reset}",
                 20 * scale,
-                yOffset,
+                yOffset + (float)metrics.PrimaryTextTopOffset,
                 width - 27 * scale,
                 18 * scale,
-                11 * scale,
+                (float)metrics.PrimaryTextSize,
                 true,
                 0xD9FFFFFF);
             yOffset += 19 * scale;
@@ -230,7 +230,7 @@ internal sealed class LayeredRenderer
             height - 19 * scale,
             width - 20 * scale,
             14 * scale,
-            9 * scale,
+            (float)metrics.SecondaryTextSize,
             false,
             0x8CFFFFFF);
         Present(hwnd, surface, x, y);

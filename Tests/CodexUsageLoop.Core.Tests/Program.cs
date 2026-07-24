@@ -69,6 +69,14 @@ Check(
 Check(
     "Windows 11 card uses an 8-DIP corner radius",
     UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_000).CornerRadius == 20);
+var cardStyle250 = UsageCardStyle.Metrics(dpiScale: 2.5, windowsBuild: 22_621);
+Check(
+    "card text is 10 percent larger and follows DPI",
+    Math.Abs(cardStyle250.PrimaryTextSize - 30.25) < 0.001
+        && Math.Abs(cardStyle250.SecondaryTextSize - 24.75) < 0.001);
+Check(
+    "card text alignment offset follows DPI",
+    cardStyle250.PrimaryTextTopOffset == 10);
 
 if (failures.Count > 0)
 {
@@ -76,5 +84,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 14 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 16 checks passed");
 return 0;

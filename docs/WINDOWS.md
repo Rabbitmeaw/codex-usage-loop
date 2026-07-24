@@ -68,7 +68,9 @@ macOS 打包脚本保持独立，不依赖 .NET 项目。
    缩放；跨屏后下一次布局立即使用目标显示器缩放。卡片使用不透明
    `#202020` WinUI 深色表面、1.25 DIP 描边和 DengXian 字体（不可用时
    回落 Segoe UI）；Windows 10 为直角，Windows 11 按原生 overlay 规范
-   使用 8 DIP 圆角。
+   使用 8 DIP 圆角。主文字为 12.1 DIP，状态文字为 9.9 DIP；主文字按
+   DengXian 的视觉边界下移 4 DIP，与左侧圆点垂直居中，三项度量均随
+   目标显示器 DPI 缩放。
 8. 退出通过 `WM_CLOSE` 进入标准消息循环收尾，停止计时器和 app-server，
    移除通知区域图标，销毁 HWND/HICON/HBITMAP/HDC/GDI+ 对象。
 

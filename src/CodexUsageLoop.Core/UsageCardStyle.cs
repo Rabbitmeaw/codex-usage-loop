@@ -1,12 +1,20 @@
 namespace CodexUsageLoop.Core;
 
-public readonly record struct UsageCardMetrics(double BorderWidth, double CornerRadius);
+public readonly record struct UsageCardMetrics(
+    double BorderWidth,
+    double CornerRadius,
+    double PrimaryTextSize,
+    double SecondaryTextSize,
+    double PrimaryTextTopOffset);
 
 public static class UsageCardStyle
 {
     public const double BaseBorderWidth = 1.25;
     public const double Windows11CornerRadius = 8;
     public const int Windows11MinimumBuild = 22_000;
+    public const double PrimaryTextSize = 12.1;
+    public const double SecondaryTextSize = 9.9;
+    public const double PrimaryTextTopOffset = 4;
 
     public static UsageCardMetrics Metrics(double dpiScale, int windowsBuild)
     {
@@ -15,6 +23,9 @@ public static class UsageCardStyle
             BaseBorderWidth * scale,
             windowsBuild >= Windows11MinimumBuild
                 ? Windows11CornerRadius * scale
-                : 0);
+                : 0,
+            PrimaryTextSize * scale,
+            SecondaryTextSize * scale,
+            PrimaryTextTopOffset * scale);
     }
 }
