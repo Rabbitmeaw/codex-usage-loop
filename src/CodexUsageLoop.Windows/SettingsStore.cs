@@ -6,9 +6,15 @@ namespace CodexUsageLoop.Windows;
 internal sealed class SettingsStore
 {
     private const string RegistryPath = @"Software\CodexUsageLoop";
+    private readonly bool _isTestInstance = !string.IsNullOrWhiteSpace(
+        Environment.GetEnvironmentVariable("CODEX_USAGE_LOOP_TEST_INSTANCE_ID"));
 
     internal UsageState Load()
     {
+        if (_isTestInstance)
+        {
+            return new UsageState();
+        }
         using var key = Registry.CurrentUser.CreateSubKey(RegistryPath);
         return new UsageState
         {
@@ -30,6 +36,10 @@ internal sealed class SettingsStore
 
     internal void Save(UsageState state)
     {
+        if (_isTestInstance)
+        {
+            return;
+        }
         using var key = Registry.CurrentUser.CreateSubKey(RegistryPath);
         key.SetValue("AlwaysVisible", state.AlwaysVisible ? 1 : 0, RegistryValueKind.DWord);
         key.SetValue("ManualMoveV2", state.ManualMove ? 1 : 0, RegistryValueKind.DWord);
@@ -43,6 +53,10 @@ internal sealed class SettingsStore
 
     internal PointD? LoadManualPosition()
     {
+        if (_isTestInstance)
+        {
+            return null;
+        }
         using var key = Registry.CurrentUser.CreateSubKey(RegistryPath);
         if (key.GetValue("ManualX") is int x && key.GetValue("ManualY") is int y)
         {
@@ -53,6 +67,10 @@ internal sealed class SettingsStore
 
     internal void SaveManualPosition(int x, int y)
     {
+        if (_isTestInstance)
+        {
+            return;
+        }
         using var key = Registry.CurrentUser.CreateSubKey(RegistryPath);
         key.SetValue("ManualX", x, RegistryValueKind.DWord);
         key.SetValue("ManualY", y, RegistryValueKind.DWord);

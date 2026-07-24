@@ -9,9 +9,14 @@ internal static class Program
     {
         // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
         NativeMethods.SetProcessDpiAwarenessContext(new nint(-4));
+        var testInstanceId = Environment.GetEnvironmentVariable(
+            "CODEX_USAGE_LOOP_TEST_INSTANCE_ID");
+        var mutexName = string.IsNullOrWhiteSpace(testInstanceId)
+            ? @"Local\CodexUsageLoop.Windows.Singleton"
+            : $@"Local\CodexUsageLoop.Windows.Singleton.{testInstanceId}";
         using var mutex = new Mutex(
             initiallyOwned: true,
-            @"Local\CodexUsageLoop.Windows.Singleton",
+            mutexName,
             out var isFirstInstance);
         if (!isFirstInstance)
         {

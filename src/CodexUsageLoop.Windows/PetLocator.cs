@@ -113,7 +113,7 @@ internal sealed class PetLocator
 
     private static PetLocation? LocateFromWindow()
     {
-        var candidates = new List<(RectD Frame, string Title)>();
+        var candidates = new List<(RectD Frame, string Title, double Scale)>();
         NativeMethods.EnumWindows((hwnd, _) =>
         {
             if (!NativeMethods.IsWindowVisible(hwnd)
@@ -146,7 +146,11 @@ internal sealed class PetLocator
             var titleBuffer = new char[256];
             var titleLength = NativeMethods.GetWindowTextW(hwnd, titleBuffer, titleBuffer.Length);
             var title = titleLength > 0 ? new string(titleBuffer, 0, titleLength) : "";
-            candidates.Add((new RectD(rect.left, rect.top, rect.Width, rect.Height), title));
+            var scale = Math.Max(96, NativeMethods.GetDpiForWindow(hwnd)) / 96.0;
+            candidates.Add((
+                new RectD(rect.left, rect.top, rect.Width, rect.Height),
+                title,
+                scale));
             return true;
         }, 0);
 
@@ -167,7 +171,7 @@ internal sealed class PetLocator
         }
 
         var pet = UsageGeometry.EstimateMascot(candidate.Frame, monitor.Value.Bounds, null);
-        return new PetLocation(pet, monitor.Value.WorkArea, null, 1);
+        return new PetLocation(pet, monitor.Value.WorkArea, null, candidate.Scale);
     }
 
     private static MonitorGeometry? MatchMonitor(RectD logicalDisplay)

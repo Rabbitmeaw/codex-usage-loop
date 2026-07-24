@@ -177,32 +177,44 @@ internal sealed class LayeredRenderer
         int y,
         int width,
         int height,
+        double dpiScale,
         UsageState state)
     {
         _cardSurface = EnsureSurface(_cardSurface, width, height);
         var surface = _cardSurface;
         surface.Clear();
 
-        DrawRoundedRectangle(surface.Graphics, 0.5f, 0.5f, width - 1, height - 1, 16, 0x8F000000, 0x2FFFFFFF);
+        var scale = (float)Math.Max(1, dpiScale);
+        var borderWidth = scale;
+        DrawRoundedRectangle(
+            surface.Graphics,
+            borderWidth / 2,
+            borderWidth / 2,
+            width - borderWidth,
+            height - borderWidth,
+            16 * scale,
+            0x8F000000,
+            0x2FFFFFFF,
+            borderWidth);
         var windows = state.DisplaySnapshot?.Windows ?? Array.Empty<UsageWindow>();
-        var yOffset = 8f;
+        var yOffset = 8 * scale;
         foreach (var window in windows.Take(2))
         {
             var hasShort = windows.Any(item => !item.IsWeekly);
             var color = window.IsWeekly && hasShort ? state.InnerRingColor : state.OuterRingColor;
-            DrawDot(surface.Graphics, 10, yOffset + 7, color);
+            DrawDot(surface.Graphics, 10 * scale, yOffset + 7 * scale, 6 * scale, color);
             var reset = window.ResetsAt is null ? "" : $" · {Countdown(window.ResetsAt.Value)}";
             DrawText(
                 surface.Graphics,
                 $"{window.Label}  {window.RemainingPercent:0}% 剩余{reset}",
-                20,
+                20 * scale,
                 yOffset,
-                width - 27,
-                18,
-                11,
+                width - 27 * scale,
+                18 * scale,
+                11 * scale,
                 true,
                 0xD9FFFFFF);
-            yOffset += 19;
+            yOffset += 19 * scale;
         }
 
         var status = state.DemoDualRing
@@ -210,7 +222,16 @@ internal sealed class LayeredRenderer
             : state.DisplaySnapshot is not null
                 ? $"更新于 {state.DisplaySnapshot.ObservedAt.LocalDateTime:t}"
                 : state.ErrorMessage ?? "等待 Codex 用量";
-        DrawText(surface.Graphics, status, 10, height - 19, width - 20, 14, 9, false, 0x8CFFFFFF);
+        DrawText(
+            surface.Graphics,
+            status,
+            10 * scale,
+            height - 19 * scale,
+            width - 20 * scale,
+            14 * scale,
+            9 * scale,
+            false,
+            0x8CFFFFFF);
         Present(hwnd, surface, x, y);
     }
 
@@ -335,13 +356,19 @@ internal sealed class LayeredRenderer
         }
     }
 
-    private static void DrawDot(nint graphics, float x, float y, RingColor color)
+    private static void DrawDot(
+        nint graphics,
+        float x,
+        float y,
+        float diameter,
+        RingColor color)
     {
         GdiPlusRuntime.Check(NativeMethods.GdipCreateSolidFill(
             Argb(255, color), out var brush));
         try
         {
-            GdiPlusRuntime.Check(NativeMethods.GdipFillEllipse(graphics, brush, x, y, 6, 6));
+            GdiPlusRuntime.Check(NativeMethods.GdipFillEllipse(
+                graphics, brush, x, y, diameter, diameter));
         }
         finally
         {
@@ -408,7 +435,8 @@ internal sealed class LayeredRenderer
         float height,
         float radius,
         uint fillColor,
-        uint borderColor)
+        uint borderColor,
+        float borderWidth)
     {
         GdiPlusRuntime.Check(NativeMethods.GdipCreatePath(0, out var path));
         try
@@ -431,7 +459,7 @@ internal sealed class LayeredRenderer
             }
 
             GdiPlusRuntime.Check(NativeMethods.GdipCreatePen1(
-                borderColor, 1, NativeMethods.UnitPixel, out var pen));
+                borderColor, borderWidth, NativeMethods.UnitPixel, out var pen));
             try
             {
                 GdiPlusRuntime.Check(NativeMethods.GdipDrawPath(graphics, pen, path));

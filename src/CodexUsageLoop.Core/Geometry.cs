@@ -74,6 +74,14 @@ public static class UsageGeometry
             : 14;
     }
 
+    public static SizeD CardSize(bool hasDualRing, double dpiScale)
+    {
+        var scale = Math.Max(1, dpiScale);
+        return new SizeD(
+            190 * scale,
+            (hasDualRing ? 70 : 54) * scale);
+    }
+
     public static PointD RingCenter(
         RectD pet,
         double baseRingDiameter,
@@ -101,9 +109,12 @@ public static class UsageGeometry
         double ringSize,
         RingPlacement placement,
         SizeD cardSize,
-        RectD workArea)
+        RectD workArea,
+        double dpiScale = 1)
     {
-        const double gap = 12;
+        var scale = Math.Max(1, dpiScale);
+        var gap = 12 * scale;
+        var margin = 8 * scale;
         var proposed = placement == RingPlacement.Around
             ? new PointD(
                 ringCenter.X + ringSize / 2 + gap,
@@ -113,7 +124,11 @@ public static class UsageGeometry
                 ringCenter.Y + ringSize / 2 + gap);
 
         return new PointD(
-            Math.Max(workArea.Left + 8, Math.Min(proposed.X, workArea.Right - cardSize.Width - 8)),
-            Math.Max(workArea.Top + 8, Math.Min(proposed.Y, workArea.Bottom - cardSize.Height - 8)));
+            Math.Max(
+                workArea.Left + margin,
+                Math.Min(proposed.X, workArea.Right - cardSize.Width - margin)),
+            Math.Max(
+                workArea.Top + margin,
+                Math.Min(proposed.Y, workArea.Bottom - cardSize.Height - margin)));
     }
 }

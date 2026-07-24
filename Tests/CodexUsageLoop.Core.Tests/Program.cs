@@ -47,6 +47,19 @@ var card = UsageGeometry.CardOrigin(
     new SizeD(190, 70),
     new RectD(0, 0, 1000, 600));
 Check("card constrained to work area", card.X == 802 && card.Y == 465);
+Check(
+    "card size follows 250 percent DPI",
+    UsageGeometry.CardSize(hasDualRing: true, dpiScale: 2.5) == new SizeD(475, 175));
+var scaledCard = UsageGeometry.CardOrigin(
+    new PointD(2_350, 1_300),
+    500,
+    RingPlacement.Around,
+    UsageGeometry.CardSize(hasDualRing: true, dpiScale: 2.5),
+    new RectD(0, 0, 2_400, 1_350),
+    dpiScale: 2.5);
+Check(
+    "scaled card uses scaled work-area margin",
+    scaledCard == new PointD(1_905, 1_155));
 
 if (failures.Count > 0)
 {
@@ -54,5 +67,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 9 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 11 checks passed");
 return 0;

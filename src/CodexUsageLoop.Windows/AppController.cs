@@ -7,7 +7,7 @@ namespace CodexUsageLoop.Windows;
 
 internal sealed class AppController : IDisposable
 {
-    private const string WindowClass = "CodexUsageLoop.NativeWindow";
+    private static readonly string WindowClass = BuildWindowClass();
     private const nuint OverlayTimer = 1;
     private const nuint RefreshTimer = 2;
     private const nuint AnimationTimer = 3;
@@ -90,6 +90,15 @@ internal sealed class AppController : IDisposable
         Diagnostics.Write(
             $"started message=0x{_messageWindow:X} ring=0x{_ringWindow:X} card=0x{_cardWindow:X} "
             + $"dpi=PerMonitorV2 ringExStyle=0x{NativeMethods.GetWindowLongPtrW(_ringWindow, NativeMethods.GWL_EXSTYLE).ToInt64():X}");
+    }
+
+    private static string BuildWindowClass()
+    {
+        var testInstanceId = Environment.GetEnvironmentVariable(
+            "CODEX_USAGE_LOOP_TEST_INSTANCE_ID");
+        return string.IsNullOrWhiteSpace(testInstanceId)
+            ? "CodexUsageLoop.NativeWindow"
+            : $"CodexUsageLoop.NativeWindow.{testInstanceId}";
     }
 
     internal int Run()
@@ -496,10 +505,12 @@ internal sealed class AppController : IDisposable
             pet.Frame,
             _state.RingPlacement,
             _state.AroundRingScale);
+        var overlayDpiScale = Math.Max(1, pet.Scale);
         if (_state.ManualMove)
         {
             var destinationScale = Math.Max(1, NativeMethods.GetDpiForWindow(_ringWindow)) / 96.0;
             baseDiameter *= destinationScale / Math.Max(0.01, pet.Scale);
+            overlayDpiScale = destinationScale;
         }
         var snapshot = _state.DisplaySnapshot;
         var hasDual = (snapshot?.Windows.Count ?? 0) > 1;
@@ -603,7 +614,7 @@ internal sealed class AppController : IDisposable
         var showCard = _state.AlwaysVisible || CursorIsNear(center, totalDiameter);
         if (showCard)
         {
-            ShowCard(pet.WorkArea, snapshot);
+            ShowCard(pet.WorkArea, snapshot, overlayDpiScale);
         }
         else
         {
@@ -611,22 +622,34 @@ internal sealed class AppController : IDisposable
         }
     }
 
-    private void ShowCard(RectD workArea, UsageSnapshot? snapshot)
+    private void ShowCard(
+        RectD workArea,
+        UsageSnapshot? snapshot,
+        double dpiScale)
     {
-        const int width = 190;
-        var height = (snapshot?.Windows.Count ?? 0) > 1 ? 70 : 54;
+        var logicalSize = UsageGeometry.CardSize(
+            hasDualRing: (snapshot?.Windows.Count ?? 0) > 1,
+            dpiScale);
+        var width = Math.Max(
+            1,
+            (int)Math.Round(logicalSize.Width, MidpointRounding.AwayFromZero));
+        var height = Math.Max(
+            1,
+            (int)Math.Round(logicalSize.Height, MidpointRounding.AwayFromZero));
         var origin = UsageGeometry.CardOrigin(
             _lastRingCenter,
             _ringSize,
             _state.RingPlacement,
             new SizeD(width, height),
-            workArea);
+            workArea,
+            dpiScale);
         _renderer.RenderCard(
             _cardWindow,
             (int)Math.Round(origin.X),
             (int)Math.Round(origin.Y),
             width,
             height,
+            dpiScale,
             _state);
     }
 

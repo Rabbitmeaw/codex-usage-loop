@@ -61,7 +61,10 @@ macOS 打包脚本保持独立，不依赖 .NET 项目。
 6. 每秒读取一次 pet 布局和鼠标位置。只有几何、额度、颜色或动画帧变化时
    才重新提交圆环位图；额度变化时临时使用 16 ms 定时器平滑过渡，稳定后
    立即停表。用量每 30 秒主动刷新，并同时接受 app-server 推送。
-7. 退出通过 `WM_CLOSE` 进入标准消息循环收尾，停止计时器和 app-server，
+7. 用量卡片以 96 DPI 下的 190×54/70 DIP 为基准，窗口尺寸、字体、圆点、
+   圆角、描边、内边距和屏幕安全边距均按圆环所在显示器的有效 DPI 等比
+   缩放；跨屏后下一次布局立即使用目标显示器缩放。
+8. 退出通过 `WM_CLOSE` 进入标准消息循环收尾，停止计时器和 app-server，
    移除通知区域图标，销毁 HWND/HICON/HBITMAP/HDC/GDI+ 对象。
 
 ## pet 定位与 DPI
@@ -116,9 +119,10 @@ powershell -NoProfile -ExecutionPolicy Bypass `
   -File scripts/test-windows-integration.ps1
 ```
 
-该检查实际验证双窗口额度、`WS_EX_LAYERED/TOOLWINDOW/TOPMOST/NOACTIVATE`、
-任务栏/Alt+Tab 排除、点击穿透与 `HTCAPTION` 拖动切换，以及 `WM_CLOSE`
-资源清理。
+该检查实际验证双窗口额度、当前显示器 DPI 下的卡片物理尺寸、
+`WS_EX_LAYERED/TOOLWINDOW/TOPMOST/NOACTIVATE`、任务栏/Alt+Tab 排除、
+点击穿透与 `HTCAPTION` 拖动切换，以及 `WM_CLOSE` 资源清理。测试实例使用
+独立互斥体、窗口类和内存偏好，不影响正在运行的正常实例或用户注册表。
 
 输出：
 
