@@ -15,6 +15,7 @@ public static class UsageCardStyle
     public const double PrimaryTextSize = 14;
     public const double SecondaryTextSize = 11;
     public const double PrimaryTextTopOffset = 3;
+    public const uint SecondaryTextColor = 0xB3FFFFFF;
 
     public static UsageCardMetrics Metrics(double dpiScale, int windowsBuild)
     {

@@ -70,7 +70,8 @@ macOS 打包脚本保持独立，不依赖 .NET 项目。
    回落 Segoe UI）；Windows 10 为直角，Windows 11 按原生 overlay 规范
    使用 8 DIP 圆角。主文字为 14 DIP，状态文字为 11 DIP；主文字按
    DengXian 的视觉边界下移 3 DIP，与左侧圆点垂直居中，三项度量均随
-   目标显示器 DPI 缩放。
+   目标显示器 DPI 缩放。状态文字使用约 70% 白，在保留次级视觉层级的
+   同时提高深色背景下的可读性。
 8. 退出通过 `WM_CLOSE` 进入标准消息循环收尾，停止计时器和 app-server，
    移除通知区域图标，销毁 HWND/HICON/HBITMAP/HDC/GDI+ 对象。
 

@@ -77,6 +77,9 @@ Check(
 Check(
     "card text alignment offset follows DPI",
     cardStyle250.PrimaryTextTopOffset == 7.5);
+Check(
+    "card secondary text uses a clearer 70-percent white",
+    UsageCardStyle.SecondaryTextColor == 0xB3FFFFFF);
 
 if (failures.Count > 0)
 {
@@ -84,5 +87,5 @@ if (failures.Count > 0)
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 16 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 17 checks passed");
 return 0;

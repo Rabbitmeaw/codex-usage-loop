@@ -232,7 +232,7 @@ internal sealed class LayeredRenderer
             14 * scale,
             (float)metrics.SecondaryTextSize,
             false,
-            0x8CFFFFFF);
+            UsageCardStyle.SecondaryTextColor);
         Present(hwnd, surface, x, y);
     }
 
