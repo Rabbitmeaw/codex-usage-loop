@@ -84,6 +84,22 @@
 
 菜单栏图标提供原色蓝绿双环和单色 template image 两种模式，并持久化用户选择。单色模式交由 macOS 按菜单栏对比度显示白色或黑色，避免固定白色在浅色菜单栏中不可见。
 
+## D-015 · Windows 版本采用独立原生 Win32 前端
+
+日期：2026-07-24
+
+保留现有 SwiftPM/macOS target，不对 AppKit 与 ScreenCaptureKit 实现做跨平台
+重构。Windows 版本使用独立的 .NET 10 / C# 项目，以 Win32 窗口、User32、
+GDI+、Shell API 和注册表实现平台层；透明叠加层采用
+`WS_EX_LAYERED` 与 `UpdateLayeredWindow` 的预乘 Alpha 位图，不使用颜色键，
+也不引入 WinUI、WPF、WinForms、Electron、Qt 或第三方 GUI/JSON 库。
+
+Windows 进程使用 Per-Monitor V2 DPI awareness，内部几何统一采用物理像素。
+Codex pet 优先通过 `.codex-global-state.json` 中的 GUI 几何状态定位，状态
+不可读时回退到 Codex / ChatGPT 可见小窗口；状态文件只读取 pet 布局键，
+不读取、解析或上传任何认证文件。配置使用当前用户注册表，实时额度只存在于
+内存。
+
 ## 待澄清
 
 - macOS 13 的定位行为验收标准。
