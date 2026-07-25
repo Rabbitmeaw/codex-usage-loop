@@ -49,8 +49,7 @@ final class PetWindowLocator {
         let placement = codexPlacement(from: persistedState)
         let candidates: [Candidate] = windows.compactMap { info in
             guard let owner = info[kCGWindowOwnerName as String] as? String,
-                  owner != "CodexUsageLoop",
-                  owner.localizedCaseInsensitiveContains("codex") || owner.localizedCaseInsensitiveContains("chatgpt"),
+                  PetWindowCandidateScoring.accepts(owner: owner),
                   let bounds = info[kCGWindowBounds as String] as? [String: Any],
                   let x = number(bounds["X"]), let y = number(bounds["Y"]),
                   let width = number(bounds["Width"]), let height = number(bounds["Height"]),

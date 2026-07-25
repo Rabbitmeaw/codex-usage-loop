@@ -8,6 +8,11 @@ enum PetGeometrySource: String, Equatable {
 }
 
 enum PetWindowCandidateScoring {
+    static func accepts(owner: String) -> Bool {
+        owner.caseInsensitiveCompare("Codex") == .orderedSame
+            || owner.caseInsensitiveCompare("ChatGPT") == .orderedSame
+    }
+
     static func score(owner: String,
                       title: String,
                       container: CGRect,

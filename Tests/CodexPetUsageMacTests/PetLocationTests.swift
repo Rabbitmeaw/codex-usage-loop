@@ -3,6 +3,18 @@ import XCTest
 @testable import CodexPetUsageMac
 
 final class PetLocationTests: XCTestCase {
+    func testCandidateAdmissionAllowsOnlyMainCodexOwners() {
+        XCTAssertTrue(PetWindowCandidateScoring.accepts(owner: "Codex"))
+        XCTAssertTrue(PetWindowCandidateScoring.accepts(owner: "ChatGPT"))
+    }
+
+    func testCandidateAdmissionRejectsComputerUseSoftwareCursorAndSimilarAuxiliaryOwners() {
+        let softwareCursor = (owner: "ChatGPT Computer Use", title: "Software Cursor")
+
+        XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: softwareCursor.owner), softwareCursor.title)
+        XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: "Codex Helper"))
+    }
+
     func testCandidateScorePrefersPetTitleOverPlainCodexWindow() {
         let container = CGRect(x: 120, y: 80, width: 356, height: 320)
         let origin = CGPoint(x: 120, y: 80)

@@ -6,7 +6,7 @@
 
 ## 当前阶段
 
-阶段 23：v0.1.1 Release
+阶段 25：排除 Computer Use 辅助窗口候选
 
 ## 各阶段
 
@@ -178,6 +178,25 @@
 - [x] 将应用版本与 app-server 客户端标识更新为 `0.1.1`。
 - [x] 运行完整测试、构建并核验 Release 工件。
 - [x] 创建并推送 `v0.1.1` tag 与 GitHub Release。
+- **状态：** complete
+
+### 阶段 24：运行中圆环位置／大小失焦诊断
+
+- [x] 核对当前运行包、用户偏好、Codex pet 持久化状态与最近几何日志。
+- [x] 使用项目自带只读探针复现窗口候选选择结果。
+- [x] 将截图中的圆环尺寸与运行日志、降级几何公式逐项对齐。
+- [x] 复核 Computer Use 结束后“重新检测”仍无法恢复的 reset 与候选复选链路。
+- [x] 运行完整测试并审计现有测试覆盖缺口。
+- [x] 输出根因诊断报告；本阶段不修改运行代码。
+- **状态：** complete
+
+### 阶段 25：排除 Computer Use 辅助窗口候选
+
+- [x] 先增加 `ChatGPT Computer Use / Software Cursor` 与真实 Codex pet 竞争的失败测试。
+- [x] 仅收紧 pet 窗口候选准入，保留 `Codex` 与历史 `ChatGPT` 主应用 owner。
+- [x] 运行完整 `swift test`。
+- [x] 构建应用包并验证签名。
+- [x] 安装／重启修复版本，确认现场候选不再是 `Software Cursor`。
 - **状态：** complete
 
 ## 已做决策
