@@ -49,11 +49,15 @@ final class AppController: NSObject, NSApplicationDelegate {
             guard let self else { return }
             self.store.snapshot = snapshot
             self.store.errorMessage = nil
+            self.store.isRefreshing = false
             if self.store.hasRealDualRing { self.store.demoDualRing = false }
             self.rebuildMenu()
             self.updateOverlayForSnapshot()
         }
-        client.onError = { [weak self] error in self?.store.errorMessage = error.localizedDescription }
+        client.onError = { [weak self] error in
+            self?.store.errorMessage = error.localizedDescription
+            self?.store.isRefreshing = false
+        }
         startClientLifecycle()
         updateOverlay()
         scheduleStartupOverlayRetries()
@@ -184,7 +188,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         if !demo.isEnabled { demo.toolTip = "真实双环存在时不可用" }
         menu.addItem(demo)
         menu.addItem(.separator())
-        let refresh = NSMenuItem(title: "立即刷新", action: #selector(refresh), keyEquivalent: "r")
+        let refresh = NSMenuItem(
+            title: "立即刷新",
+            action: #selector(refresh),
+            keyEquivalent: UsageRefreshPresentation.menuKeyEquivalent
+        )
         refresh.target = self
         menu.addItem(refresh)
         let recalibrate = NSMenuItem(title: "重新检测宠物位置/大小", action: #selector(recalibrate), keyEquivalent: "")
@@ -204,6 +212,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         requestScreenRecording.isEnabled = !CGPreflightScreenCaptureAccess()
         requestScreenRecording.toolTip = "仅在你主动选择后请求 macOS 屏幕录制权限；系统可能要求退出并重新打开应用。"
         menu.addItem(requestScreenRecording)
+        menu.addItem(.separator())
+        let releases = NSMenuItem(title: "在浏览器查看 GitHub Releases…", action: #selector(openGitHubReleases), keyEquivalent: "")
+        releases.target = self
+        releases.toolTip = "仅在你主动选择后由默认浏览器打开官方 Releases；应用不会检查、下载或安装更新。"
+        menu.addItem(releases)
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -398,8 +411,9 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     @objc private func refresh() {
+        store.errorMessage = nil
+        store.isRefreshing = true
         client.refresh()
-        recalibrate()
     }
 
     @objc private func recalibrate() {
@@ -409,6 +423,9 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     @objc private func requestScreenRecordingAuthorization() {
         locator.requestScreenRecordingAuthorization()
+    }
+    @objc private func openGitHubReleases() {
+        NSWorkspace.shared.open(ProjectLinks.releasesURL)
     }
     @objc private func quit() { NSApp.terminate(nil) }
 

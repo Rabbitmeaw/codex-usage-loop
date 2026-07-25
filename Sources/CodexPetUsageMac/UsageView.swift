@@ -27,16 +27,10 @@ struct UsageCardView: View {
             ForEach(visibleWindows, id: \.label) { window in
                 usageLine(window: window, color: ringColor(for: window))
             }
-            Text(statusText)
+            Text(store.statusText)
                 .font(.system(size: 9, design: .rounded))
                 .foregroundStyle(.white.opacity(0.55))
         }
-    }
-
-    private var statusText: String {
-        if store.demoDualRing { return "双环演示（本地模拟）" }
-        if let snapshot = store.displaySnapshot { return "更新于 \(snapshot.observedAt.formatted(date: .omitted, time: .shortened))" }
-        return store.errorMessage ?? "等待 Codex 用量"
     }
 
     private var visibleWindows: [UsageWindow] {

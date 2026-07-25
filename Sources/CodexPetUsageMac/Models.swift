@@ -2,6 +2,14 @@ import Foundation
 import Combine
 import CoreGraphics
 
+enum ProjectLinks {
+    static let releasesURL = URL(string: "https://github.com/Rabbitmeaw/codex-usage-loop/releases")!
+}
+
+enum UsageRefreshPresentation {
+    static let menuKeyEquivalent = ""
+}
+
 enum RingPlacement: String, CaseIterable {
     case around
     case left
@@ -175,6 +183,7 @@ final class UsageStore: ObservableObject {
     @Published var snapshot: UsageSnapshot?
     @Published var demoDualRing = false
     @Published var errorMessage: String?
+    @Published var isRefreshing = false
     @Published var alwaysVisible: Bool {
         didSet { UserDefaults.standard.set(alwaysVisible, forKey: "alwaysVisible") }
     }
@@ -211,6 +220,16 @@ final class UsageStore: ObservableObject {
 
     var hasRealDualRing: Bool { (snapshot?.windows.count ?? 0) > 1 }
     var isDualRingDemoAvailable: Bool { !hasRealDualRing }
+
+    var statusText: String {
+        if isRefreshing { return "正在刷新…" }
+        if demoDualRing { return "双环演示（本地模拟）" }
+        if errorMessage != nil, snapshot != nil { return "刷新失败，仍显示上次数据" }
+        if let snapshot = displaySnapshot {
+            return "更新于 \(snapshot.observedAt.formatted(date: .omitted, time: .shortened))"
+        }
+        return errorMessage ?? "等待 Codex 用量"
+    }
 
     var displaySnapshot: UsageSnapshot? {
         guard demoDualRing, isDualRingDemoAvailable else { return snapshot }

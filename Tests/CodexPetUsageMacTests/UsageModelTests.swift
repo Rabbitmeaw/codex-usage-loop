@@ -2,6 +2,74 @@ import XCTest
 @testable import CodexPetUsageMac
 
 final class UsageModelTests: XCTestCase {
+    func testManualRefreshHasNoMenuShortcut() {
+        XCTAssertEqual(UsageRefreshPresentation.menuKeyEquivalent, "")
+    }
+
+    func testManualRefreshShowsProgress() {
+        let store = UsageStore()
+
+        store.isRefreshing = true
+
+        XCTAssertEqual(store.statusText, "正在刷新…")
+    }
+
+    func testManualRefreshProgressTakesPriorityOverDemoStatus() {
+        let store = UsageStore()
+        store.demoDualRing = true
+
+        store.isRefreshing = true
+
+        XCTAssertEqual(store.statusText, "正在刷新…")
+    }
+
+    func testRefreshFailureKeepsSnapshotAndShowsFailure() {
+        let snapshot = UsageSnapshot(
+            primary: UsageWindow(label: "5 小时", remainingPercent: 63, resetsAt: nil),
+            secondary: nil,
+            observedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            source: "test"
+        )
+        let store = UsageStore()
+        store.snapshot = snapshot
+
+        store.errorMessage = "连接失败"
+
+        XCTAssertEqual(store.snapshot, snapshot)
+        XCTAssertEqual(store.statusText, "刷新失败，仍显示上次数据")
+    }
+
+    func testSuccessfulRefreshReturnsToUpdatedStatus() {
+        let snapshot = UsageSnapshot(
+            primary: UsageWindow(label: "5 小时", remainingPercent: 63, resetsAt: nil),
+            secondary: nil,
+            observedAt: Date(timeIntervalSince1970: 1_800_000_000),
+            source: "test"
+        )
+        let store = UsageStore()
+        store.isRefreshing = false
+        store.errorMessage = nil
+        store.snapshot = snapshot
+
+        let expectedTime = snapshot.observedAt.formatted(date: .omitted, time: .shortened)
+        XCTAssertEqual(store.statusText, "更新于 \(expectedTime)")
+    }
+
+    func testInitialRefreshFailureShowsActualError() {
+        let store = UsageStore()
+
+        store.errorMessage = "连接失败"
+
+        XCTAssertEqual(store.statusText, "连接失败")
+    }
+
+    func testOfficialReleasesURLIsFixed() {
+        XCTAssertEqual(
+            ProjectLinks.releasesURL,
+            URL(string: "https://github.com/Rabbitmeaw/codex-usage-loop/releases")
+        )
+    }
+
     func testOuterRingHasNoUsageArcBeforeTheFirstSnapshot() {
         XCTAssertNil(RingPresentation.outerPercent(snapshot: nil))
     }

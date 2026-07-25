@@ -52,7 +52,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 | 目标 | 操作 | 结果 |
 | --- | --- | --- |
 | 调整 pet 大小或位置后重新贴合 | 菜单栏图标 → **重新检测宠物位置/大小** | 清除定位缓存并对当前 pet 重新定位；已授权时重新读取可见像素边界。 |
-| 立即获得最新额度 | 菜单栏图标 → **立即刷新** | 立即请求用量，并同时重新检测宠物位置。 |
+| 立即获得最新额度 | 菜单栏图标 → **立即刷新** | 仅请求最新用量；刷新中和失败状态会显示在卡片中，失败时保留上次数据。为避免与前台应用冲突，不设置快捷键。 |
 | 保持详情卡显示 | 菜单栏图标 → 勾选 **始终显示用量卡片** | 即使鼠标未悬停，或 pet 已隐藏但 Codex 仍运行，也显示详情卡；圆环在该场景始终保留。 |
 | 临时把圆环移到别处 | 勾选 **自由拖动位置** 后拖动圆环 | 关闭该选项即可恢复自动跟随 pet。 |
 | 调整围绕模式视觉大小 | **围绕 pet 的圆环大小** → 拖动滑杆 | 在 75%–150% 间实时缩放；可选择“恢复默认（100%）”。 |
@@ -91,7 +91,7 @@ zsh scripts/install.sh --with-login-agent
 
 ## 权限与隐私
 
-用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。
+用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。应用不会主动访问互联网；只有当你选择“在浏览器查看 GitHub Releases…”时，macOS 才会在默认浏览器打开官方发布页，CodexUsageLoop 自身不会检查、下载或安装更新。
 
 应用不会在启动时自动弹出屏幕录制授权。需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍可通过 pet 容器的窗口几何估算进行基本跟随，但在非默认布局、pet 实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的可见 pet 像素边界作为圆心与直径来源，以获得更准确的贴合效果。
 
@@ -135,7 +135,7 @@ A macOS companion overlay that places Codex usage rings beside the Codex pet and
 - **Stable, low-energy tracking:** a successful measurement is cached. Capture runs only for the first measurement or a container/layout change, collects three short samples, and uses their median. There is no continuous capture while stable; lightweight window geometry is checked once per second and usage refreshes every 30 seconds.
 - **Three layouts and a persistent card:** choose around, left, or right. In around-pet mode, the persistent card sits to the ring's right; in side modes it sits below the ring and stays within the visible screen.
 - **Adjustable appearance:** around-pet rings scale from 75% to 150% while preserving dual-ring proportions. Outer and inner colors can be set independently with the native macOS color panel and persisted; the menu-bar icon supports blue/green color or system-adaptive monochrome.
-- **Controlled interaction:** temporarily enable free dragging, then turn it off to resume pet following. **Refresh now** refreshes usage and recalibrates position. A real dual ring disables **Demo dual ring**, so simulated data never replaces real usage.
+- **Controlled interaction:** temporarily enable free dragging, then turn it off to resume pet following. **Refresh now** refreshes usage only; pet geometry recalibration remains a separate action. A real dual ring disables **Demo dual ring**, so simulated data never replaces real usage.
 - **Coexists with the Codex pet:** the overlay is click-through by default and has no global right-click listener. It does not change the pet's context menu, task-card expansion, or other native behavior.
 - **Optional companion startup:** install the login companion and enable **Start with Codex pet**. Usage reading pauses and both panels hide when Codex Desktop quits. While Codex is running and the pet is hidden, the ring stays visible and **Always show usage card** controls the detail card only.
 - **Local and minimal-permission:** the app never reads auth files, uploads usage or screen imagery, or saves captures. Screen Recording is requested only after the user selects the menu action.
@@ -145,7 +145,7 @@ A macOS companion overlay that places Codex usage rings beside the Codex pet and
 | Goal | Action | Result |
 | --- | --- | --- |
 | Refit after moving or resizing the pet | Menu-bar icon → **Re-detect pet position / size** | Clears cached geometry and repositions around the current pet; with permission, it remeasures visible pixels. |
-| Get current usage immediately | Menu-bar icon → **Refresh now** | Refreshes usage and recalibrates pet geometry. |
+| Get current usage immediately | Menu-bar icon → **Refresh now** | Refreshes usage only, shows progress or failure, and keeps the last data on failure. No shortcut is assigned to avoid conflicts with the frontmost app. |
 | Keep the detail card visible | Enable **Always show usage card** | The ring and detail card remain visible without hovering. |
 | Move the ring temporarily | Enable **Free drag position**, then drag the ring | Disable it to resume automatic pet following. |
 | Change around-pet size | **Around-pet ring size** → move the slider | Adjusts from 75% to 150%; **Reset to default (100%)** restores the default. |
@@ -184,7 +184,7 @@ zsh scripts/install.sh --with-login-agent
 
 ## Permissions and privacy
 
-Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded.
+Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. The app does not proactively access the internet. Only when you choose **View GitHub Releases in Browser…** does macOS open the official release page in your default browser; CodexUsageLoop itself never checks for, downloads, or installs updates.
 
 The app never requests Screen Recording automatically at launch. When precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet using estimated window geometry, but the ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access makes the visible pet pixel bounds the source of the around-pet ring's center and diameter.
 
