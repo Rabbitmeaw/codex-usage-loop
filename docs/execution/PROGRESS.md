@@ -41,8 +41,8 @@
 | B36 | Windows 版本能力同步 | 已完成 | Windows 同步 Releases 入口、刷新职责拆分、无快捷键及刷新状态反馈；Core 29 项检查、Windows Release 交叉构建／单文件发布、macOS 52 项测试通过 |
 | B37 | 跨平台文档与兼容策略收口 | 已完成 | 更新根目录历史文档，关闭 macOS 13 与 Codex 版本范围待澄清项，并将更新策略建议改为已采纳决策 |
 | B38 | macOS 13 像素定位能力门禁 | 待实机验证 | 纯能力测试、菜单／授权／捕获门禁、54 项测试、Release 构建与签名通过；macOS 13 实机估算 smoke 待发布环境 |
-| B39 | `v0.1.2` 跨平台预发布 | 进行中 | 更新版本与变更记录，推送 main 并等待 CI，生成双平台工件、创建预发布版并更新本机安装；macOS 13 实机 smoke 仍为稳定发布门槛 |
+| B39 | `v0.1.2` 跨平台预发布 | 已完成 | main 与 tag CI 全绿；双平台工件、SHA-256、构建元数据及 GitHub 预发布已核验；本机已用稳定 Apple Development 签名更新并重启 |
 
 ## 当前批次
 
-B39 进行中。目标版本为 `v0.1.2`（build 3）；由于当前本机为 macOS 15.7.4，先创建明确标记的 GitHub 预发布版，macOS 13 实机估算 smoke 完成后才能转为稳定 Release。
+B39 已完成。`v0.1.2`（build 3）预发布对应提交 `2b5c3c8`，macOS 与 Windows tag CI 全绿，5 个 Release 工件重新下载后校验通过；本机 `/Applications/CodexUsageLoop.app` 已使用稳定 Apple Development 签名更新并以单实例运行。B38 的 macOS 13 实机估算 smoke 仍是转为稳定 Release 的门槛。
