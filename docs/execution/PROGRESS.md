@@ -42,7 +42,8 @@
 | B37 | 跨平台文档与兼容策略收口 | 已完成 | 更新根目录历史文档，关闭 macOS 13 与 Codex 版本范围待澄清项，并将更新策略建议改为已采纳决策 |
 | B38 | macOS 13 像素定位能力门禁 | 待实机验证 | 纯能力测试、菜单／授权／捕获门禁、54 项测试、Release 构建与签名通过；macOS 13 实机估算 smoke 待发布环境 |
 | B39 | `v0.1.2` 跨平台预发布 | 已完成 | main 与 tag CI 全绿；双平台工件、SHA-256、构建元数据及 GitHub 预发布已核验；本机已用稳定 Apple Development 签名更新并重启 |
+| B40 | 安装权限提示与定位边界澄清 | 已完成 | README、Agent 项目指令与安装脚本突出 macOS 14+ 像素定位授权，严谨区分图像、本应用、Codex app-server 与浏览器边界，并将屏幕边缘提醒限定为估算定位 |
 
 ## 当前批次
 
-B39 已完成。`v0.1.2`（build 3）预发布对应提交 `2b5c3c8`，macOS 与 Windows tag CI 全绿，5 个 Release 工件重新下载后校验通过；本机 `/Applications/CodexUsageLoop.app` 已使用稳定 Apple Development 签名更新并以单实例运行。B38 的 macOS 13 实机估算 smoke 仍是转为稳定 Release 的门槛。
+B40 已完成。README 中英双语靠前位置、根 `AGENTS.md` 与安装脚本输出均要求安装 Agent 提醒用户自行决定并完成 macOS 14+ 精确定位授权；隐私说明不作绝对零风险承诺，边缘提醒只适用于估算定位。CI 重复触发证据与建议见 `docs/execution/CI_TRIGGER_EVALUATION_2026-07-25.md`，本批次未修改工作流。

@@ -22,6 +22,24 @@ Windows 商店版 Codex GUI 的内置 CLI 当前不能由普通桌面进程直�
 最新用量，“重新检测宠物位置/大小”独立重查几何；两者都不注册快捷键。也可
 由用户主动在默认浏览器打开官方 Releases，应用自身不检查、下载或安装更新。
 
+## macOS 安装后必读：启用精确定位
+
+macOS 14+ 用户如需让圆环准确贴合 pet（包括靠近屏幕边缘时），请在
+CodexUsageLoop 菜单中选择“启用像素级定位…”，按系统提示授予“屏幕录制”
+权限，然后重新打开应用。macOS 13 仅支持窗口几何估算，不提供此入口。
+
+如果由 Agent 帮助安装本项目，**安装 Agent 必须向用户说明上述步骤与权限
+边界；是否授权以及实际授权操作必须由用户自行决定和完成**，不得代替用户
+启用权限，也不得把授权描述为安装的必要条件。
+
+当前实现只在 CodexUsageLoop 进程内存中分析用于定位的图像，不保存、不上传；
+CodexUsageLoop 进程不发起自有 HTTP 请求，用量仅通过本机
+`codex app-server --stdio` 读取。Codex CLI／app-server 自身以及用户明确选择
+“在浏览器查看 GitHub Releases…”后的浏览器连接属于各自独立的网络边界。
+屏幕录制仍是可以访问屏幕内容的敏感系统权限，上述技术边界不等于绝对零风险；
+请在理解用途并确认软件来源后自行决定是否授权。不授权不会阻止应用运行，但
+定位会使用估算模式。
+
 ## 兼容策略
 
 macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS 14+ 才可由
@@ -114,7 +132,14 @@ zsh scripts/install.sh --with-login-agent
 
 ## macOS 权限与隐私
 
-用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。在 macOS 14+，如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。应用不会主动访问互联网；只有当你选择“在浏览器查看 GitHub Releases…”时，macOS 才会在默认浏览器打开官方发布页，CodexUsageLoop 自身不会检查、下载或安装更新。
+用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传
+`~/.codex/auth.json`。CodexUsageLoop 不发起自有 HTTP 请求；Codex CLI／
+app-server 自身可能有独立的网络行为，但屏幕画面不会传给它。在 macOS 14+，
+如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与
+安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、
+不上传。只有当你选择“在浏览器查看 GitHub Releases…”时，系统才会在默认浏览器
+打开官方发布页；该浏览器连接是另一个独立边界，CodexUsageLoop 自身不会检查、
+下载或安装更新。
 
 应用不会在启动时自动弹出屏幕录制授权。在 macOS 14+ 需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍可通过 pet 容器的窗口几何估算进行基本跟随，但在非默认布局、pet 实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的可见 pet 像素边界作为圆心与直径来源，以获得更准确的贴合效果。
 
@@ -122,7 +147,7 @@ zsh scripts/install.sh --with-login-agent
 
 ## macOS 已知定位边界
 
-当宠物特别靠近屏幕左侧或右侧边缘时，圆环的自动跟随可能失效。请将宠物稍微向屏幕内侧移动，保持圆环中心到左右边缘至少约为半个任务卡片宽度的距离，再重新检测宠物位置／大小。
+使用估算定位时（未授权、macOS 13 或捕获暂时不可用），宠物特别靠近屏幕左侧或右侧边缘可能导致圆环跟随偏差。请将宠物稍微向屏幕内侧移动，再选择“重新检测宠物位置／大小”。菜单显示“已授权（像素级定位）”时会使用可见 pet 像素边界，通常无需避开屏幕边缘。
 
 ## macOS 下载与安全
 
@@ -168,6 +193,30 @@ interactions remain available without it. In the Windows notification-area menu,
 separate action; neither action registers a shortcut. Users can explicitly open
 the official Releases page in their default browser, but the app itself never
 checks for, downloads, or installs updates.
+
+## macOS post-install notice: enable precise positioning
+
+On macOS 14+, for accurate ring alignment—including when the pet is near a
+display edge—choose **Enable pixel-level positioning…** from the CodexUsageLoop
+menu, grant Screen Recording access when macOS asks, and then reopen the app.
+macOS 13 supports estimated window geometry only and does not offer this action.
+
+If an Agent installs this project for a user, **the installing Agent must explain
+these steps and the permission boundary; the user must personally decide whether
+to grant access and perform the authorization**. The Agent must not enable it on
+the user's behalf or describe it as required for installation.
+
+The current implementation analyzes positioning frames only in the
+CodexUsageLoop process's memory and does not save or upload them. The
+CodexUsageLoop process makes no application-owned HTTP requests; usage is read
+only through the local `codex app-server --stdio` interface. Any network
+behavior of Codex CLI/app-server, and the browser connection opened by an
+explicit **View GitHub Releases in Browser…** action, are separate boundaries.
+Screen Recording nevertheless remains a sensitive system permission that can
+expose screen content, so these implementation boundaries are not a promise of
+absolute zero risk. Grant it only after understanding the purpose and verifying
+the software source. The app remains usable without it in estimated positioning
+mode.
 
 ## Compatibility policy
 
@@ -239,7 +288,16 @@ zsh scripts/install.sh --with-login-agent
 
 ## macOS permissions and privacy
 
-Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. On macOS 14+, for precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. The app does not proactively access the internet. Only when you choose **View GitHub Releases in Browser…** does macOS open the official release page in your default browser; CodexUsageLoop itself never checks for, downloads, or installs updates.
+Usage is read from the local, read-only `codex app-server --stdio` interface.
+The app does not read, parse, or upload `~/.codex/auth.json`. CodexUsageLoop
+makes no application-owned HTTP requests. Codex CLI/app-server may have its own
+separate network behavior, but screen frames are never passed to it. On macOS
+14+, for precise detection inside the transparent pet window, **we recommend
+granting CodexUsageLoop Screen Recording access** in macOS System Settings →
+Privacy & Security; frames are analyzed only in local memory and are never
+stored or uploaded. Choosing **View GitHub Releases in Browser…** opens the
+official page in the default browser, which is another separate boundary;
+CodexUsageLoop itself never checks for, downloads, or installs updates.
 
 The app never requests Screen Recording automatically at launch. On macOS 14+, when precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet using estimated window geometry, but the ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access makes the visible pet pixel bounds the source of the around-pet ring's center and diameter.
 
@@ -247,7 +305,12 @@ On macOS 14+, the menu reports the permission seen by the current process: **Scr
 
 ## macOS known positioning boundary
 
-Automatic ring tracking can fail when the pet is extremely close to the left or right edge of a display. Move the pet slightly inward so the ring center remains at least roughly half a task-card width from either side, then use **Re-detect pet position / size**.
+When estimated positioning is in use (permission not granted, macOS 13, or
+capture temporarily unavailable), placing the pet extremely close to the left
+or right edge of a display can reduce ring-following accuracy. Move the pet
+slightly inward, then choose **Re-detect pet position / size**. When the menu
+reports **Authorized (pixel-level positioning)**, visible pet pixel bounds are
+used and the pet usually does not need to avoid display edges.
 
 ## macOS downloads and security
 
