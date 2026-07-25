@@ -40,11 +40,11 @@
 - `Tests/CodexPetUsageMacTests/PetLocationTests.swift`：窗口评分、坐标换算和像素宠物定位样例。
 - `README.md`：使用、构建、隐私与已知边界。
 
-当前自动化基线为 macOS 52 项 Swift 测试与 Windows Core 29 项检查。
+当前自动化基线为 macOS 54 项 Swift 测试与 Windows Core 29 项检查。
 
 ## 发布／CI 验证边界
 
-- macOS 13：先完成 B38 的菜单／状态门禁，再做窗口几何估算实机 smoke。
+- macOS 13：B38 已完成菜单、授权和捕获门禁；仍需窗口几何估算实机 smoke。
 - Windows：原生消息循环、托盘、分层窗口、DPI、点击穿透与退出必须在
   Windows CI／实机验证。
 - Codex：不固定历史版本矩阵；每次发布记录确切稳定版本，并验证真实

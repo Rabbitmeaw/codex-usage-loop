@@ -66,13 +66,46 @@ final class OverlayBehaviorTests: XCTestCase {
         ))
     }
 
-    func testScreenRecordingMenuStatusReportsTheActualAuthorizationState() {
+    func testMacOS13DoesNotSupportPixelMascotLocation() {
+        let macOS13 = OperatingSystemVersion(majorVersion: 13, minorVersion: 6, patchVersion: 9)
+
+        XCTAssertFalse(PixelMascotLocationCapability.isSupported(on: macOS13))
+        XCTAssertFalse(PixelMascotLocationCapability.shouldRequestAuthorization(
+            on: macOS13,
+            hasPermission: false
+        ))
         XCTAssertEqual(
-            ScreenRecordingAuthorizationStatus.menuTitle(hasPermission: true),
+            ScreenRecordingAuthorizationStatus.menuTitle(
+                on: macOS13,
+                hasPermission: true
+            ),
+            "定位精度：使用估算（像素级定位需要 macOS 14+）"
+        )
+    }
+
+    func testMacOS14KeepsPixelMascotLocationAuthorizationFlow() {
+        let macOS14 = OperatingSystemVersion(majorVersion: 14, minorVersion: 0, patchVersion: 0)
+
+        XCTAssertTrue(PixelMascotLocationCapability.isSupported(on: macOS14))
+        XCTAssertTrue(PixelMascotLocationCapability.shouldRequestAuthorization(
+            on: macOS14,
+            hasPermission: false
+        ))
+        XCTAssertFalse(PixelMascotLocationCapability.shouldRequestAuthorization(
+            on: macOS14,
+            hasPermission: true
+        ))
+    }
+
+    func testScreenRecordingMenuStatusReportsTheActualAuthorizationState() {
+        let macOS14 = OperatingSystemVersion(majorVersion: 14, minorVersion: 0, patchVersion: 0)
+
+        XCTAssertEqual(
+            ScreenRecordingAuthorizationStatus.menuTitle(on: macOS14, hasPermission: true),
             "屏幕录制：已授权（像素级定位）"
         )
         XCTAssertEqual(
-            ScreenRecordingAuthorizationStatus.menuTitle(hasPermission: false),
+            ScreenRecordingAuthorizationStatus.menuTitle(on: macOS14, hasPermission: false),
             "屏幕录制：未授权（使用估算）"
         )
     }

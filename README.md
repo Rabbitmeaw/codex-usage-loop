@@ -25,8 +25,8 @@ Windows 商店版 Codex GUI 的内置 CLI 当前不能由普通桌面进程直�
 ## 兼容策略
 
 macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS 14+ 才可由
-用户主动启用像素级定位。当前 macOS 13 的菜单门禁与授权状态仍待 B38 修正，
-完成前不视为完整交付。Codex Desktop／CLI 不固定历史版本
+用户主动启用像素级定位。B38 已完成菜单、授权和捕获门禁的代码与自动化，
+仍需 macOS 13 实机 smoke 后才视为完整交付。Codex Desktop／CLI 不固定历史版本
 矩阵；每个 Release 只承诺其发布说明中记录的已回归稳定版本与能力契约，发布后
 的新版本不自动视为已支持。不兼容时显示明确错误，不伪造用量。详见
 [决策日志](docs/execution/DECISIONS.md)与[发布流程](docs/RELEASING.md)。
@@ -173,8 +173,9 @@ checks for, downloads, or installs updates.
 
 The macOS 13 compatibility target is window-geometry estimation without
 pixel-level guarantees; user-enabled pixel positioning requires macOS 14+.
-The macOS 13 menu gate and authorization status still require B38 before this
-target is considered fully delivered. Rather than freezing a historical
+The B38 menu, authorization, and capture gates are implemented and covered by
+automated tests; a macOS 13 smoke test is still required before this target is
+considered fully delivered. Rather than freezing a historical
 Codex Desktop/CLI version matrix, each release supports only the exact stable
 versions and capability contract recorded after its release validation; later
 Codex versions are not assumed compatible. Incompatibilities produce explicit
@@ -238,11 +239,11 @@ zsh scripts/install.sh --with-login-agent
 
 ## macOS permissions and privacy
 
-Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. The app does not proactively access the internet. Only when you choose **View GitHub Releases in Browser…** does macOS open the official release page in your default browser; CodexUsageLoop itself never checks for, downloads, or installs updates.
+Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. On macOS 14+, for precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. The app does not proactively access the internet. Only when you choose **View GitHub Releases in Browser…** does macOS open the official release page in your default browser; CodexUsageLoop itself never checks for, downloads, or installs updates.
 
-The app never requests Screen Recording automatically at launch. When precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet using estimated window geometry, but the ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access makes the visible pet pixel bounds the source of the around-pet ring's center and diameter.
+The app never requests Screen Recording automatically at launch. On macOS 14+, when precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet using estimated window geometry, but the ring's position or diameter can be less accurate with non-default layouts, a mascot whose visible boundary differs from the container proportions, or a repositioned task card. Granting access makes the visible pet pixel bounds the source of the around-pet ring's center and diameter.
 
-The menu reports the permission seen by the current process: **Screen Recording: Authorized (pixel-level positioning)** or **Not authorized (estimated positioning)**. If System Settings shows its switch as enabled while the menu still reports not authorized, turn the switch off and on again, then restart the app.
+On macOS 14+, the menu reports the permission seen by the current process: **Screen Recording: Authorized (pixel-level positioning)** or **Not authorized (estimated positioning)**. On macOS 13, it reports that estimated positioning is in use and disables the pixel-level authorization action. If System Settings shows its switch as enabled while the menu still reports not authorized on macOS 14+, turn the switch off and on again, then restart the app.
 
 ## macOS known positioning boundary
 

@@ -19,9 +19,24 @@ enum MascotCaptureRefreshPolicy {
     }
 }
 
+enum PixelMascotLocationCapability {
+    static func isSupported(on operatingSystemVersion: OperatingSystemVersion) -> Bool {
+        operatingSystemVersion.majorVersion >= 14
+    }
+
+    static func shouldRequestAuthorization(on operatingSystemVersion: OperatingSystemVersion,
+                                           hasPermission: Bool) -> Bool {
+        isSupported(on: operatingSystemVersion) && !hasPermission
+    }
+}
+
 enum ScreenRecordingAuthorizationStatus {
-    static func menuTitle(hasPermission: Bool) -> String {
-        hasPermission
+    static func menuTitle(on operatingSystemVersion: OperatingSystemVersion,
+                          hasPermission: Bool) -> String {
+        guard PixelMascotLocationCapability.isSupported(on: operatingSystemVersion) else {
+            return "定位精度：使用估算（像素级定位需要 macOS 14+）"
+        }
+        return hasPermission
             ? "屏幕录制：已授权（像素级定位）"
             : "屏幕录制：未授权（使用估算）"
     }
@@ -89,7 +104,15 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
     }
 
     func requestScreenRecordingAuthorization() {
-        guard !CGPreflightScreenCaptureAccess() else { return }
+        let operatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        guard PixelMascotLocationCapability.isSupported(on: operatingSystemVersion) else {
+            Self.logger.notice("pet capture authorization ignored reason=unsupportedMacOS")
+            return
+        }
+        guard PixelMascotLocationCapability.shouldRequestAuthorization(
+            on: operatingSystemVersion,
+            hasPermission: CGPreflightScreenCaptureAccess()
+        ) else { return }
         let shouldRequest = synchronized {
             guard !screenRecordingAuthorizationRequested else { return false }
             screenRecordingAuthorizationRequested = true
@@ -110,6 +133,11 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
                estimatedFrame: CGRect,
                layoutSignature: String) -> (frame: CGRect, source: PetGeometrySource) {
         guard windowID != 0 else { return (estimatedFrame, .anchoredFallback) }
+        guard PixelMascotLocationCapability.isSupported(
+            on: ProcessInfo.processInfo.operatingSystemVersion
+        ) else {
+            return (estimatedFrame, .anchoredFallback)
+        }
         let now = Date.timeIntervalSinceReferenceDate
 
         lock.lock()
@@ -203,6 +231,13 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
                          container: CGRect,
                          estimatedFrame: CGRect,
                          generation: UInt) {
+        guard PixelMascotLocationCapability.isSupported(
+            on: ProcessInfo.processInfo.operatingSystemVersion
+        ) else {
+            Self.logger.notice("pet capture unavailable reason=unsupportedMacOS")
+            finish(windowID: windowID, generation: generation)
+            return
+        }
         let hasScreenRecordingPermission = CGPreflightScreenCaptureAccess()
         if !hasScreenRecordingPermission {
             synchronized { screenRecordingUnavailable = true }

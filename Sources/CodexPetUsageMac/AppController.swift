@@ -198,9 +198,17 @@ final class AppController: NSObject, NSApplicationDelegate {
         let recalibrate = NSMenuItem(title: "重新检测宠物位置/大小", action: #selector(recalibrate), keyEquivalent: "")
         recalibrate.target = self
         menu.addItem(recalibrate)
+        let operatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
+        let pixelLocationSupported = PixelMascotLocationCapability.isSupported(
+            on: operatingSystemVersion
+        )
+        let hasScreenRecordingPermission = pixelLocationSupported
+            ? CGPreflightScreenCaptureAccess()
+            : false
         let screenRecordingStatus = NSMenuItem(
             title: ScreenRecordingAuthorizationStatus.menuTitle(
-                hasPermission: CGPreflightScreenCaptureAccess()
+                on: operatingSystemVersion,
+                hasPermission: hasScreenRecordingPermission
             ),
             action: nil,
             keyEquivalent: ""
@@ -209,8 +217,13 @@ final class AppController: NSObject, NSApplicationDelegate {
         menu.addItem(screenRecordingStatus)
         let requestScreenRecording = NSMenuItem(title: "启用像素级定位…", action: #selector(requestScreenRecordingAuthorization), keyEquivalent: "")
         requestScreenRecording.target = self
-        requestScreenRecording.isEnabled = !CGPreflightScreenCaptureAccess()
-        requestScreenRecording.toolTip = "仅在你主动选择后请求 macOS 屏幕录制权限；系统可能要求退出并重新打开应用。"
+        requestScreenRecording.isEnabled = PixelMascotLocationCapability.shouldRequestAuthorization(
+            on: operatingSystemVersion,
+            hasPermission: hasScreenRecordingPermission
+        )
+        requestScreenRecording.toolTip = pixelLocationSupported
+            ? "仅在你主动选择后请求 macOS 屏幕录制权限；系统可能要求退出并重新打开应用。"
+            : "像素级定位需要 macOS 14 或更高版本；当前使用窗口几何估算。"
         menu.addItem(requestScreenRecording)
         menu.addItem(.separator())
         let releases = NSMenuItem(title: "在浏览器查看 GitHub Releases…", action: #selector(openGitHubReleases), keyEquivalent: "")

@@ -6,7 +6,7 @@
 
 1. 确认工作区干净，目标提交已审阅并已推送。
 2. 更新 [CHANGELOG.md](../CHANGELOG.md)，并确定版本号与对应 Git tag。
-3. 在 macOS 运行 `swift test`，当前基线为 52 项测试；运行
+3. 在 macOS 运行 `swift test`，当前基线为 54 项测试；运行
    `zsh scripts/build-app.sh` 和严格 `codesign` 校验。
 4. 在 Windows 运行 `scripts/build-windows.ps1` 和
    `scripts/test-windows-integration.ps1`；当前 Core 基线为 29 项检查。
