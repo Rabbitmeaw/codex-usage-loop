@@ -16,7 +16,10 @@ $checksum = "$archive.sha256"
 
 Compress-Archive -Path (Join-Path $publish '*') -DestinationPath $archive -Force
 $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-"$hash  $(Split-Path -Leaf $archive)" | Set-Content -LiteralPath $checksum -Encoding ascii
+[System.IO.File]::WriteAllText(
+    $checksum,
+    "$hash  $(Split-Path -Leaf $archive)`n",
+    [System.Text.Encoding]::ASCII)
 
 Write-Output "Release artifacts:"
 Write-Output "  $archive"

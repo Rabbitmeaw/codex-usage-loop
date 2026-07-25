@@ -22,6 +22,7 @@
 
 - 排除 `ChatGPT Computer Use / Software Cursor` 等辅助窗口，避免圆环突然使用错误的小窗口几何。
 - macOS 与 Windows 的“立即刷新”不再同时触发 pet 重测；macOS 移除与前台应用冲突的 ⌘R，Windows 保持无快捷键。两端的刷新中及保留旧数据时的失败状态现在可见。
+- Windows Release 的 SHA-256 文件统一使用跨平台 LF 换行，可直接由 macOS、Linux 和 Windows 校验工具读取。
 
 ### 已变更
 
