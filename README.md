@@ -4,11 +4,23 @@
 
 <a id="中文"></a>
 
-# CodexUsageLoop for macOS
+# CodexUsageLoop
 
-macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显示在 Codex 宠物旁，并通过菜单栏提供控制。
+Codex 宠物的本地用量伴随层，在 macOS 和 Windows 上显示 5 小时与 7 天
+剩余额度。
 
-## 界面示意
+## 平台
+
+| 平台 | 原生实现 | 使用说明 |
+| --- | --- | --- |
+| macOS 13+ | AppKit / SwiftUI；macOS 14+ 可选 ScreenCaptureKit 像素级定位 | 见下方功能与构建说明 |
+| Windows 10 22H2 / Windows 11 x64 | .NET 10 + Win32 分层窗口，不使用 WinUI、WPF 或 WinForms | [Windows 构建、运行与限制](docs/WINDOWS.md) |
+
+Windows 商店版 Codex GUI 的内置 CLI 当前不能由普通桌面进程直接启动；实时
+额度需要独立安装官方 Codex CLI 或设置 `CODEX_EXECUTABLE`。没有独立 CLI
+时，pet 圆环和本地交互仍可使用。
+
+## macOS 界面示意
 
 <p align="center">
   <img src="docs/images/single-ring.png" alt="单环用量显示在 Codex 宠物周围" width="260">
@@ -35,7 +47,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
   <em>左侧布局示例：圆环与宠物分离，详情卡位于圆环下方。浅蓝“2”为说明标记，不属于应用界面。</em>
 </p>
 
-## 功能
+## macOS 功能
 
 - **两类用量一眼可见**：读取本机 Codex app-server 的 5 小时与 7 天剩余额度；一个窗口显示单环，两个真实窗口自动显示双环。
 - **围绕真实 pet 的像素级定位**：在 macOS 14+ 且已授权屏幕录制时，圆环圆心与直径直接使用当前可见 pet 的实测像素边界。pet 缩放、拖动、任务卡布局变化和左右边缘位置都会触发重新测量。
@@ -47,7 +59,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 - **可选伴随启动**：安装登录 companion 并开启“随 Codex 宠物启动”后，Codex Desktop 退出时暂停用量读取并隐藏悬浮层；pet 隐藏但 Codex 仍运行时，圆环保留，卡片由“始终显示用量卡片”决定。
 - **本地与最小权限**：不读取认证文件，不上传用量或屏幕画面，不保存截图；屏幕录制授权只在用户从菜单主动请求时触发。
 
-## 常用操作
+## macOS 常用操作
 
 | 目标 | 操作 | 结果 |
 | --- | --- | --- |
@@ -68,7 +80,7 @@ macOS 版 Codex 宠物用量伴随层。它将 5 小时和 7 天剩余比例显�
 | 已开启“随 Codex 宠物启动”，Codex 已退出 | 隐藏 | 隐藏 |
 | 未开启“随 Codex 宠物启动”，Codex 已退出 | 保持显示 | 仍由“始终显示用量卡片”决定 |
 
-## 构建与启动
+## macOS 构建与启动
 
 要求 macOS 13+、Xcode Command Line Tools，以及已登录的 Codex CLI 或 Codex Desktop。构建后可直接重启本机实例：
 
@@ -89,7 +101,7 @@ zsh scripts/install.sh
 zsh scripts/install.sh --with-login-agent
 ```
 
-## 权限与隐私
+## macOS 权限与隐私
 
 用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。应用不会主动访问互联网；只有当你选择“在浏览器查看 GitHub Releases…”时，macOS 才会在默认浏览器打开官方发布页，CodexUsageLoop 自身不会检查、下载或安装更新。
 
@@ -97,11 +109,11 @@ zsh scripts/install.sh --with-login-agent
 
 菜单会显示当前进程实际检测到的“屏幕录制：已授权（像素级定位）”或“未授权（使用估算）”。若系统设置中的开关显示已开启、菜单仍显示未授权，请关闭再重新开启该开关，然后重启应用。
 
-## 已知定位边界
+## macOS 已知定位边界
 
 当宠物特别靠近屏幕左侧或右侧边缘时，圆环的自动跟随可能失效。请将宠物稍微向屏幕内侧移动，保持圆环中心到左右边缘至少约为半个任务卡片宽度的距离，再重新检测宠物位置／大小。
 
-## 下载与安全
+## macOS 下载与安全
 
 项目采用 [MIT License](LICENSE)，Release 不提供 Developer ID 签名或 Apple 公证。请只从[官方 GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)下载，核对 SHA-256 校验和与 tag；确认来源后再按 macOS 提示打开应用，**不要关闭 Gatekeeper**。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
 
@@ -110,6 +122,7 @@ zsh scripts/install.sh --with-login-agent
 ### 用户文档
 
 - [用户手册](docs/MANUAL.md)
+- [Windows 构建、运行与限制](docs/WINDOWS.md)
 - [变更记录](CHANGELOG.md)
 - [Release 安全说明](docs/RELEASE_SECURITY.md)
 
@@ -124,11 +137,24 @@ zsh scripts/install.sh --with-login-agent
 
 <a id="english"></a>
 
-# CodexUsageLoop for macOS
+# CodexUsageLoop
 
-A macOS companion overlay that places Codex usage rings beside the Codex pet and exposes controls from the menu bar.
+A local Codex pet companion that displays the remaining 5-hour and 7-day usage
+allowances on macOS and Windows.
 
-## Features
+## Platforms
+
+| Platform | Native implementation | Guide |
+| --- | --- | --- |
+| macOS 13+ | AppKit / SwiftUI; optional ScreenCaptureKit pixel-level positioning on macOS 14+ | See the macOS features and build instructions below |
+| Windows 10 22H2 / Windows 11 x64 | .NET 10 + native Win32 layered windows; no WinUI, WPF, or WinForms | [Windows build, runtime, and limitations](docs/WINDOWS.md) |
+
+The Codex CLI bundled with the Microsoft Store GUI currently cannot be launched
+by a regular desktop process. Live usage on Windows requires a separately
+installed official Codex CLI or `CODEX_EXECUTABLE`; pet rings and local
+interactions remain available without it.
+
+## macOS features
 
 - **Usage at a glance:** reads the local Codex app-server's 5-hour and 7-day windows. One real window renders one ring; two real windows render dual rings.
 - **Pixel-accurate pet geometry:** on macOS 14+ with Screen Recording access, the around-pet ring uses the visible pet's measured pixel bounds for both center and diameter. Resizing, dragging, task-card layout changes, and left/right edge placement trigger a new measurement.
@@ -140,7 +166,7 @@ A macOS companion overlay that places Codex usage rings beside the Codex pet and
 - **Optional companion startup:** install the login companion and enable **Start with Codex pet**. Usage reading pauses and both panels hide when Codex Desktop quits. While Codex is running and the pet is hidden, the ring stays visible and **Always show usage card** controls the detail card only.
 - **Local and minimal-permission:** the app never reads auth files, uploads usage or screen imagery, or saves captures. Screen Recording is requested only after the user selects the menu action.
 
-## Common tasks
+## macOS common tasks
 
 | Goal | Action | Result |
 | --- | --- | --- |
@@ -161,7 +187,7 @@ A macOS companion overlay that places Codex usage rings beside the Codex pet and
 | **Start with Codex pet** enabled, Codex quits | Hidden | Hidden |
 | **Start with Codex pet** disabled, Codex quits | Remains visible | Controlled by **Always show usage card** |
 
-## Build and run
+## macOS build and run
 
 Requires macOS 13+, Xcode Command Line Tools, and a signed-in Codex CLI or Codex Desktop installation. Build and restart the local instance with:
 
@@ -182,7 +208,7 @@ Optional: install the login companion and enable **Start with Codex pet** from t
 zsh scripts/install.sh --with-login-agent
 ```
 
-## Permissions and privacy
+## macOS permissions and privacy
 
 Usage is read from the local, read-only `codex app-server --stdio` interface. The app does not read, parse, or upload `~/.codex/auth.json`. For precise detection inside the transparent pet window, **we recommend granting CodexUsageLoop Screen Recording access** in macOS System Settings → Privacy & Security; frames are analyzed only in local memory and are never stored or uploaded. The app does not proactively access the internet. Only when you choose **View GitHub Releases in Browser…** does macOS open the official release page in your default browser; CodexUsageLoop itself never checks for, downloads, or installs updates.
 
@@ -190,11 +216,11 @@ The app never requests Screen Recording automatically at launch. When precise po
 
 The menu reports the permission seen by the current process: **Screen Recording: Authorized (pixel-level positioning)** or **Not authorized (estimated positioning)**. If System Settings shows its switch as enabled while the menu still reports not authorized, turn the switch off and on again, then restart the app.
 
-## Known positioning boundary
+## macOS known positioning boundary
 
 Automatic ring tracking can fail when the pet is extremely close to the left or right edge of a display. Move the pet slightly inward so the ring center remains at least roughly half a task-card width from either side, then use **Re-detect pet position / size**.
 
-## Downloads and security
+## macOS downloads and security
 
 The project is licensed under the [MIT License](LICENSE). Releases do not have a Developer ID signature or Apple notarization. Download only from the [official GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases), verify the SHA-256 checksum and tag, and follow macOS only after confirming the source. **Do not disable Gatekeeper.** See the [release security guide](docs/RELEASE_SECURITY.md).
 
@@ -203,6 +229,7 @@ The project is licensed under the [MIT License](LICENSE). Releases do not have a
 ### For users
 
 - [User manual](docs/MANUAL.md)
+- [Windows build, runtime, and limitations](docs/WINDOWS.md)
 - [Changelog](CHANGELOG.md)
 - [Release security guide](docs/RELEASE_SECURITY.md)
 

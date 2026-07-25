@@ -5,11 +5,25 @@ on:
   pull_request:
 
 jobs:
-  test:
+  macos:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run tests
         run: swift test
       - name: Build release binary
         run: swift build -c release
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Build and test native Windows companion
+        shell: pwsh
+        run: ./scripts/build-windows.ps1 -Configuration Release -Publish
+      - name: Run app-server and native lifecycle integration
+        shell: pwsh
+        run: ./scripts/test-windows-integration.ps1

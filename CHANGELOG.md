@@ -7,11 +7,26 @@
 ### 已新增
 
 - 菜单增加“在浏览器查看 GitHub Releases…”；仅由用户点击后打开默认浏览器，应用自身不检查、下载或安装更新。
+- 新增 Windows 10 22H2 / Windows 11 x64 原生伴随应用，使用 .NET 10 与
+  Win32 分层窗口实现圆环、用量卡片、通知区域菜单、点击穿透和自由拖动。
+- 新增独立的 Windows 核心模型、额度解析和几何测试，以及 app-server、
+  分层窗口和正常退出的生命周期集成测试。
+- CI 新增 Windows 构建、测试和单文件发布验证，同时保留 macOS 测试与
+  Release 构建。
+- 新增 [Windows 构建、运行与限制](docs/WINDOWS.md)，说明 DPI、依赖、
+  打包、诊断和系统 DLL。
 
 ### 已修复
 
 - 排除 `ChatGPT Computer Use / Software Cursor` 等辅助窗口，避免圆环突然使用错误的小窗口几何。
 - “立即刷新”不再同时触发 pet 重测，并移除与前台应用冲突的 ⌘R；刷新中及保留旧数据时的失败状态现在可见。
+
+### 已知限制
+
+- Windows 版本当前仅提供 x64、依赖 .NET 10 Runtime 的单文件发布。
+- Windows 商店版 Codex GUI 的内置 CLI 没有外部执行入口；实时额度需要独立
+  安装官方 Codex CLI 或设置 `CODEX_EXECUTABLE`。
+- 混合 DPI 多显示器定位仍需补充更多拓扑测试。
 
 ## 0.1.1 — 2026-07-24
 
