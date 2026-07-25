@@ -43,12 +43,13 @@
 | B38 | macOS 13 像素定位能力门禁 | 待实机验证 | 纯能力测试、菜单／授权／捕获门禁、54 项测试、Release 构建与签名通过；macOS 13 实机估算 smoke 待发布环境 |
 | B39 | `v0.1.2` 跨平台预发布 | 已完成 | main 与 tag CI 全绿；双平台工件、SHA-256、构建元数据及 GitHub 预发布已核验；本机已用稳定 Apple Development 签名更新并重启 |
 | B40 | 安装权限提示与定位边界澄清 | 已完成 | README、Agent 项目指令与安装脚本突出 macOS 14+ 像素定位授权，严谨区分图像、本应用、Codex app-server 与浏览器边界，并将屏幕边缘提醒限定为估算定位 |
-| B41 | 日常 CI 与 tag Release 分离 | 远端验证中 | 日常 CI 仅覆盖 `main` push 与 PR；`vX.Y.Z` tag 独立校验主分支归属、版本化说明、双平台测试与工件后创建 GitHub Release |
+| B41 | 日常 CI 与 tag Release 分离 | 已完成 | 日常 CI 仅覆盖 `main` push 与 PR；`vX.Y.Z` tag 独立校验主分支归属、版本化说明、双平台测试与工件后创建 GitHub Release |
 
 ## 当前批次
 
-B41 已完成本地实现与独立复核。日常 CI 限定为 `main` push 与 PR，不再为 tag 重复运行或在普通
+B41 已完成。日常 CI 限定为 `main` push 与 PR，不再为 tag 重复运行或在普通
 push 保存 Release 工件。独立 Release workflow 只接受 `vX.Y.Z` tag，确认
 主分支归属、四处版本、版本化说明、双平台测试与工件、签名、SHA-256 和提交
-元数据后，以最小写权限创建 GitHub Release；待本次 `main` push 的单次日常
-CI 通过后收口。
+元数据后，以最小写权限创建 GitHub Release。本次 `main` push 仅生成一个
+日常 CI run，macOS 与 Windows job 均通过；Release workflow 已在 GitHub
+注册为 active，未通过创建测试 tag 触发真实发布。
