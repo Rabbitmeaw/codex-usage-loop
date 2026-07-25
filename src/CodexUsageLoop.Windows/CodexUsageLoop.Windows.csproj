@@ -10,6 +10,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>CodexUsageLoop.Windows</AssemblyName>
     <RootNamespace>CodexUsageLoop.Windows</RootNamespace>
+    <Version>0.1.2</Version>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>

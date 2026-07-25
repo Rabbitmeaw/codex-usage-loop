@@ -167,7 +167,7 @@ dist/windows/win-x64/CodexUsageLoop.Windows.exe
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
-  -File scripts/package-windows.ps1 -Version 0.2.0
+  -File scripts/package-windows.ps1 -Version 0.1.2
 ```
 
 生成 x64 ZIP 和相邻的 SHA-256 文件。

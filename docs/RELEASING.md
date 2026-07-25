@@ -30,7 +30,7 @@ zsh scripts/package-release.sh <version>
 例如：
 
 ```bash
-zsh scripts/package-release.sh 0.1.1
+zsh scripts/package-release.sh 0.1.2
 ```
 
 脚本会构建应用、校验其 ad-hoc 签名，并在 `dist/` 中生成：
@@ -50,6 +50,10 @@ zsh scripts/package-release.sh 0.1.1
 Windows 工件名称和运行时依赖以脚本输出及
 [`docs/WINDOWS.md`](WINDOWS.md) 为准。macOS 上的交叉构建可以验证编译和
 单文件发布，但不能替代 Windows 原生集成 smoke。
+
+推送到 GitHub 后，Windows CI 会在原生 runner 完成测试与集成检查，再从
+Windows 项目的 `Version` 生成 `windows-release-assets` 工件；创建 Release
+前应下载并核对其中的 ZIP 与相邻 SHA-256 文件。
 
 ## 发布内容
 

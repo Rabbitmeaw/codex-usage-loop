@@ -248,6 +248,16 @@
 - [ ] 在 macOS 13 发布环境执行估算定位实机 smoke。
 - **状态：** in_progress
 
+### 阶段 31：v0.1.2 跨平台预发布
+
+- [x] 更新 macOS、app-server 客户端和 Windows 程序版本为 0.1.2（build 3）。
+- [x] 将 Unreleased 内容收口为 0.1.2 发布说明并提交版本快照。
+- [ ] 推送 main，等待 macOS 与 Windows CI 通过。
+- [ ] 生成并校验 macOS 与 Windows x64 发布工件。
+- [ ] 创建并核验 GitHub `v0.1.2` 预发布版。
+- [ ] 使用本机稳定 Apple Development 签名更新 `/Applications` 安装版。
+- **状态：** in_progress
+
 ## 已做决策
 
 | 决策 | 理由 |
