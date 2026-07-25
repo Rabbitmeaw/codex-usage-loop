@@ -117,11 +117,52 @@ Check(
     "thinner ring stroke follows 250 percent DPI on whole pixels",
     UsageRingStyle.LineWidth(485.875, compact: false, dpiScale: 2.5) == 16);
 
+Check(
+    "official releases URI is fixed HTTPS",
+    ProjectLinks.ReleasesUri == new Uri(
+        "https://github.com/Rabbitmeaw/codex-usage-loop/releases"));
+
+var observedAt = new DateTimeOffset(2026, 7, 25, 14, 30, 0, TimeSpan.Zero);
+var statusSnapshot = new UsageSnapshot(
+    new UsageWindow("5 小时", 75, null),
+    null,
+    observedAt,
+    "test");
+Check(
+    "refreshing status takes priority over demo",
+    new UsageState
+    {
+        IsRefreshing = true,
+        DemoDualRing = true
+    }.StatusText == "正在刷新…");
+Check(
+    "refresh error preserves existing snapshot message",
+    new UsageState
+    {
+        Snapshot = statusSnapshot,
+        ErrorMessage = "请求失败"
+    }.StatusText == "刷新失败，仍显示上次数据");
+Check(
+    "initial refresh error keeps actual message",
+    new UsageState
+    {
+        ErrorMessage = "请求失败"
+    }.StatusText == "请求失败");
+Check(
+    "successful snapshot shows update time",
+    new UsageState
+    {
+        Snapshot = statusSnapshot
+    }.StatusText == $"更新于 {observedAt.LocalDateTime:t}");
+Check(
+    "empty state waits for Codex usage",
+    new UsageState().StatusText == "等待 Codex 用量");
+
 if (failures.Count > 0)
 {
     Console.Error.WriteLine($"FAILED ({failures.Count}): {string.Join(", ", failures)}");
     return 1;
 }
 
-Console.WriteLine("CodexUsageLoop.Core.Tests: 23 checks passed");
+Console.WriteLine("CodexUsageLoop.Core.Tests: 29 checks passed");
 return 0;

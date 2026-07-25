@@ -1,5 +1,6 @@
 using CodexUsageLoop.Core;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -29,6 +30,7 @@ internal sealed class AppController : IDisposable
     private const int CommandDemo = 141;
     private const int CommandRefresh = 150;
     private const int CommandRecalibrate = 151;
+    private const int CommandOpenReleases = 152;
     private const int CommandQuit = 199;
 
     private static readonly NativeMethods.WindowProc WindowProcedure = WndProc;
@@ -418,6 +420,7 @@ internal sealed class AppController : IDisposable
                 StartAnimation();
             }
         }
+        _state.IsRefreshing = false;
         _forceRender = true;
         UpdateOverlay(force: true);
     }
@@ -429,6 +432,7 @@ internal sealed class AppController : IDisposable
             _state.ErrorMessage = error;
             Diagnostics.Write($"appServerError message={error}");
         }
+        _state.IsRefreshing = false;
         UpdateOverlay(force: true);
     }
 
@@ -782,6 +786,8 @@ internal sealed class AppController : IDisposable
             AddItem(menu, CommandRefresh, "立即刷新");
             AddItem(menu, CommandRecalibrate, "重新检测宠物位置/大小");
             NativeMethods.AppendMenuW(menu, NativeMethods.MF_SEPARATOR, 0, null);
+            AddItem(menu, CommandOpenReleases, "在浏览器查看 GitHub Releases…");
+            NativeMethods.AppendMenuW(menu, NativeMethods.MF_SEPARATOR, 0, null);
             AddItem(menu, CommandQuit, "退出");
 
             NativeMethods.GetCursorPos(out var cursor);
@@ -864,12 +870,16 @@ internal sealed class AppController : IDisposable
                 _displayInnerPercent = InnerPercent(_state.DisplaySnapshot);
                 break;
             case CommandRefresh:
+                _state.ErrorMessage = null;
+                _state.IsRefreshing = true;
                 _client.Refresh();
-                _lastPet = null;
                 break;
             case CommandRecalibrate:
                 _lastPet = null;
                 break;
+            case CommandOpenReleases:
+                OpenGitHubReleases();
+                return;
             case CommandQuit:
                 NativeMethods.PostMessageW(_messageWindow, NativeMethods.WM_CLOSE, 0, 0);
                 return;
@@ -878,6 +888,26 @@ internal sealed class AppController : IDisposable
         UpdateClientLifecycle();
         _forceRender = true;
         UpdateOverlay(force: true);
+    }
+
+    private static void OpenGitHubReleases()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = ProjectLinks.ReleasesUri.AbsoluteUri,
+                UseShellExecute = true
+            });
+        }
+        catch (InvalidOperationException error)
+        {
+            Diagnostics.Write($"openReleasesError message={error.Message}");
+        }
+        catch (Win32Exception error)
+        {
+            Diagnostics.Write($"openReleasesError message={error.Message}");
+        }
     }
 
     private RingColor ChooseColor(RingColor current)

@@ -1,5 +1,11 @@
 namespace CodexUsageLoop.Core;
 
+public static class ProjectLinks
+{
+    public static Uri ReleasesUri { get; } = new(
+        "https://github.com/Rabbitmeaw/codex-usage-loop/releases");
+}
+
 public enum RingPlacement
 {
     Around,
@@ -32,6 +38,7 @@ public sealed class UsageState
 {
     public UsageSnapshot? Snapshot { get; set; }
     public string? ErrorMessage { get; set; }
+    public bool IsRefreshing { get; set; }
     public bool DemoDualRing { get; set; }
     public bool AlwaysVisible { get; set; }
     public bool ManualMove { get; set; }
@@ -43,6 +50,29 @@ public sealed class UsageState
 
     public bool HasRealDualRing => (Snapshot?.Windows.Count ?? 0) > 1;
     public bool IsDualRingDemoAvailable => !HasRealDualRing;
+    public string StatusText
+    {
+        get
+        {
+            if (IsRefreshing)
+            {
+                return "正在刷新…";
+            }
+            if (DemoDualRing)
+            {
+                return "双环演示（本地模拟）";
+            }
+            if (ErrorMessage is not null)
+            {
+                return Snapshot is not null
+                    ? "刷新失败，仍显示上次数据"
+                    : ErrorMessage;
+            }
+            return Snapshot is not null
+                ? $"更新于 {Snapshot.ObservedAt.LocalDateTime:t}"
+                : "等待 Codex 用量";
+        }
+    }
 
     public UsageSnapshot? DisplaySnapshot
     {

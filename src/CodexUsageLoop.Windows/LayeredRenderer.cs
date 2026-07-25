@@ -222,14 +222,9 @@ internal sealed class LayeredRenderer
             yOffset += 19 * scale;
         }
 
-        var status = state.DemoDualRing
-            ? "双环演示（本地模拟）"
-            : state.DisplaySnapshot is not null
-                ? $"更新于 {state.DisplaySnapshot.ObservedAt.LocalDateTime:t}"
-                : state.ErrorMessage ?? "等待 Codex 用量";
         DrawText(
             surface.Graphics,
-            status,
+            state.StatusText,
             10 * scale,
             (float)UsageCardStyle.StatusTextTop(height, dpiScale),
             width - 20 * scale,

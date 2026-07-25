@@ -81,6 +81,19 @@ macOS 打包脚本保持独立，不依赖 .NET 项目。
 8. 退出通过 `WM_CLOSE` 进入标准消息循环收尾，停止计时器和 app-server，
    移除通知区域图标，销毁 HWND/HICON/HBITMAP/HDC/GDI+ 对象。
 
+## 通知区域菜单
+
+| 操作 | 实际行为 |
+| --- | --- |
+| 立即刷新 | 只异步请求最新用量，不重测 pet；卡片显示“正在刷新…”，失败时保留旧数据并显示失败提示。 |
+| 重新检测宠物位置/大小 | 只清除当前 pet 定位结果，并立即从 GUI 状态或系统窗口重新定位。 |
+| 在浏览器查看 GitHub Releases… | 仅在点击后把固定的官方 HTTPS Releases URL 交给 Windows 默认浏览器。 |
+
+Windows 版本没有为这些操作注册快捷键或全局热键，因此不会与浏览器的
+`Ctrl+R` 冲突。应用不会请求版本信息、下载或安装更新；打开 Releases 后的
+网络连接由默认浏览器按其隐私策略处理，CodexUsageLoop 不发送用量、窗口几何
+或其他本机状态。
+
 ## pet 定位与 DPI
 
 Windows Codex GUI 把 pet 布局写入

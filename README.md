@@ -18,7 +18,9 @@ Codex 宠物的本地用量伴随层，在 macOS 和 Windows 上显示 5 小时�
 
 Windows 商店版 Codex GUI 的内置 CLI 当前不能由普通桌面进程直接启动；实时
 额度需要独立安装官方 Codex CLI 或设置 `CODEX_EXECUTABLE`。没有独立 CLI
-时，pet 圆环和本地交互仍可使用。
+时，pet 圆环和本地交互仍可使用。Windows 通知区域菜单的“立即刷新”只请求
+最新用量，“重新检测宠物位置/大小”独立重查几何；两者都不注册快捷键。也可
+由用户主动在默认浏览器打开官方 Releases，应用自身不检查、下载或安装更新。
 
 ## macOS 界面示意
 
@@ -152,7 +154,11 @@ allowances on macOS and Windows.
 The Codex CLI bundled with the Microsoft Store GUI currently cannot be launched
 by a regular desktop process. Live usage on Windows requires a separately
 installed official Codex CLI or `CODEX_EXECUTABLE`; pet rings and local
-interactions remain available without it.
+interactions remain available without it. In the Windows notification-area menu,
+**Refresh now** only requests usage, while pet geometry re-detection remains a
+separate action; neither action registers a shortcut. Users can explicitly open
+the official Releases page in their default browser, but the app itself never
+checks for, downloads, or installs updates.
 
 ## macOS features
 

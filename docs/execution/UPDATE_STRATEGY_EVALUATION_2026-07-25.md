@@ -108,4 +108,4 @@
 
 ## 实施状态
 
-用户已确认采用推荐方案。B34 增加“在浏览器查看 GitHub Releases…”菜单项，只调用 `NSWorkspace` 打开硬编码官方 URL；未引入应用内版本请求、下载、安装、后台检查或更新状态持久化。
+用户已确认采用推荐方案。B34 在 macOS 增加“在浏览器查看 GitHub Releases…”菜单项，只调用 `NSWorkspace` 打开硬编码官方 URL；B36 在 Windows 增加相同入口，仅通过 `ProcessStartInfo.UseShellExecute` 交给默认浏览器。两个平台都未引入应用内版本请求、下载、安装、后台检查或更新状态持久化。

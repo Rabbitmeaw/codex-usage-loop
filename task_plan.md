@@ -222,12 +222,12 @@
 ### 阶段 28：Windows 版本能力同步
 
 - [x] 保护当前 macOS B34／B35 修改并拉取远端最新 Windows 合并版。
-- [ ] 审计 Windows 的 Releases 入口、手动刷新、pet 重测、快捷键和状态反馈实现。
-- [ ] 先增加 Windows 回归测试，再同步用户主动打开 Releases 的能力。
-- [ ] 让 Windows“立即刷新”只刷新用量、移除冲突快捷键，并显示刷新中／失败状态。
-- [ ] 保持 Windows pet 重新检测为独立入口，不增加自动更新或全局键盘监听。
-- [ ] 更新跨平台文档并完成 macOS 与 Windows 可执行验证。
-- **状态：** in_progress
+- [x] 审计 Windows 的 Releases 入口、手动刷新、pet 重测、快捷键和状态反馈实现。
+- [x] 先增加 Windows 回归测试，再同步用户主动打开 Releases 的能力。
+- [x] 让 Windows“立即刷新”只刷新用量、保持无快捷键，并显示刷新中／失败状态。
+- [x] 保持 Windows pet 重新检测为独立入口，不增加自动更新或全局键盘监听。
+- [x] 更新跨平台文档并完成 macOS 与 Windows 可执行验证。
+- **状态：** complete
 
 ## 已做决策
 

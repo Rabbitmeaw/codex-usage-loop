@@ -38,8 +38,8 @@
 | B33 | 排除 Computer Use 辅助窗口候选 | 已完成 | 回归测试覆盖 `Software Cursor` 冲突；修复版在错误窗口仍存在时选择真实 Codex pet；45 项测试、应用构建与 ad-hoc 严格签名校验通过 |
 | B34 | 用户主动打开官方 Releases | 已完成 | macOS 应用自身不检查、下载或安装更新；仅在用户点击后由默认浏览器打开硬编码官方 Releases URL；46 项测试、构建与签名校验通过 |
 | B35 | 手动刷新职责与反馈收口 | 已完成 | macOS“立即刷新”仅刷新用量、移除冲突的 ⌘R、显示刷新中及保留旧数据时的失败反馈；52 项测试、构建、签名、安装与重启验证通过 |
-| B36 | Windows 版本能力同步 | 进行中 | 已拉取远端 Windows 合并版，正在同步 Releases 入口、刷新职责拆分、无冲突快捷键及刷新状态反馈 |
+| B36 | Windows 版本能力同步 | 已完成 | Windows 同步 Releases 入口、刷新职责拆分、无快捷键及刷新状态反馈；Core 29 项检查、Windows Release 交叉构建／单文件发布、macOS 52 项测试通过 |
 
 ## 当前批次
 
-B36 进行中。已保护当前 macOS 修改并合入远端 Windows 原生版本；下一步按测试优先把 B34／B35 能力同步到 Windows，同时保持无自动更新和无全局键盘监听的隐私边界。
+B36 已完成。Windows 通知区域菜单现与 macOS 保持相同的更新隐私边界和刷新职责；当前 macOS 环境已验证 Core、Windows Release 交叉构建与单文件发布，Windows 原生消息循环和默认浏览器拉起留给 Windows CI／实机验收。
