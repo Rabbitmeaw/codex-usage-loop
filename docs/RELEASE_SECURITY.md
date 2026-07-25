@@ -40,4 +40,4 @@ zsh scripts/package-release.sh 0.1.2
 
 ## 发布前待决事项
 
-项目采用 [MIT License](../LICENSE)，官方 Release 已托管在 [Rabbitmeaw/codex-usage-loop Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)。每次发布前请确认目标 tag 指向已审阅的提交，并上传脚本生成的三个工件。
+项目采用 [MIT License](../LICENSE)，官方 Release 已托管在 [Rabbitmeaw/codex-usage-loop Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)。每次发布前请确认目标 tag 指向已审阅且属于 `main` 的提交，并按 [Release 发布流程](RELEASING.md)准备版本化说明。推送 `vX.Y.Z` tag 后，GitHub Actions 会重新执行双平台测试与打包，校验版本、提交和 SHA-256，再创建 Release；普通 `main` push 不创建 Release。

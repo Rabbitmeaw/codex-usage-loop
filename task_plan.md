@@ -6,7 +6,7 @@
 
 ## 当前阶段
 
-阶段 29：跨平台文档与兼容策略收口
+阶段 33：日常 CI 与 tag Release 分离
 
 ## 各阶段
 
@@ -268,6 +268,19 @@
 - [x] 验证安装脚本语法、文档链接、权限提示契约与既有测试。
 - [x] 评估 branch push 与 tag push 产生两次 CI 的合理性，不在本阶段直接修改工作流。
 - **状态：** complete
+
+### 阶段 33：日常 CI 与 tag Release 分离
+
+- [x] 先建立工作流触发、权限、主分支归属和发布工件契约检查。
+- [x] 将日常 CI 限定为 `main` push 与 PR，并移除普通 push 的 Release 打包。
+- [x] 新增仅由 `v*` tag 触发的跨平台 Release 工作流。
+- [x] 发布前确认 tag 提交属于 `origin/main`，并校验 tag 与项目版本一致。
+- [x] 在 Release 工作流中执行双平台测试、构建、打包、校验和与元数据生成。
+- [x] 使用最小 `contents: write` 权限创建 GitHub Release，并上传双平台工件。
+- [x] 更新发布文档、决策记录、Release 规则缓存与 CI 评估结论。
+- [x] 运行契约检查、Swift 测试、macOS 打包签名和工作流静态验证。
+- [ ] 独立复核后提交推送，并确认日常 CI 只执行一次。
+- **状态：** in_progress
 
 ## 已做决策
 

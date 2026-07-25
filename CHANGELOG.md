@@ -9,6 +9,9 @@
 - 在 README、Agent 项目规则与安装完成提示中突出 macOS 14+ 像素定位授权步骤，
   严谨区分本地图像处理、Codex app-server 与浏览器网络边界；屏幕边缘提醒仅
   适用于估算定位。
+- 将日常 CI 限定为 PR 与 `main` push；新增仅由 `vX.Y.Z` tag 触发的跨平台
+  Release workflow，校验主分支归属、版本化说明、测试、工件、签名、提交元数据
+  与 SHA-256 后自动创建 GitHub Release。
 
 ## 0.1.2 — 2026-07-25
 

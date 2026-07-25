@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify tag source and version
+        shell: bash
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$(git rev-parse HEAD)" refs/remotes/origin/main
+          zsh scripts/validate-release-ref.sh "$GITHUB_REF_NAME"
+
+  macos:
+    needs: validate
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run tests
+        run: swift test
+      - name: Package macOS release assets
+        run: zsh scripts/package-release.sh "${GITHUB_REF_NAME#v}"
+      - name: Verify application signature
+        run: codesign --verify --deep --strict "dist/CodexUsageLoop.app"
+      - name: Upload macOS release assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-release-assets
+          path: |
+            dist/CodexUsageLoop-*.zip
+            dist/SHA256SUMS.txt
+            dist/RELEASE_METADATA.txt
+          if-no-files-found: error
+
+  windows:
+    needs: validate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Package Windows release assets
+        shell: pwsh
+        run: ./scripts/package-windows.ps1 -Version $env:GITHUB_REF_NAME.Substring(1)
+      - name: Run app-server and native lifecycle integration
+        shell: pwsh
+        run: ./scripts/test-windows-integration.ps1
+      - name: Upload Windows release assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-release-assets
+          path: |
+            dist/CodexUsageLoop-Windows-x64-*.zip
+            dist/CodexUsageLoop-Windows-x64-*.zip.sha256
+          if-no-files-found: error
+
+  publish:
+    needs:
+      - validate
+      - macos
+      - windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download macOS release assets
+        uses: actions/download-artifact@v7
+        with:
+          name: macos-release-assets
+          path: release-assets/macos
+      - name: Download Windows release assets
+        uses: actions/download-artifact@v7
+        with:
+          name: windows-release-assets
+          path: release-assets/windows
+      - name: Verify release checksums
+        shell: bash
+        run: |
+          cd release-assets/macos
+          sha256sum --check SHA256SUMS.txt
+          grep -Fx "version=${GITHUB_REF_NAME#v}" RELEASE_METADATA.txt
+          grep -Fx "commit=$(git -C ../.. rev-parse HEAD)" RELEASE_METADATA.txt
+          cd ../windows
+          sha256sum --check ./*.sha256
+      - name: Create GitHub Release
+        shell: bash
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            release-assets/macos/* \
+            release-assets/windows/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "$(cat "docs/releases/${GITHUB_REF_NAME}.md")" \
+            --generate-notes \
+            --verify-tag \
+            --fail-on-no-commits

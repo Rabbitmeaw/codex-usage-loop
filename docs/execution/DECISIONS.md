@@ -96,6 +96,20 @@ parser fixtures、窗口／状态定位、macOS 与 Windows 自动化，以及�
 实机 smoke。遇到不兼容时必须显示明确错误并保留可恢复的本地交互，不得伪造
 用量数据。
 
+## D-020 · 日常 CI 与正式 Release 按 ref 分离
+
+日期：2026-07-25
+
+日常 CI 只监听 PR 与 `main` push，不创建或保存 Release 工件。正式发布只由
+`vX.Y.Z` tag 触发独立 workflow；发布前必须确认 tag 提交属于 `origin/main`，
+版本来源与版本化 Release 说明一致，并重新执行双平台测试、构建、原生集成、
+签名、元数据和 SHA-256 校验。只有创建 Release 的最终 job 获得
+`contents: write`。
+
+版本化说明必须记录本次实际回归的 Codex Desktop／CLI 版本和能力边界，以及
+未 Developer ID／未公证、无 Authenticode 的分发风险。当前流程只接受正式
+三段版本号；预发布后缀需要先单独定义 macOS Bundle 版本映射。
+
 ## D-007 · 常驻卡片位置与双环演示互斥
 
 日期：2026-07-22
