@@ -21,6 +21,10 @@
 - 排除 `ChatGPT Computer Use / Software Cursor` 等辅助窗口，避免圆环突然使用错误的小窗口几何。
 - macOS 与 Windows 的“立即刷新”不再同时触发 pet 重测；macOS 移除与前台应用冲突的 ⌘R，Windows 保持无快捷键。两端的刷新中及保留旧数据时的失败状态现在可见。
 
+### 已变更
+
+- 收口跨平台文档与兼容契约：macOS 13 的目标明确为窗口几何估算，并将尚未完成的菜单门禁／状态修正登记为 B38；每个 Release 只承诺发布说明记录的已回归 Codex Desktop／CLI 稳定版本与能力契约。
+
 ### 已知限制
 
 - Windows 版本当前仅提供 x64、依赖 .NET 10 Runtime 的单文件发布。

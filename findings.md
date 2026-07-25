@@ -1,48 +1,40 @@
-# 发现与决策
+# 发现与决策摘要
 
-## 需求
+本文件是阶段性研究摘要。当前批次状态以
+[`docs/execution/PROGRESS.md`](docs/execution/PROGRESS.md) 为准，不可逆决策以
+[`docs/execution/DECISIONS.md`](docs/execution/DECISIONS.md) 为准。
 
-- 常驻用量卡片在围绕 pet 时位于圆环右侧；左右侧圆环时位于圆环正下方。
-- 真实双环存在时禁用“演示双环”。
-- 核查立即刷新和重新检测是否已有实现。
-- 图标替换为透明背景、仅有蓝绿双环的标志。
+## 已验证发现
 
-## 研究发现
+- macOS 与 Windows 都能通过本机 app-server 获取 5 小时和 7 天用量；协议异常
+  时显示错误，不伪造数据。
+- “立即刷新”和 pet 几何重测是不同职责；两端现已拆分，刷新期间由
+  `IsRefreshing`／`isRefreshing` 驱动 `StatusText`／`statusText`。
+- 全局右键监听会影响其他应用，已移除；控制入口集中在菜单栏或通知区域。
+- Computer Use 的 `Software Cursor` 等辅助窗口可能命中旧候选规则，现已排除。
+- macOS 屏幕捕获仅适合作为用户授权后的本地精确化路径；无权限及 macOS 13
+  必须保留窗口几何估算。
+- Windows 适合独立 Win32 平台层，不应让 Win32 或 AppKit 条件判断跨平台扩散。
+- 用户主动打开官方 Releases 可以提高更新可发现性，同时保持应用进程自身不
+  主动联网；macOS 使用 `NSWorkspace`，Windows 使用
+  `ProcessStartInfo.UseShellExecute`。
 
-- `refresh()` 调用 `client.refresh()` 后调用 `recalibrate()`；前者请求或重新启动 app-server，后者清除宠物图像定位缓存并立即更新悬浮层。
-- `recalibrate()` 已调用 `locator.reset()` 和 `updateOverlay()`，因此已有实际实现。
-- 原有卡片位置完全由鼠标位置决定，常驻状态不影响卡片可见性。
-- 原有 `displaySnapshot` 在演示开关开启后直接返回模拟快照，会遮蔽真实双环数据。
+## 已采纳取舍
 
-## 技术决策
+| 主题 | 当前取舍 |
+| --- | --- |
+| 数据与隐私 | 无自有服务端／数据库；不读取认证文件，不保存截图 |
+| macOS 定位 | 窗口几何为基础；macOS 14+ 可由用户主动授权像素级定位 |
+| macOS 13 | 目标为估算定位且不承诺像素级精度；菜单门禁与授权状态待 B38 |
+| Windows 架构 | .NET 10 Core + 独立 Win32 平台层 |
+| 刷新交互 | 只刷新用量，无菜单或全局快捷键；失败时保留旧数据 |
+| 更新策略 | 不检查、不下载、不安装；仅显式打开浏览器 |
+| Codex 兼容 | 每个 Release 记录并支持当次已回归的确切稳定版本与能力契约，不维护历史版本矩阵 |
+| 发布安全 | macOS 开源工件使用 ad-hoc 完整性签名，无 Developer ID 或公证 |
 
-| 决策 | 理由 |
-|------|------|
-| 将卡片坐标计算提取为 `UsageCardLayout` | 让位置规则可脱离 AppKit 控制器进行单元测试。 |
-| 使用 `isDualRingDemoAvailable` 控制演示开关和快照选择 | 真实用量到达时菜单和渲染逻辑统一互斥。 |
-| 图标先在纯色背景生成，再用本地工具抠出 alpha | 内置图像生成路径不直接输出原生透明 PNG。 |
-| 移除全局右键监听 | 右键菜单不是必要交互，且 `NSEvent` 全局监听会观察其他应用的右键事件。 |
-| 保留 Swift 模块名称，改写用户可见应用身份 | 重命名模块和目录会引入无关的构建与测试变更；应用包、可执行文件、Bundle 标识和文案足以完成产品更名。 |
-| 菜单栏直接加载打包的 `AppIcon.icns` | 状态栏此前只设置了文本 `◉`，未使用应用图标资源。 |
-| 只对评分最高的候选窗口执行 ScreenCaptureKit | 窗口评分无需截图；先筛选再精确化可避免多窗口重复捕获。 |
-| 单色菜单栏图标使用 template image | macOS 会在深色菜单栏渲染白色、浅色菜单栏渲染黑色，优先保证系统对比度。 |
-| 开源 Release 不采用 Developer ID 或公证 | 必须用官方 Release、SHA-256、提交 ID 和用户确认来源来降低供应链风险；不建议关闭 Gatekeeper。 |
-| 自定义内外环颜色 | 可用两个原生颜色选择器实现，分别持久化 sRGB 值，并提供恢复默认蓝绿。 |
-| B01 限额解析 | 现有 JSON-RPC 映射可无行为变更地抽离为纯 `RateLimitParser`，从而直接测试百分比、窗口时长、重置时间和无效值。 |
-| B02 定位测试 | 候选评分、宠物估算、CG→AppKit 坐标与圆环位置可抽成纯函数；像素样例应固定图像→窗口坐标翻转后的真实输出，避免混淆两种坐标原点。 |
-| B10 自定义颜色 | 外环对应单环／短周期环，内环对应双环时的周周期环；用原生 `NSColorPanel` 取 sRGB 后持久化三元组，避免依赖归档的 `NSColor`。 |
-| Swift 6 并发收口 | `ScreenCaptureMascotLocator` 的共享状态仍由 `NSLock` 串行化；将异步方法中的直接锁调用收敛到同步访问器，并显式说明该受锁保护对象为 `@unchecked Sendable`，可消除迁移警告且不改变截图退避和回退策略。 |
+## 验证基线
 
-## 视觉发现
-
-- 第一版图标有宠物形象和深色方形底，用户认为不合适。
-- 第二版要求只保留蓝绿双环，透明背景、无文字、无宠物、无方形底。
-- 第二版已完成抠图：`Resources/AppIcon.png` 为 1254 × 1254 PNG，含 alpha 通道。
-
-## 遇到的问题
-
-| 问题 | 解决方案 |
-|------|---------|
-| release 构建对 `ScreenCaptureMascotLocator` 报告 `Sendable` 与异步上下文锁的迁移警告 | 这些是既有代码的 Swift 6 兼容性技术债；本轮不扩大范围修改并发定位逻辑。应用仍成功构建、签名并通过测试。 |
-| 在其他应用右键时悬浮层出现异常 | 根因是全局 `.rightMouseDown` 监听；已移除右键菜单能力。 |
-| 异常能耗 | 初次优化后仍检测到持续 100% CPU。进程采样确认 app-server stdout／stderr 在 EOF 后保留 `readabilityHandler`，导致 fd monitoring 队列忙等；EOF 时清除两条回调后，新实例短样本降至约 0.6% CPU。 |
+- macOS：52 项 Swift 测试。
+- Windows Core：29 项检查。
+- Windows 原生窗口集成与 macOS 13 实机 smoke 属于发布／CI 验证边界；B38
+  的 macOS 13 菜单门禁修复也不能由当前自动化结果替代。

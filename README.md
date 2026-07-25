@@ -22,6 +22,15 @@ Windows 商店版 Codex GUI 的内置 CLI 当前不能由普通桌面进程直�
 最新用量，“重新检测宠物位置/大小”独立重查几何；两者都不注册快捷键。也可
 由用户主动在默认浏览器打开官方 Releases，应用自身不检查、下载或安装更新。
 
+## 兼容策略
+
+macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS 14+ 才可由
+用户主动启用像素级定位。当前 macOS 13 的菜单门禁与授权状态仍待 B38 修正，
+完成前不视为完整交付。Codex Desktop／CLI 不固定历史版本
+矩阵；每个 Release 只承诺其发布说明中记录的已回归稳定版本与能力契约，发布后
+的新版本不自动视为已支持。不兼容时显示明确错误，不伪造用量。详见
+[决策日志](docs/execution/DECISIONS.md)与[发布流程](docs/RELEASING.md)。
+
 ## macOS 界面示意
 
 <p align="center">
@@ -71,7 +80,7 @@ Windows 商店版 Codex GUI 的内置 CLI 当前不能由普通桌面进程直�
 | 临时把圆环移到别处 | 勾选 **自由拖动位置** 后拖动圆环 | 关闭该选项即可恢复自动跟随 pet。 |
 | 调整围绕模式视觉大小 | **围绕 pet 的圆环大小** → 拖动滑杆 | 在 75%–150% 间实时缩放；可选择“恢复默认（100%）”。 |
 | 改变环或菜单栏图标外观 | **圆环颜色**／**菜单栏图标** | 可分别修改内外环，或切换原色蓝绿与单色跟随系统。 |
-| 获得最准确的位置和直径 | **启用像素级定位…** → 按 macOS 流程授权并重新打开 | 授权后菜单显示“已授权（像素级定位）”，围绕模式按实测 pet 边界定位。 |
+| 在 macOS 14+ 获得最准确的位置和直径 | **启用像素级定位…** → 按 macOS 流程授权并重新打开 | 授权后菜单显示“已授权（像素级定位）”，围绕模式按实测 pet 边界定位。 |
 
 ### pet 可见性规则
 
@@ -105,9 +114,9 @@ zsh scripts/install.sh --with-login-agent
 
 ## macOS 权限与隐私
 
-用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。应用不会主动访问互联网；只有当你选择“在浏览器查看 GitHub Releases…”时，macOS 才会在默认浏览器打开官方发布页，CodexUsageLoop 自身不会检查、下载或安装更新。
+用量通过本机 `codex app-server --stdio` 的只读接口获取，不读取、解析或上传 `~/.codex/auth.json`。在 macOS 14+，如需精确识别透明宠物窗口内的实际边界，**建议在 macOS“系统设置 → 隐私与安全性 → 屏幕录制”中授权 CodexUsageLoop**；图像只在本机内存中分析，不保存、不上传。应用不会主动访问互联网；只有当你选择“在浏览器查看 GitHub Releases…”时，macOS 才会在默认浏览器打开官方发布页，CodexUsageLoop 自身不会检查、下载或安装更新。
 
-应用不会在启动时自动弹出屏幕录制授权。需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍可通过 pet 容器的窗口几何估算进行基本跟随，但在非默认布局、pet 实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的可见 pet 像素边界作为圆心与直径来源，以获得更准确的贴合效果。
+应用不会在启动时自动弹出屏幕录制授权。在 macOS 14+ 需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍可通过 pet 容器的窗口几何估算进行基本跟随，但在非默认布局、pet 实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的可见 pet 像素边界作为圆心与直径来源，以获得更准确的贴合效果。
 
 菜单会显示当前进程实际检测到的“屏幕录制：已授权（像素级定位）”或“未授权（使用估算）”。若系统设置中的开关显示已开启、菜单仍显示未授权，请关闭再重新开启该开关，然后重启应用。
 
@@ -160,6 +169,19 @@ separate action; neither action registers a shortcut. Users can explicitly open
 the official Releases page in their default browser, but the app itself never
 checks for, downloads, or installs updates.
 
+## Compatibility policy
+
+The macOS 13 compatibility target is window-geometry estimation without
+pixel-level guarantees; user-enabled pixel positioning requires macOS 14+.
+The macOS 13 menu gate and authorization status still require B38 before this
+target is considered fully delivered. Rather than freezing a historical
+Codex Desktop/CLI version matrix, each release supports only the exact stable
+versions and capability contract recorded after its release validation; later
+Codex versions are not assumed compatible. Incompatibilities produce explicit
+errors instead of fabricated usage. See the
+[decision log](docs/execution/DECISIONS.md) and
+[release process](docs/RELEASING.md).
+
 ## macOS features
 
 - **Usage at a glance:** reads the local Codex app-server's 5-hour and 7-day windows. One real window renders one ring; two real windows render dual rings.
@@ -170,7 +192,7 @@ checks for, downloads, or installs updates.
 - **Controlled interaction:** temporarily enable free dragging, then turn it off to resume pet following. **Refresh now** refreshes usage only; pet geometry recalibration remains a separate action. A real dual ring disables **Demo dual ring**, so simulated data never replaces real usage.
 - **Coexists with the Codex pet:** the overlay is click-through by default and has no global right-click listener. It does not change the pet's context menu, task-card expansion, or other native behavior.
 - **Optional companion startup:** install the login companion and enable **Start with Codex pet**. Usage reading pauses and both panels hide when Codex Desktop quits. While Codex is running and the pet is hidden, the ring stays visible and **Always show usage card** controls the detail card only.
-- **Local and minimal-permission:** the app never reads auth files, uploads usage or screen imagery, or saves captures. Screen Recording is requested only after the user selects the menu action.
+- **Local and minimal-permission:** the app never reads auth files, uploads usage or screen imagery, or saves captures. On macOS 14+, Screen Recording is requested only after the user selects the menu action.
 
 ## macOS common tasks
 
@@ -182,7 +204,7 @@ checks for, downloads, or installs updates.
 | Move the ring temporarily | Enable **Free drag position**, then drag the ring | Disable it to resume automatic pet following. |
 | Change around-pet size | **Around-pet ring size** → move the slider | Adjusts from 75% to 150%; **Reset to default (100%)** restores the default. |
 | Change ring or menu-bar appearance | **Ring colors** / **Menu-bar icon** | Set outer and inner colors independently, or choose color and system-adaptive monochrome icon modes. |
-| Get the most accurate center and diameter | **Enable pixel-level positioning…** → authorize in macOS and reopen | The menu reports **Authorized (pixel-level positioning)** and around-pet geometry uses measured pet bounds. |
+| Get the most accurate center and diameter on macOS 14+ | **Enable pixel-level positioning…** → authorize in macOS and reopen | The menu reports **Authorized (pixel-level positioning)** and around-pet geometry uses measured pet bounds. |
 
 ### Pet visibility rules
 
