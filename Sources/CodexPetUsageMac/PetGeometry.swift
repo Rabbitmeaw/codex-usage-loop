@@ -13,6 +13,11 @@ enum PetWindowCandidateScoring {
             || owner.caseInsensitiveCompare("ChatGPT") == .orderedSame
     }
 
+    static func accepts(owner: String, title: String) -> Bool {
+        accepts(owner: owner)
+            && !ComputerUseSessionWindow.isAuxiliary(title: title)
+    }
+
     static func score(owner: String,
                       title: String,
                       container: CGRect,
@@ -31,9 +36,48 @@ enum PetWindowCandidateScoring {
     }
 }
 
+enum ComputerUseSessionWindow {
+    static func isActive(owner: String, title: String) -> Bool {
+        guard owner.caseInsensitiveCompare("ChatGPT") == .orderedSame else {
+            return false
+        }
+        return title.caseInsensitiveCompare("Computer Use") == .orderedSame
+            || title.caseInsensitiveCompare("Computer Use Controls") == .orderedSame
+    }
+
+    static func isActive(in windows: [[String: Any]]) -> Bool {
+        windows.contains { window in
+            guard let owner = window[kCGWindowOwnerName as String] as? String else {
+                return false
+            }
+            let title = window[kCGWindowName as String] as? String ?? ""
+            return isActive(owner: owner, title: title)
+        }
+    }
+
+    static func isAuxiliary(title: String) -> Bool {
+        title.caseInsensitiveCompare("Computer Use") == .orderedSame
+            || title.caseInsensitiveCompare("Computer Use Controls") == .orderedSame
+            || title.caseInsensitiveCompare("Software Cursor") == .orderedSame
+    }
+}
+
 enum PetOverlayVisibility {
     static func isOpen(_ value: Any?) -> Bool {
         value as? Bool ?? true
+    }
+}
+
+enum ComputerUseGeometryFreezePolicy {
+    static func shouldFreeze(isComputerUseActive: Bool,
+                             hasTrustedGeometry: Bool) -> Bool {
+        isComputerUseActive && hasTrustedGeometry
+    }
+}
+
+enum ComputerUseActivityTransition {
+    static func enteredActive(previous: Bool, current: Bool) -> Bool {
+        !previous && current
     }
 }
 

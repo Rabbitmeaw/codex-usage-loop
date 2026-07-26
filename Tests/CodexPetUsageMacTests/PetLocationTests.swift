@@ -6,6 +6,7 @@ final class PetLocationTests: XCTestCase {
     func testCandidateAdmissionAllowsOnlyMainCodexOwners() {
         XCTAssertTrue(PetWindowCandidateScoring.accepts(owner: "Codex"))
         XCTAssertTrue(PetWindowCandidateScoring.accepts(owner: "ChatGPT"))
+        XCTAssertTrue(PetWindowCandidateScoring.accepts(owner: "ChatGPT", title: "Codex"))
     }
 
     func testCandidateAdmissionRejectsComputerUseSoftwareCursorAndSimilarAuxiliaryOwners() {
@@ -13,6 +14,16 @@ final class PetLocationTests: XCTestCase {
 
         XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: softwareCursor.owner), softwareCursor.title)
         XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: "Codex Helper"))
+        XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: "ChatGPT", title: "Computer Use"))
+        XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: "ChatGPT", title: "Computer Use Controls"))
+        XCTAssertFalse(PetWindowCandidateScoring.accepts(owner: "ChatGPT", title: "Software Cursor"))
+    }
+
+    func testComputerUseSessionDetectionRecognizesOnlyTheLiveSessionWindows() {
+        XCTAssertTrue(ComputerUseSessionWindow.isActive(owner: "ChatGPT", title: "Computer Use"))
+        XCTAssertTrue(ComputerUseSessionWindow.isActive(owner: "ChatGPT", title: "Computer Use Controls"))
+        XCTAssertFalse(ComputerUseSessionWindow.isActive(owner: "ChatGPT", title: "Codex"))
+        XCTAssertFalse(ComputerUseSessionWindow.isActive(owner: "Codex", title: "Computer Use"))
     }
 
     func testCandidateScorePrefersPetTitleOverPlainCodexWindow() {
@@ -39,6 +50,72 @@ final class PetLocationTests: XCTestCase {
         XCTAssertTrue(PetOverlayVisibility.isOpen(nil))
         XCTAssertTrue(PetOverlayVisibility.isOpen(true))
         XCTAssertFalse(PetOverlayVisibility.isOpen(false))
+    }
+
+    func testComputerUseFreezesExistingTrustedPetGeometryOnlyWhileActive() {
+        XCTAssertTrue(
+            ComputerUseGeometryFreezePolicy.shouldFreeze(
+                isComputerUseActive: true,
+                hasTrustedGeometry: true
+            )
+        )
+        XCTAssertFalse(
+            ComputerUseGeometryFreezePolicy.shouldFreeze(
+                isComputerUseActive: false,
+                hasTrustedGeometry: true
+            )
+        )
+        XCTAssertFalse(
+            ComputerUseGeometryFreezePolicy.shouldFreeze(
+                isComputerUseActive: true,
+                hasTrustedGeometry: false
+            )
+        )
+    }
+
+    func testComputerUsePausesManualPetGeometryRecalibration() {
+        let activeLocator = PetWindowLocator(computerUseIsActive: { _ in true })
+        let inactiveLocator = PetWindowLocator(computerUseIsActive: { _ in false })
+
+        XCTAssertFalse(activeLocator.reset())
+        XCTAssertTrue(inactiveLocator.reset())
+    }
+
+    func testManualRecalibrationUsesTheCurrentWindowSnapshotForSessionDetection() {
+        let activeWindow: [String: Any] = [
+            kCGWindowOwnerName as String: "ChatGPT",
+            kCGWindowName as String: "Computer Use"
+        ]
+        let petWindow: [String: Any] = [
+            kCGWindowOwnerName as String: "ChatGPT",
+            kCGWindowName as String: "Codex"
+        ]
+
+        XCTAssertFalse(PetWindowLocator(windowInfoProvider: { [activeWindow, petWindow] }).reset())
+        XCTAssertTrue(PetWindowLocator(windowInfoProvider: { [petWindow] }).reset())
+    }
+
+    func testComputerUseTransitionInvalidationRunsOncePerActivePeriodAcrossLocateAndReset() {
+        var active = false
+        var invalidationCount = 0
+        let locator = PetWindowLocator(
+            windowInfoProvider: { [] },
+            computerUseIsActive: { _ in active },
+            computerUseTransitionObserver: { invalidationCount += 1 }
+        )
+
+        _ = locator.locate()
+        active = true
+        _ = locator.locate()
+        XCTAssertFalse(locator.reset())
+        _ = locator.locate()
+        XCTAssertEqual(invalidationCount, 1)
+
+        active = false
+        XCTAssertTrue(locator.reset())
+        active = true
+        XCTAssertFalse(locator.reset())
+        XCTAssertEqual(invalidationCount, 2)
     }
 
     func testEstimatedMascotFrameFollowsPersistedPlacement() {

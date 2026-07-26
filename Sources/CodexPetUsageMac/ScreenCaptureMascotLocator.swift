@@ -103,6 +103,16 @@ final class ScreenCaptureMascotLocator: @unchecked Sendable {
         lock.unlock()
     }
 
+    @discardableResult
+    func invalidatePendingCapturesForComputerUse() -> UInt {
+        lock.lock()
+        generation &+= 1
+        pending.removeAll()
+        let currentGeneration = generation
+        lock.unlock()
+        return currentGeneration
+    }
+
     func requestScreenRecordingAuthorization() {
         let operatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
         guard PixelMascotLocationCapability.isSupported(on: operatingSystemVersion) else {

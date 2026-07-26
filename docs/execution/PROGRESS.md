@@ -44,12 +44,17 @@
 | B39 | `v0.1.2` 跨平台预发布 | 已完成 | main 与 tag CI 全绿；双平台工件、SHA-256、构建元数据及 GitHub 预发布已核验；本机已用稳定 Apple Development 签名更新并重启 |
 | B40 | 安装权限提示与定位边界澄清 | 已完成 | README、Agent 项目指令与安装脚本突出 macOS 14+ 像素定位授权，严谨区分图像、本应用、Codex app-server 与浏览器边界，并将屏幕边缘提醒限定为估算定位 |
 | B41 | 日常 CI 与 tag Release 分离 | 已完成 | 日常 CI 仅覆盖 `main` push 与 PR；`vX.Y.Z` tag 独立校验主分支归属、版本化说明、双平台测试与工件后创建 GitHub Release |
+| B42 | Computer Use 期间冻结圆环几何 | 已完成 | 活跃会话按可见窗口识别并冻结可信几何；排除辅助窗口与延迟捕获；结束后恢复跟踪，手动重测显示非抢焦点提示 |
 
 ## 当前批次
 
-B41 已完成。日常 CI 限定为 `main` push 与 PR，不再为 tag 重复运行或在普通
-push 保存 Release 工件。独立 Release workflow 只接受 `vX.Y.Z` tag，确认
-主分支归属、四处版本、版本化说明、双平台测试与工件、签名、SHA-256 和提交
-元数据后，以最小写权限创建 GitHub Release。本次 `main` push 仅生成一个
-日常 CI run，macOS 与 Windows job 均通过；Release workflow 已在 GitHub
-注册为 active，未通过创建测试 tag 触发真实发布。
+B42 已完成。现场自动窗口快照确认当前会话窗口实际表现为
+`ChatGPT / Computer Use` 与 `ChatGPT / Computer Use Controls`，而
+`com.openai.sky.CUAService` 是常驻进程，不能代表会话是否活跃。修复改为
+按这两个可见会话窗口门禁：活动期间复用最后可信几何并暂停手动重测；同时按
+标题排除会话窗口和 Software Cursor 作为 pet 候选，保证会话中重启也能降级
+到真实 Codex 窗口。进入会话时还会让在途像素捕获失效但保留可信缓存，避免
+结束后采用活动期结果。重测暂停时在圆环附近短暂提示“结束后自动恢复”。
+64 项 warnings-as-errors 测试、Release 构建、安装包严格签名和构建哈希均
+通过；本机安装版已更新并重启，圆环窗口从错误的 252×252 恢复为 154×154。
+独立复核未发现剩余 P0–P2。

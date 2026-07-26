@@ -27,10 +27,36 @@ final class PetWindowLocator {
     }
 
     private let contentLocator = ScreenCaptureMascotLocator()
+    private let windowInfoProvider: () -> [[String: Any]]
+    private let computerUseIsActive: ([[String: Any]]) -> Bool
+    private let computerUseTransitionObserver: () -> Void
     private var lastMeasuredPet: PetWindow?
+    private var lastTrustedPet: PetWindow?
+    private var previousComputerUseIsActive = false
 
-    func reset() {
+    init(windowInfoProvider: @escaping () -> [[String: Any]] = {
+        (CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements],
+            kCGNullWindowID
+        ) as? [[String: Any]]) ?? []
+    },
+    computerUseIsActive: @escaping ([[String: Any]]) -> Bool = {
+        ComputerUseSessionWindow.isActive(in: $0)
+    },
+    computerUseTransitionObserver: @escaping () -> Void = {
+    }) {
+        self.windowInfoProvider = windowInfoProvider
+        self.computerUseIsActive = computerUseIsActive
+        self.computerUseTransitionObserver = computerUseTransitionObserver
+    }
+
+    @discardableResult
+    func reset() -> Bool {
+        let isComputerUseActive = computerUseIsActive(windowInfoProvider())
+        handleComputerUseActivity(isComputerUseActive)
+        guard !isComputerUseActive else { return false }
         contentLocator.reset()
+        return true
     }
 
     func requestScreenRecordingAuthorization() {
@@ -38,24 +64,35 @@ final class PetWindowLocator {
     }
 
     func locate() -> PetWindow? {
-        let windows = (CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]) ?? []
+        let windows = windowInfoProvider()
+        let isComputerUseActive = computerUseIsActive(windows)
+        handleComputerUseActivity(isComputerUseActive)
         let persistedOverlay = persistedOverlayState()
         let persistedState = persistedOverlay?.state
+        if ComputerUseGeometryFreezePolicy.shouldFreeze(
+            isComputerUseActive: isComputerUseActive,
+            hasTrustedGeometry: lastTrustedPet != nil
+        ) {
+            return lastTrustedPet
+        }
         if persistedOverlay?.isOpen == false {
             lastMeasuredPet = nil
+            lastTrustedPet = nil
             return nil
         }
         let overlayOrigin = codexOverlayOrigin(from: persistedState)
         let placement = codexPlacement(from: persistedState)
         let candidates: [Candidate] = windows.compactMap { info in
-            guard let owner = info[kCGWindowOwnerName as String] as? String,
-                  PetWindowCandidateScoring.accepts(owner: owner),
+            guard let owner = info[kCGWindowOwnerName as String] as? String else {
+                return nil
+            }
+            let title = info[kCGWindowName as String] as? String ?? ""
+            guard PetWindowCandidateScoring.accepts(owner: owner, title: title),
                   let bounds = info[kCGWindowBounds as String] as? [String: Any],
                   let x = number(bounds["X"]), let y = number(bounds["Y"]),
                   let width = number(bounds["Width"]), let height = number(bounds["Height"]),
                   width > 40, height > 40, width < 700, height < 700 else { return nil }
             let windowID = (info[kCGWindowNumber as String] as? NSNumber)?.uint32Value ?? 0
-            let title = info[kCGWindowName as String] as? String ?? ""
             let container = CGRect(x: x, y: y, width: width, height: height)
             let displayID = displayID(for: container)
             let mascotSize = PersistedPetGeometry.mascotSize(from: persistedState ?? [:], displayID: displayID)
@@ -88,7 +125,11 @@ final class PetWindowLocator {
             // A live window can disappear for a frame while Codex rebuilds a
             // task card. Do not replace an already measured pet with a less
             // accurate persisted estimate during that transient.
-            return lastMeasuredPet ?? fallbackPet(from: persistedState, isOpen: persistedOverlay?.isOpen ?? false)
+            return rememberTrusted(
+                lastMeasuredPet
+                    ?? fallbackPet(from: persistedState,
+                                   isOpen: persistedOverlay?.isOpen ?? false)
+            )
         }
         let resolution = contentLocator.frame(for: candidate.window.windowID,
                                               container: candidate.container,
@@ -107,12 +148,30 @@ final class PetWindowLocator {
                                     title: candidate.window.title)
         if resolution.source == .measured {
             lastMeasuredPet = resolvedPet
-            return resolvedPet
+            return rememberTrusted(resolvedPet)
         }
         if let lastMeasuredPet, lastMeasuredPet.windowID == candidate.window.windowID {
-            return lastMeasuredPet
+            return rememberTrusted(lastMeasuredPet)
         }
-        return resolvedPet
+        return rememberTrusted(resolvedPet)
+    }
+
+    private func handleComputerUseActivity(_ isActive: Bool) {
+        let enteredActive = ComputerUseActivityTransition.enteredActive(
+            previous: previousComputerUseIsActive,
+            current: isActive
+        )
+        previousComputerUseIsActive = isActive
+        guard enteredActive else { return }
+        contentLocator.invalidatePendingCapturesForComputerUse()
+        computerUseTransitionObserver()
+    }
+
+    private func rememberTrusted(_ pet: PetWindow?) -> PetWindow? {
+        if let pet {
+            lastTrustedPet = pet
+        }
+        return pet
     }
 
     private func fallbackPet(from state: [String: Any]?, isOpen: Bool) -> PetWindow? {

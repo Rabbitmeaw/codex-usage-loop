@@ -44,6 +44,38 @@ struct UsageCardView: View {
 
 }
 
+struct RecalibrationPausedNoticeView: View {
+    @ObservedObject var store: UsageStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 7) {
+                Circle()
+                    .fill(Color(ringColor: store.outerRingColor))
+                    .frame(width: 7, height: 7)
+                Text("Computer Use 进行中")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.92))
+            }
+            Text("已暂停重新检测，结束后自动恢复")
+                .font(.system(size: 10, design: .rounded))
+                .foregroundStyle(.white.opacity(0.65))
+        }
+        .padding(.horizontal, 14)
+        .frame(width: 260, height: 64, alignment: .leading)
+        .background(Color.black.opacity(0.68),
+                    in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color(ringColor: store.outerRingColor).opacity(0.48),
+                        lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.28), radius: 12, y: 5)
+        .preferredColorScheme(.dark)
+        .allowsHitTesting(false)
+    }
+}
+
 struct UsageRingsView: View {
     @ObservedObject var store: UsageStore
 

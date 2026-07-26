@@ -150,6 +150,21 @@ Codex pet 优先通过 `.codex-global-state.json` 中的 GUI 几何状态定位�
 不读取、解析或上传任何认证文件。配置使用当前用户注册表，实时额度只存在于
 内存。
 
+## D-021 · Computer Use 活跃期间冻结最后可信 pet 几何
+
+日期：2026-07-26
+
+macOS 检测到可见的 `ChatGPT / Computer Use` 或
+`ChatGPT / Computer Use Controls` 会话窗口且已有可信 pet 几何时，圆环
+继续使用该位置和大小，不再接受这一期间的窗口候选、持久化状态或像素捕获更新。
+“重新检测宠物位置/大小”在活动期间不执行，也不清理截图定位缓存，改为在圆环
+附近短暂显示非抢焦点、点击穿透的暂停提示。
+
+Computer Use 结束后恢复既有自动定位；若应用在 Computer Use 已活跃时启动且
+没有可信历史，则保留原有窗口与持久化降级路径，但会话窗口与
+`Software Cursor` 都不得成为 pet 候选。活动状态不使用常驻的 CUAService
+进程或可能残留的 `Software Cursor` 窗口，避免会话结束后错误地继续冻结。
+
 ## 已收口
 
 - macOS 13 定位目标：见 D-018；B38 代码已完成，剩余实机 smoke。

@@ -10,9 +10,11 @@ final class AppController: NSObject, NSApplicationDelegate {
     private let codexPresenceMonitor = CodexDesktopPresenceMonitor()
     private var panel: NSPanel!
     private var cardPanel: NSPanel!
+    private var recalibrationNoticePanel: NSPanel!
     private var statusItem: NSStatusItem!
     private var locatorTimer: Timer?
     private var refreshTimer: Timer?
+    private var recalibrationNoticeHideTimer: Timer?
     private var lastRingCenter = NSPoint(x: 200, y: 200)
     private var lastSnapshotOverlayRefresh: TimeInterval = 0
     private var activeRingColorTarget: RingColorTarget?
@@ -66,6 +68,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         locatorTimer?.invalidate()
         refreshTimer?.invalidate()
+        recalibrationNoticeHideTimer?.invalidate()
         codexPresenceMonitor.stop()
         client.stop()
     }
@@ -98,6 +101,29 @@ final class AppController: NSObject, NSApplicationDelegate {
         cardPanel.hasShadow = false
         cardPanel.ignoresMouseEvents = true
         cardPanel.orderOut(nil)
+
+        recalibrationNoticePanel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 260, height: 64),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: true
+        )
+        recalibrationNoticePanel.contentView = NSHostingView(
+            rootView: RecalibrationPausedNoticeView(store: store)
+        )
+        recalibrationNoticePanel.isFloatingPanel = true
+        recalibrationNoticePanel.level = .floating
+        recalibrationNoticePanel.collectionBehavior = [
+            .canJoinAllSpaces,
+            .fullScreenAuxiliary,
+            .stationary
+        ]
+        recalibrationNoticePanel.hidesOnDeactivate = false
+        recalibrationNoticePanel.isOpaque = false
+        recalibrationNoticePanel.backgroundColor = .clear
+        recalibrationNoticePanel.hasShadow = false
+        recalibrationNoticePanel.ignoresMouseEvents = true
+        recalibrationNoticePanel.orderOut(nil)
     }
 
     private func createStatusItem() {
@@ -407,6 +433,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             refreshTimer = nil
             locatorTimer?.invalidate()
             locatorTimer = nil
+            hideRecalibrationPausedNotice()
             cardPanel.orderOut(nil)
             panel.orderOut(nil)
             client.stop()
@@ -430,8 +457,53 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     @objc private func recalibrate() {
-        locator.reset()
+        guard clientIsRunning else { return }
+        guard locator.reset() else {
+            showRecalibrationPausedNotice()
+            return
+        }
+        hideRecalibrationPausedNotice()
         updateOverlay()
+    }
+
+    private func showRecalibrationPausedNotice() {
+        let size = NSSize(width: 260, height: 64)
+        let anchorCenter = RecalibrationPausedNoticeAnchor.center(
+            automaticCenter: lastRingCenter,
+            manualMove: store.manualMove,
+            panelIsVisible: panel.isVisible,
+            panelFrame: panel.frame
+        )
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(anchorCenter) })
+            ?? NSScreen.main
+        let origin = RecalibrationPausedNoticeLayout.origin(
+            ringCenter: anchorCenter,
+            ringSize: store.ringSize,
+            noticeSize: size,
+            visibleFrame: screen?.visibleFrame ?? .zero
+        )
+        if recalibrationNoticePanel.contentView?.bounds.size != size {
+            recalibrationNoticePanel.setContentSize(size)
+        }
+        if recalibrationNoticePanel.frame.origin != origin {
+            recalibrationNoticePanel.setFrameOrigin(origin)
+        }
+        recalibrationNoticePanel.orderFrontRegardless()
+
+        recalibrationNoticeHideTimer?.invalidate()
+        recalibrationNoticeHideTimer = Timer.scheduledTimer(
+            withTimeInterval: 3.5,
+            repeats: false
+        ) { [weak self] _ in
+            self?.recalibrationNoticePanel.orderOut(nil)
+            self?.recalibrationNoticeHideTimer = nil
+        }
+    }
+
+    private func hideRecalibrationPausedNotice() {
+        recalibrationNoticeHideTimer?.invalidate()
+        recalibrationNoticeHideTimer = nil
+        recalibrationNoticePanel.orderOut(nil)
     }
 
     @objc private func requestScreenRecordingAuthorization() {

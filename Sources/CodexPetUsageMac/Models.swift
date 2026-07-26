@@ -162,6 +162,38 @@ enum UsageCardLayout {
     }
 }
 
+enum RecalibrationPausedNoticeLayout {
+    static func origin(ringCenter: CGPoint,
+                       ringSize: CGFloat,
+                       noticeSize: CGSize,
+                       visibleFrame: CGRect) -> CGPoint {
+        let margin: CGFloat = 8
+        let gap: CGFloat = 12
+        let horizontal = ringCenter.x - noticeSize.width / 2
+        let above = ringCenter.y + ringSize / 2 + gap
+        let below = ringCenter.y - ringSize / 2 - gap - noticeSize.height
+        let preferredVertical = above + noticeSize.height <= visibleFrame.maxY - margin
+            ? above
+            : below
+        return CGPoint(
+            x: max(visibleFrame.minX + margin,
+                   min(horizontal, visibleFrame.maxX - noticeSize.width - margin)),
+            y: max(visibleFrame.minY + margin,
+                   min(preferredVertical, visibleFrame.maxY - noticeSize.height - margin))
+        )
+    }
+}
+
+enum RecalibrationPausedNoticeAnchor {
+    static func center(automaticCenter: CGPoint,
+                       manualMove: Bool,
+                       panelIsVisible: Bool,
+                       panelFrame: CGRect) -> CGPoint {
+        guard manualMove, panelIsVisible else { return automaticCenter }
+        return CGPoint(x: panelFrame.midX, y: panelFrame.midY)
+    }
+}
+
 struct UsageWindow: Equatable {
     let label: String
     let remainingPercent: Double

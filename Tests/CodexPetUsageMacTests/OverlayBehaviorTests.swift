@@ -35,6 +35,83 @@ final class OverlayBehaviorTests: XCTestCase {
         XCTAssertEqual(origin.y, 234, accuracy: 0.001)
     }
 
+    func testRecalibrationPausedNoticeAppearsAboveRing() {
+        let origin = RecalibrationPausedNoticeLayout.origin(
+            ringCenter: CGPoint(x: 500, y: 400),
+            ringSize: 200,
+            noticeSize: CGSize(width: 260, height: 64),
+            visibleFrame: CGRect(x: 0, y: 0, width: 1_000, height: 800)
+        )
+
+        XCTAssertEqual(origin.x, 370, accuracy: 0.001)
+        XCTAssertEqual(origin.y, 512, accuracy: 0.001)
+    }
+
+    func testRecalibrationPausedNoticeMovesBelowRingAndStaysOnScreen() {
+        let origin = RecalibrationPausedNoticeLayout.origin(
+            ringCenter: CGPoint(x: 110, y: 420),
+            ringSize: 80,
+            noticeSize: CGSize(width: 260, height: 64),
+            visibleFrame: CGRect(x: 100, y: 50, width: 600, height: 400)
+        )
+
+        XCTAssertEqual(origin.x, 108, accuracy: 0.001)
+        XCTAssertEqual(origin.y, 304, accuracy: 0.001)
+    }
+
+    func testRecalibrationPausedNoticeUsesVisibleManualPanelCenter() {
+        let automaticCenter = CGPoint(x: 500, y: 400)
+        let manualPanelFrame = CGRect(x: 40, y: 80, width: 220, height: 220)
+
+        XCTAssertEqual(
+            RecalibrationPausedNoticeAnchor.center(
+                automaticCenter: automaticCenter,
+                manualMove: true,
+                panelIsVisible: true,
+                panelFrame: manualPanelFrame
+            ),
+            CGPoint(x: 150, y: 190)
+        )
+        XCTAssertEqual(
+            RecalibrationPausedNoticeAnchor.center(
+                automaticCenter: automaticCenter,
+                manualMove: false,
+                panelIsVisible: true,
+                panelFrame: manualPanelFrame
+            ),
+            automaticCenter
+        )
+        XCTAssertEqual(
+            RecalibrationPausedNoticeAnchor.center(
+                automaticCenter: automaticCenter,
+                manualMove: true,
+                panelIsVisible: false,
+                panelFrame: manualPanelFrame
+            ),
+            automaticCenter
+        )
+    }
+
+    func testComputerUseTransitionInvalidatesOnlyWhenEnteringActiveState() {
+        XCTAssertTrue(ComputerUseActivityTransition.enteredActive(previous: false, current: true))
+        XCTAssertFalse(ComputerUseActivityTransition.enteredActive(previous: true, current: true))
+        XCTAssertFalse(ComputerUseActivityTransition.enteredActive(previous: true, current: false))
+        XCTAssertFalse(ComputerUseActivityTransition.enteredActive(previous: false, current: false))
+    }
+
+    func testComputerUseInvalidationRejectsPreviousCaptureGeneration() {
+        let locator = ScreenCaptureMascotLocator()
+        let previousGeneration = locator.invalidatePendingCapturesForComputerUse()
+        let currentGeneration = locator.invalidatePendingCapturesForComputerUse()
+
+        XCTAssertFalse(
+            ScreenCaptureMascotLocator.accepts(
+                completionGeneration: previousGeneration,
+                currentGeneration: currentGeneration
+            )
+        )
+    }
+
     func testRealDualRingSuppressesDemoSnapshot() {
         let store = UsageStore()
         store.demoDualRing = true
