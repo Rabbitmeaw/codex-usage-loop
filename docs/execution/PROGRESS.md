@@ -45,16 +45,13 @@
 | B40 | 安装权限提示与定位边界澄清 | 已完成 | README、Agent 项目指令与安装脚本突出 macOS 14+ 像素定位授权，严谨区分图像、本应用、Codex app-server 与浏览器边界，并将屏幕边缘提醒限定为估算定位 |
 | B41 | 日常 CI 与 tag Release 分离 | 已完成 | 日常 CI 仅覆盖 `main` push 与 PR；`vX.Y.Z` tag 独立校验主分支归属、版本化说明、双平台测试与工件后创建 GitHub Release |
 | B42 | Computer Use 期间冻结圆环几何 | 已完成 | 活跃会话按可见窗口识别并冻结可信几何；排除辅助窗口与延迟捕获；结束后恢复跟踪，手动重测显示非抢焦点提示 |
+| B43 | `v0.1.2` 正式发布收口 | 进行中 | 汇总 v0.1.1 后全部跨平台更新，macOS build 提升至 4，更新用户与发布文档，重建旧预发布 tag／Release 并核验正式双平台工件 |
 
 ## 当前批次
 
-B42 已完成。现场自动窗口快照确认当前会话窗口实际表现为
-`ChatGPT / Computer Use` 与 `ChatGPT / Computer Use Controls`，而
-`com.openai.sky.CUAService` 是常驻进程，不能代表会话是否活跃。修复改为
-按这两个可见会话窗口门禁：活动期间复用最后可信几何并暂停手动重测；同时按
-标题排除会话窗口和 Software Cursor 作为 pet 候选，保证会话中重启也能降级
-到真实 Codex 窗口。进入会话时还会让在途像素捕获失效但保留可信缓存，避免
-结束后采用活动期结果。重测暂停时在圆环附近短暂提示“结束后自动恢复”。
-64 项 warnings-as-errors 测试、Release 构建、安装包严格签名和构建哈希均
-通过；本机安装版已更新并重启，圆环窗口从错误的 252×252 恢复为 154×154。
-独立复核未发现剩余 P0–P2。
+B43 进行中。当前 `v0.1.2` tag 和 GitHub 预发布仍指向旧提交 `2b5c3c8`，
+而 `main` 已包含其后的文档、CI 分离和 Computer Use 圆环冻结修复。正式发布
+必须先更新 README、CHANGELOG、版本化 Release Notes 与执行文档，创建最终
+版本提交（`CFBundleShortVersionString=0.1.2`、`CFBundleVersion=4`）并通过
+main CI；随后精确删除旧预发布、将同名 annotated tag 重建到
+最终提交，再由 tag-only Release workflow 重新生成并核验双平台工件。

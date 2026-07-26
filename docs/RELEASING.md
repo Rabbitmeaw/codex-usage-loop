@@ -8,7 +8,7 @@
 2. 更新 [CHANGELOG.md](../CHANGELOG.md)，并确定版本号与对应 Git tag。
    在 [`docs/releases/`](releases/README.md) 中增加同名的
    `vX.Y.Z.md` 版本化说明。
-3. 在 macOS 运行 `swift test`，当前基线为 54 项测试；运行
+3. 在 macOS 运行 `swift test`，当前基线为 64 项测试；运行
    `zsh scripts/build-app.sh` 和严格 `codesign` 校验。
 4. 在 Windows 运行 `scripts/build-windows.ps1` 和
    `scripts/test-windows-integration.ps1`；当前 Core 基线为 29 项检查。
@@ -17,7 +17,8 @@
    不得发布伪造数据；发布后的新版本不自动视为已支持。
 6. 在可用平台完成实机 smoke。macOS 13 必须确认不请求截图权限、明确显示
    估算、圆环可用且可重测；Windows 必须确认通知区域、原生消息循环、分层窗口、
-   点击穿透和退出。
+   点击穿透和退出。macOS 的 Computer Use 回归须确认活动期间圆环几何保持、
+   手动重测显示暂停提示，并在会话结束后恢复跟踪。
 7. 将版本、变更记录和版本化说明提交到 `main`，推送并等待日常 CI 通过。
 
 ## 自动发布

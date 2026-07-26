@@ -9,6 +9,9 @@
 Codex 宠物的本地用量伴随层，在 macOS 和 Windows 上显示 5 小时与 7 天
 剩余额度。
 
+当前正式版：[v0.1.2](https://github.com/Rabbitmeaw/codex-usage-loop/releases/tag/v0.1.2)。
+请从官方 Release 下载对应平台工件并核对相邻的 SHA-256 文件。
+
 ## 平台
 
 | 平台 | 原生实现 | 使用说明 |
@@ -43,10 +46,11 @@ CodexUsageLoop 进程不发起自有 HTTP 请求，用量仅通过本机
 ## 兼容策略
 
 macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS 14+ 才可由
-用户主动启用像素级定位。B38 已完成菜单、授权和捕获门禁的代码与自动化，
-仍需 macOS 13 实机 smoke 后才视为完整交付。Codex Desktop／CLI 不固定历史版本
-矩阵；每个 Release 只承诺其发布说明中记录的已回归稳定版本与能力契约，发布后
-的新版本不自动视为已支持。不兼容时显示明确错误，不伪造用量。详见
+用户主动启用像素级定位。菜单、授权和捕获门禁已有自动化覆盖，但 macOS 13
+实机 smoke 尚未完成，因此该系统版本仍属于未实机验证环境。Codex Desktop／
+CLI 不固定历史版本矩阵；每个 Release 只承诺其发布说明中有仓库证据的回归版本
+与能力契约，发布后的新版本不自动视为已支持。不兼容时显示明确错误，不伪造
+用量。详见
 [决策日志](docs/execution/DECISIONS.md)与[发布流程](docs/RELEASING.md)。
 
 ## macOS 界面示意
@@ -81,6 +85,7 @@ macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS
 - **两类用量一眼可见**：读取本机 Codex app-server 的 5 小时与 7 天剩余额度；一个窗口显示单环，两个真实窗口自动显示双环。
 - **围绕真实 pet 的像素级定位**：在 macOS 14+ 且已授权屏幕录制时，圆环圆心与直径直接使用当前可见 pet 的实测像素边界。pet 缩放、拖动、任务卡布局变化和左右边缘位置都会触发重新测量。
 - **低能耗的稳定跟随**：成功测量会缓存；只有首次定位或容器／布局变化时才采集 3 个短时样本并取中位数。稳态不持续截图；窗口几何仅以轻量级 1 秒检查维持跟随，用量每 30 秒刷新。
+- **Computer Use 期间保持稳定**：检测到活动会话且已有可信 pet 几何时，圆环保持原位置与大小；此时点击“重新检测宠物位置/大小”会在圆环附近短暂提示检测已暂停，会话结束后自动恢复跟踪。
 - **三种布局与常驻详情**：选择围绕 pet、左侧或右侧；围绕模式的常驻卡片固定在圆环右侧，左右侧模式固定在圆环下方，并限制在当前屏幕可见范围。
 - **可调外观**：围绕模式圆环可在 75%–150% 缩放，双环比例保持一致；内外环可分别使用原生 macOS 取色器设置并持久化，菜单栏图标可切换原色蓝绿或随系统对比度变化的单色。
 - **可控交互**：可临时开启自由拖动；关闭后恢复跟随。支持“立即刷新”和“重新检测宠物位置/大小”。真实双环存在时，“演示双环”自动禁用，绝不以模拟值覆盖真实数据。
@@ -92,7 +97,7 @@ macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS
 
 | 目标 | 操作 | 结果 |
 | --- | --- | --- |
-| 调整 pet 大小或位置后重新贴合 | 菜单栏图标 → **重新检测宠物位置/大小** | 清除定位缓存并对当前 pet 重新定位；已授权时重新读取可见像素边界。 |
+| 调整 pet 大小或位置后重新贴合 | 菜单栏图标 → **重新检测宠物位置/大小** | 清除定位缓存并对当前 pet 重新定位；已授权时重新读取可见像素边界。Computer Use 活跃时不会清缓存或重测，而会短暂提示暂停，结束后自动恢复。 |
 | 立即获得最新额度 | 菜单栏图标 → **立即刷新** | 仅请求最新用量；刷新中和失败状态会显示在卡片中，失败时保留上次数据。为避免与前台应用冲突，不设置快捷键。 |
 | 保持详情卡显示 | 菜单栏图标 → 勾选 **始终显示用量卡片** | 即使鼠标未悬停，或 pet 已隐藏但 Codex 仍运行，也显示详情卡；圆环在该场景始终保留。 |
 | 临时把圆环移到别处 | 勾选 **自由拖动位置** 后拖动圆环 | 关闭该选项即可恢复自动跟随 pet。 |
@@ -149,9 +154,14 @@ app-server 自身可能有独立的网络行为，但屏幕画面不会传给它
 
 使用估算定位时（未授权、macOS 13 或捕获暂时不可用），宠物特别靠近屏幕左侧或右侧边缘可能导致圆环跟随偏差。请将宠物稍微向屏幕内侧移动，再选择“重新检测宠物位置／大小”。菜单显示“已授权（像素级定位）”时会使用可见 pet 像素边界，通常无需避开屏幕边缘。
 
-## macOS 下载与安全
+## 下载与安全
 
-项目采用 [MIT License](LICENSE)，Release 不提供 Developer ID 签名或 Apple 公证。请只从[官方 GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)下载，核对 SHA-256 校验和与 tag；确认来源后再按 macOS 提示打开应用，**不要关闭 Gatekeeper**。详见[安全使用说明](docs/RELEASE_SECURITY.md)。
+项目采用 [MIT License](LICENSE)。macOS Release 不提供 Developer ID 签名或
+Apple 公证，Windows Release 不提供 Authenticode 发布者签名。请只从
+[官方 GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases)
+下载，核对 SHA-256 校验和与 tag；确认来源后再按系统提示打开应用，**不要关闭
+Gatekeeper 或其他系统安全机制**。详见
+[安全使用说明](docs/RELEASE_SECURITY.md)。
 
 ## 文档
 
@@ -177,6 +187,11 @@ app-server 自身可能有独立的网络行为，但屏幕画面不会传给它
 
 A local Codex pet companion that displays the remaining 5-hour and 7-day usage
 allowances on macOS and Windows.
+
+Current stable release:
+[v0.1.2](https://github.com/Rabbitmeaw/codex-usage-loop/releases/tag/v0.1.2).
+Download the matching platform asset from the official Release and verify its
+adjacent SHA-256 file.
 
 ## Platforms
 
@@ -222,13 +237,13 @@ mode.
 
 The macOS 13 compatibility target is window-geometry estimation without
 pixel-level guarantees; user-enabled pixel positioning requires macOS 14+.
-The B38 menu, authorization, and capture gates are implemented and covered by
-automated tests; a macOS 13 smoke test is still required before this target is
-considered fully delivered. Rather than freezing a historical
-Codex Desktop/CLI version matrix, each release supports only the exact stable
-versions and capability contract recorded after its release validation; later
-Codex versions are not assumed compatible. Incompatibilities produce explicit
-errors instead of fabricated usage. See the
+The menu, authorization, and capture gates have automated coverage, but the
+macOS 13 device smoke test remains outstanding, so that OS version is not yet a
+device-validated environment. Rather than freezing a historical Codex
+Desktop/CLI version matrix, each release supports only versions and capability
+contracts backed by repository validation evidence; later Codex versions are
+not assumed compatible. Incompatibilities produce explicit errors instead of
+fabricated usage. See the
 [decision log](docs/execution/DECISIONS.md) and
 [release process](docs/RELEASING.md).
 
@@ -237,6 +252,7 @@ errors instead of fabricated usage. See the
 - **Usage at a glance:** reads the local Codex app-server's 5-hour and 7-day windows. One real window renders one ring; two real windows render dual rings.
 - **Pixel-accurate pet geometry:** on macOS 14+ with Screen Recording access, the around-pet ring uses the visible pet's measured pixel bounds for both center and diameter. Resizing, dragging, task-card layout changes, and left/right edge placement trigger a new measurement.
 - **Stable, low-energy tracking:** a successful measurement is cached. Capture runs only for the first measurement or a container/layout change, collects three short samples, and uses their median. There is no continuous capture while stable; lightweight window geometry is checked once per second and usage refreshes every 30 seconds.
+- **Stable during Computer Use:** when an active session is detected and trusted pet geometry exists, the ring keeps its last position and size. Choosing **Re-detect pet position / size** then shows a short paused notice beside the ring, and tracking resumes automatically after the session ends.
 - **Three layouts and a persistent card:** choose around, left, or right. In around-pet mode, the persistent card sits to the ring's right; in side modes it sits below the ring and stays within the visible screen.
 - **Adjustable appearance:** around-pet rings scale from 75% to 150% while preserving dual-ring proportions. Outer and inner colors can be set independently with the native macOS color panel and persisted; the menu-bar icon supports blue/green color or system-adaptive monochrome.
 - **Controlled interaction:** temporarily enable free dragging, then turn it off to resume pet following. **Refresh now** refreshes usage only; pet geometry recalibration remains a separate action. A real dual ring disables **Demo dual ring**, so simulated data never replaces real usage.
@@ -248,7 +264,7 @@ errors instead of fabricated usage. See the
 
 | Goal | Action | Result |
 | --- | --- | --- |
-| Refit after moving or resizing the pet | Menu-bar icon → **Re-detect pet position / size** | Clears cached geometry and repositions around the current pet; with permission, it remeasures visible pixels. |
+| Refit after moving or resizing the pet | Menu-bar icon → **Re-detect pet position / size** | Clears cached geometry and repositions around the current pet; with permission, it remeasures visible pixels. During Computer Use it keeps the cache, shows a short paused notice, and resumes automatically afterward. |
 | Get current usage immediately | Menu-bar icon → **Refresh now** | Refreshes usage only, shows progress or failure, and keeps the last data on failure. No shortcut is assigned to avoid conflicts with the frontmost app. |
 | Keep the detail card visible | Enable **Always show usage card** | The ring and detail card remain visible without hovering. |
 | Move the ring temporarily | Enable **Free drag position**, then drag the ring | Disable it to resume automatic pet following. |
@@ -312,9 +328,15 @@ slightly inward, then choose **Re-detect pet position / size**. When the menu
 reports **Authorized (pixel-level positioning)**, visible pet pixel bounds are
 used and the pet usually does not need to avoid display edges.
 
-## macOS downloads and security
+## Downloads and security
 
-The project is licensed under the [MIT License](LICENSE). Releases do not have a Developer ID signature or Apple notarization. Download only from the [official GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases), verify the SHA-256 checksum and tag, and follow macOS only after confirming the source. **Do not disable Gatekeeper.** See the [release security guide](docs/RELEASE_SECURITY.md).
+The project is licensed under the [MIT License](LICENSE). macOS releases do not
+have a Developer ID signature or Apple notarization, and Windows releases do not
+have an Authenticode publisher signature. Download only from the
+[official GitHub Releases](https://github.com/Rabbitmeaw/codex-usage-loop/releases),
+verify the SHA-256 checksum and tag, and open the app only after confirming its
+source. **Do not disable Gatekeeper or other system security controls.** See the
+[release security guide](docs/RELEASE_SECURITY.md).
 
 ## Documentation
 

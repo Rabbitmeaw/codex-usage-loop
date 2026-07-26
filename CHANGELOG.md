@@ -4,22 +4,12 @@
 
 ## Unreleased
 
-### 已修复
+_暂无。_
 
-- Computer Use 活跃期间保持最后可信的 pet 位置和大小，避免圆环被临时辅助
-  窗口或捕获状态带偏；此时手动重测会在圆环附近提示检测已暂停，Computer Use
-  结束后自动恢复正常定位。
+## 0.1.2 — 2026-07-26
 
-### 已变更
-
-- 在 README、Agent 项目规则与安装完成提示中突出 macOS 14+ 像素定位授权步骤，
-  严谨区分本地图像处理、Codex app-server 与浏览器网络边界；屏幕边缘提醒仅
-  适用于估算定位。
-- 将日常 CI 限定为 PR 与 `main` push；新增仅由 `vX.Y.Z` tag 触发的跨平台
-  Release workflow，校验主分支归属、版本化说明、测试、工件、签名、提交元数据
-  与 SHA-256 后自动创建 GitHub Release。
-
-## 0.1.2 — 2026-07-25
+> 正式版替换了曾指向提交 `2b5c3c8` 的同版本预发布；旧预发布工件及
+> SHA-256 已作废，请重新下载并以正式 Release 的新校验文件为准。
 
 ### 已新增
 
@@ -35,14 +25,22 @@
 
 ### 已修复
 
-- 排除 `ChatGPT Computer Use / Software Cursor` 等辅助窗口，避免圆环突然使用错误的小窗口几何。
+- 排除 `ChatGPT Computer Use / Software Cursor` 等辅助窗口；Computer Use
+  活跃且已有可信 pet 几何时保持圆环位置和大小，手动重测改为在圆环附近短暂
+  提示检测已暂停，会话结束后自动恢复正常定位。
 - macOS 与 Windows 的“立即刷新”不再同时触发 pet 重测；macOS 移除与前台应用冲突的 ⌘R，Windows 保持无快捷键。两端的刷新中及保留旧数据时的失败状态现在可见。
 - Windows Release 的 SHA-256 文件统一使用跨平台 LF 换行，可直接由 macOS、Linux 和 Windows 校验工具读取。
 
 ### 已变更
 
-- 收口跨平台文档与兼容契约：macOS 13 的目标明确为窗口几何估算，并登记 B38 跟踪能力门禁与实机验证；每个 Release 只承诺发布说明记录的已回归 Codex Desktop／CLI 稳定版本与能力契约。
+- 收口跨平台文档与兼容契约：macOS 13 的目标明确为窗口几何估算；每个
+  Release 只承诺发布说明中有仓库证据的 Codex Desktop／CLI 回归版本与能力契约。
 - 为 macOS 13 增加像素定位能力门禁：明确显示估算状态、禁用授权入口，并在权限查询和 ScreenCaptureKit 捕获调度前回退窗口几何。
+- 在 README、Agent 项目规则与安装完成提示中突出 macOS 14+ 像素定位授权步骤，
+  严谨区分本地图像处理、Codex app-server 与浏览器网络边界；屏幕边缘提醒仅
+  适用于估算定位。
+- 将日常 CI 限定为 PR 与 `main` push；正式 Release 仅由 `vX.Y.Z` tag 触发，
+  并校验版本、测试、工件、签名、提交元数据与 SHA-256。
 
 ### 已知限制
 

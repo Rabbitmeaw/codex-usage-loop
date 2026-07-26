@@ -165,6 +165,21 @@ Computer Use 结束后恢复既有自动定位；若应用在 Computer Use 已�
 `Software Cursor` 都不得成为 pet 候选。活动状态不使用常驻的 CUAService
 进程或可能残留的 `Software Cursor` 窗口，避免会话结束后错误地继续冻结。
 
+## D-022 · 以正式 v0.1.2 替换同版本预发布
+
+日期：2026-07-26
+
+现有 `v0.1.2` annotated tag 与 GitHub 预发布指向旧提交 `2b5c3c8`，未包含
+其后的安装权限说明、日常 CI 与 tag Release 分离，以及 Computer Use 期间
+冻结 pet 几何等修复。正式发布继续使用用户指定的 `v0.1.2` 版本号：先将
+全部更新合并到 `main` 并等待 CI 通过，再删除旧预发布与旧 tag，将同名
+annotated tag 重建到最终版本提交，并由 tag-only Release workflow 重新生成
+双平台工件。
+
+为区分旧预发布与最终构建，macOS `CFBundleVersion` 从 3 提升为 4。旧预发布
+工件及其校验和不再代表最终 `v0.1.2`；正式发布完成后只以新 Release 页面、
+新 `SHA256SUMS.txt` 和新构建元数据为准。
+
 ## 已收口
 
 - macOS 13 定位目标：见 D-018；B38 代码已完成，剩余实机 smoke。
