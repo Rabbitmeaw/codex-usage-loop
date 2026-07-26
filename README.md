@@ -116,7 +116,7 @@ CLI 不固定历史版本矩阵；每个 Release 只承诺其发布说明中有�
 | 立即获得最新额度 | 菜单栏图标 → **立即刷新** | 仅请求最新用量；刷新中和失败状态会显示在卡片中，失败时保留上次数据。为避免与前台应用冲突，不设置快捷键。 |
 | 保持详情卡显示 | 菜单栏图标 → 勾选 **始终显示用量卡片** | 即使鼠标未悬停，或 pet 已隐藏但 Codex 仍运行，也显示详情卡；圆环在该场景始终保留。 |
 | 临时把圆环移到别处 | 勾选 **自由拖动位置** 后拖动圆环 | 关闭该选项即可恢复自动跟随 pet。 |
-| 调整围绕模式视觉大小 | **围绕 pet 的圆环大小** → 拖动滑杆 | 在 25%–250% 间实时缩放；可选择“恢复默认（100%）”。 |
+| 可选地微调未授权时的视觉贴合 | **围绕 pet 的圆环大小** → 拖动滑杆 | 默认 100% 已可直接使用；若希望更贴近自己的 pet 视觉大小，可向左缩小或向右放大，在 25%–250% 间实时预览。选定值会保存且不会改变 pet 本身。 |
 | 改变环或菜单栏图标外观 | **圆环颜色**／**菜单栏图标** | 可分别修改内外环，或切换原色蓝绿与单色跟随系统。 |
 | 在 macOS 14+ 获得最准确的位置和直径 | **启用像素级定位…** → 按 macOS 流程授权并重新打开 | 授权后菜单显示“已授权（像素级定位）”，围绕模式按实测 pet 边界定位。 |
 
@@ -161,13 +161,13 @@ app-server 自身可能有独立的网络行为，但屏幕画面不会传给它
 打开官方发布页；该浏览器连接是另一个独立边界，CodexUsageLoop 自身不会检查、
 下载或安装更新。
 
-应用不会在启动时自动弹出屏幕录制授权。在 macOS 14+ 需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍可通过 pet 容器的窗口几何估算进行基本跟随，但在非默认布局、pet 实际边界与容器比例不同或任务卡片改变位置时，圆环的位置和直径可能出现偏差。授权后会使用当前窗口的可见 pet 像素边界作为圆心与直径来源，以获得更准确的贴合效果。
+应用不会在启动时自动弹出屏幕录制授权。在 macOS 14+ 需要精确定位时，请在菜单选择“启用像素级定位…”，再按 macOS 的流程授权并重新打开应用。未授权时应用仍会按本机窗口几何和当前布局锚点跟随 pet，但不能读取 Codex 未公开的实时 pet 尺寸；默认直径可直接使用。若希望视觉大小更贴近自己的 pet，可选地打开 **围绕 pet 的圆环大小**：保持 100%，若 pet 在环内显得太小就向左缩小，若圆环太紧就向右放大；可在 25%–250% 间实时试到合适的视觉留白，设置会保存且不会改变 pet 本身。授权后会使用当前窗口的可见 pet 像素边界作为圆心与直径来源，以获得更准确的贴合效果。
 
 菜单会显示当前进程实际检测到的“屏幕录制：已授权（像素级定位）”或“未授权（使用估算）”。若系统设置中的开关显示已开启、菜单仍显示未授权，请关闭再重新开启该开关，然后重启应用。
 
 ## macOS 已知定位边界
 
-使用估算定位时（未授权、macOS 13 或捕获暂时不可用），宠物特别靠近屏幕左侧或右侧边缘可能导致圆环跟随偏差。请将宠物稍微向屏幕内侧移动，再选择“重新检测宠物位置／大小”。菜单显示“已授权（像素级定位）”时会使用可见 pet 像素边界，通常无需避开屏幕边缘。
+使用估算定位时（未授权、macOS 13 或捕获暂时不可用），圆环会按公开的布局锚点在普通位置和左右边缘跟随，但不能验证可见轮廓或实时尺寸。默认直径可继续使用；若你觉得直径不合适，可选地用 **围绕 pet 的圆环大小** 调整，不需要移动 pet。菜单显示“已授权（像素级定位）”时会使用可见 pet 像素边界，通常无需手动调节。
 
 ## 下载与安全
 
@@ -302,7 +302,7 @@ fabricated usage. See the
 | Get current usage immediately | Menu-bar icon → **Refresh now** | Refreshes usage only, shows progress or failure, and keeps the last data on failure. No shortcut is assigned to avoid conflicts with the frontmost app. |
 | Keep the detail card visible | Enable **Always show usage card** | The ring and detail card remain visible without hovering. |
 | Move the ring temporarily | Enable **Free drag position**, then drag the ring | Disable it to resume automatic pet following. |
-| Change around-pet size | **Around-pet ring size** → move the slider | Adjusts from 25% to 250%; **Reset to default (100%)** restores the default. |
+| Optionally fine-tune the ring without permission | **Around-pet ring size** → move the slider | The default 100% is ready to use. If you want a closer visual fit, move left when the pet looks too small inside the ring, or right when the ring is too tight. Preview from 25% to 250%; the chosen size persists and does not change the pet itself. |
 | Change ring or menu-bar appearance | **Ring colors** / **Menu-bar icon** | Set outer and inner colors independently, or choose color and system-adaptive monochrome icon modes. |
 | Get the most accurate center and diameter on macOS 14+ | **Enable pixel-level positioning…** → authorize in macOS and reopen | The menu reports **Authorized (pixel-level positioning)** and around-pet geometry uses measured pet bounds. |
 
@@ -349,7 +349,7 @@ stored or uploaded. Choosing **View GitHub Releases in Browser…** opens the
 official page in the default browser, which is another separate boundary;
 CodexUsageLoop itself never checks for, downloads, or installs updates.
 
-The app never requests Screen Recording automatically at launch. On macOS 14+, when precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet from local window geometry and its current layout anchor; its around-pet ring starts from a reasonable default alignment and size, but it cannot learn a live pet resize that Codex does not publish. Use **Around-pet ring size** to tune the visual diameter. Granting access makes the visible pet pixel bounds the source of the around-pet ring's center and diameter.
+The app never requests Screen Recording automatically at launch. On macOS 14+, when precise positioning is needed, choose **Enable pixel-level positioning…** from the menu, then follow macOS’s authorization and relaunch flow. Without permission, the app still follows the pet from local window geometry and its current layout anchor, but it cannot learn a live pet resize that Codex does not publish; its default diameter remains ready to use. If you want a closer visual fit, optionally open **Around-pet ring size**, start at 100%, move left if the pet looks too small inside the ring, or move right if the ring is too tight; preview any value from 25% to 250%. The choice persists and does not resize the pet. Granting access makes the visible pet pixel bounds the source of the around-pet ring's center and diameter.
 
 On macOS 14+, the menu reports the permission seen by the current process: **Screen Recording: Authorized (pixel-level positioning)** or **Not authorized (estimated positioning)**. On macOS 13, it reports that estimated positioning is in use and disables the pixel-level authorization action. If System Settings shows its switch as enabled while the menu still reports not authorized on macOS 14+, turn the switch off and on again, then restart the app.
 
@@ -358,8 +358,9 @@ On macOS 14+, the menu reports the permission seen by the current process: **Scr
 When estimated positioning is in use (permission not granted, macOS 13, or
 capture temporarily unavailable), the ring follows the published pet anchor at
 ordinary and left/right edge positions, but it cannot verify the visible pet
-outline or live size. Use **Around-pet ring size** to tune the diameter for your
-preferred pet size. When the menu reports **Authorized (pixel-level
+outline or live size. If the default diameter is not your preferred visual fit,
+you can use **Around-pet ring size** to tune it without moving or resizing the
+pet. When the menu reports **Authorized (pixel-level
 positioning)**, visible pet pixel bounds are used instead.
 
 ## Downloads and security
