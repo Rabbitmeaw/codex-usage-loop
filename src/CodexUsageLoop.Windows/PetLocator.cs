@@ -7,8 +7,11 @@ namespace CodexUsageLoop.Windows;
 internal sealed record PetLocation(
     RectD Frame,
     RectD WorkArea,
+    RectD DisplayBounds,
     string? Placement,
-    double Scale);
+    double Scale,
+    RectD? ContainerFrame = null,
+    bool IsAnchoredFallback = false);
 
 internal sealed class PetLocator
 {
@@ -22,9 +25,21 @@ internal sealed class PetLocator
     internal PetLocation? Locate()
     {
         var persisted = LocateFromPersistedState();
-        if (persisted is not null || IsExplicitlyHidden)
+        if (persisted is not null)
         {
+            if (persisted.IsAnchoredFallback && persisted.ContainerFrame is null)
+            {
+                // A recent Codex state can provide only the pet anchor. Keep
+                // that anchor, but recover the task-card container from the
+                // live overlay window when it is available.
+                return persisted with { ContainerFrame = LocateFromWindow()?.ContainerFrame };
+            }
             return persisted;
+        }
+
+        if (IsExplicitlyHidden)
+        {
+            return null;
         }
 
         return LocateFromWindow();
@@ -61,14 +76,26 @@ internal sealed class PetLocator
             var placement = state.TryGetProperty("placement", out var placementValue)
                 ? placementValue.GetString()
                 : null;
-            var width = TryNumber(state, "width", out var storedWidth) ? storedWidth : 119;
-            var height = TryNumber(state, "height", out var storedHeight) ? storedHeight : 129;
-            if (state.TryGetProperty("mascot", out var mascot)
+            var containerX = x;
+            var containerY = y;
+            double storedWidth = 0;
+            double storedHeight = 0;
+            var hasContainerDimensions = TryNumber(state, "width", out storedWidth)
+                && TryNumber(state, "height", out storedHeight);
+            var width = hasContainerDimensions ? storedWidth : 119;
+            var height = hasContainerDimensions ? storedHeight : 129;
+            var mascot = default(JsonElement);
+            double left = 0;
+            double top = 0;
+            double mascotWidth = 0;
+            double mascotHeight = 0;
+            var hasExplicitMascot = state.TryGetProperty("mascot", out mascot)
                 && mascot.ValueKind == JsonValueKind.Object
-                && TryNumber(mascot, "left", out var left)
-                && TryNumber(mascot, "top", out var top)
-                && TryNumber(mascot, "width", out var mascotWidth)
-                && TryNumber(mascot, "height", out var mascotHeight))
+                && TryNumber(mascot, "left", out left)
+                && TryNumber(mascot, "top", out top)
+                && TryNumber(mascot, "width", out mascotWidth)
+                && TryNumber(mascot, "height", out mascotHeight);
+            if (hasExplicitMascot)
             {
                 x += left;
                 y += top;
@@ -89,12 +116,22 @@ internal sealed class PetLocator
                 monitor.Value.Bounds.Y + (y - logicalDisplay.Y) * scaleY,
                 width * scaleX,
                 height * scaleY);
+            RectD? container = hasContainerDimensions
+                ? new RectD(
+                    monitor.Value.Bounds.X + (containerX - logicalDisplay.X) * scaleX,
+                    monitor.Value.Bounds.Y + (containerY - logicalDisplay.Y) * scaleY,
+                    storedWidth * scaleX,
+                    storedHeight * scaleY)
+                : null;
             return frame.IsValid
                 ? new PetLocation(
                     frame,
                     monitor.Value.WorkArea,
+                    monitor.Value.Bounds,
                     placement,
-                    (scaleX + scaleY) / 2)
+                    (scaleX + scaleY) / 2,
+                    container is { IsValid: true } ? container : null,
+                    !hasExplicitMascot)
                 : null;
         }
         catch (IOException)
@@ -171,7 +208,14 @@ internal sealed class PetLocator
         }
 
         var pet = UsageGeometry.EstimateMascot(candidate.Frame, monitor.Value.Bounds, null);
-        return new PetLocation(pet, monitor.Value.WorkArea, null, candidate.Scale);
+        return new PetLocation(
+            pet,
+            monitor.Value.WorkArea,
+            monitor.Value.Bounds,
+            null,
+            candidate.Scale,
+            candidate.Frame,
+            IsAnchoredFallback: true);
     }
 
     private static MonitorGeometry? MatchMonitor(RectD logicalDisplay)

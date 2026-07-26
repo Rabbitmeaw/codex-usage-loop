@@ -60,7 +60,7 @@ Windows Core 使用语义对应的 `UsageWindow`、`UsageSnapshot` 与 `UsageSta
 | `manualMoveV2` | 是否启用自由拖动 | 用户修改前永久保留 |
 | `ringPlacementV2` | 围绕、左侧或右侧 | 用户修改前永久保留 |
 | `launchWithCodexPetV1` | Codex 退出时是否暂停 companion | 用户修改前永久保留 |
-| `aroundRingScaleV1` | 围绕 pet 的圆环尺寸比例（75% 至 150%） | 用户修改前永久保留 |
+| `aroundRingScaleV1` | 围绕 pet 的圆环尺寸比例（25% 至 250%） | 用户修改前永久保留 |
 | `outerRingColorV1` | 外环 sRGB 三元组 | 用户修改前永久保留 |
 | `innerRingColorV1` | 内环 sRGB 三元组 | 用户修改前永久保留 |
 

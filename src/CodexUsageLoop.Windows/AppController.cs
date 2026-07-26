@@ -19,10 +19,11 @@ internal sealed class AppController : IDisposable
     private const int CommandPlacementAround = 110;
     private const int CommandPlacementLeft = 111;
     private const int CommandPlacementRight = 112;
-    private const int CommandScale75 = 120;
-    private const int CommandScale100 = 121;
-    private const int CommandScale125 = 122;
+    private const int CommandScale25 = 120;
+    private const int CommandScale50 = 121;
+    private const int CommandScale100 = 122;
     private const int CommandScale150 = 123;
+    private const int CommandScale250 = 124;
     private const int CommandOuterColor = 130;
     private const int CommandInnerColor = 131;
     private const int CommandDefaultColors = 132;
@@ -505,10 +506,15 @@ internal sealed class AppController : IDisposable
                 + $"placement={located.Placement ?? "unknown"}");
         }
         var pet = located ?? _lastPet ?? DefaultPetLocation();
-        var baseDiameter = UsageGeometry.BaseRingDiameter(
+        var estimatedBaseDiameter = UsageGeometry.BaseRingDiameter(
             pet.Frame,
             _state.RingPlacement,
             _state.AroundRingScale);
+        var baseDiameter = _state.RingPlacement == RingPlacement.Around
+            ? UsageGeometry.FallbackAroundDiameter(
+                estimatedBaseDiameter,
+                pet.IsAnchoredFallback)
+            : estimatedBaseDiameter;
         var overlayDpiScale = Math.Max(1, pet.Scale);
         if (_state.ManualMove)
         {
@@ -550,7 +556,11 @@ internal sealed class AppController : IDisposable
                 pet.Frame,
                 baseDiameter,
                 _state.RingPlacement,
-                pet.Placement);
+                pet.Placement,
+                pet.ContainerFrame,
+                pet.DisplayBounds,
+                pet.IsAnchoredFallback,
+                UsageGeometry.AnchoredFallbackTopClearance * pet.Scale);
             originX = (int)Math.Round(center.X - canvasSize / 2.0);
             originY = (int)Math.Round(center.Y - canvasSize / 2.0);
         }
@@ -687,9 +697,15 @@ internal sealed class AppController : IDisposable
             info.rcWork.top,
             info.rcWork.Width,
             info.rcWork.Height);
+        var display = new RectD(
+            info.rcMonitor.left,
+            info.rcMonitor.top,
+            info.rcMonitor.Width,
+            info.rcMonitor.Height);
         return new PetLocation(
             new RectD(work.Left + 70, work.Bottom - 170, 119, 129),
             work,
+            display,
             null,
             1);
     }
@@ -763,10 +779,11 @@ internal sealed class AppController : IDisposable
             AddItem(placement, CommandPlacementRight, "右侧（垂直居中）", _state.RingPlacement == RingPlacement.Right);
             NativeMethods.AppendMenuW(menu, NativeMethods.MF_POPUP, (nuint)placement, "圆环固定位置");
 
-            AddItem(scale, CommandScale75, "75%", Math.Abs(_state.AroundRingScale - 0.75) < 0.01);
+            AddItem(scale, CommandScale25, "25%", Math.Abs(_state.AroundRingScale - 0.25) < 0.01);
+            AddItem(scale, CommandScale50, "50%", Math.Abs(_state.AroundRingScale - 0.50) < 0.01);
             AddItem(scale, CommandScale100, "100%", Math.Abs(_state.AroundRingScale - 1) < 0.01);
-            AddItem(scale, CommandScale125, "125%", Math.Abs(_state.AroundRingScale - 1.25) < 0.01);
             AddItem(scale, CommandScale150, "150%", Math.Abs(_state.AroundRingScale - 1.5) < 0.01);
+            AddItem(scale, CommandScale250, "250%", Math.Abs(_state.AroundRingScale - 2.5) < 0.01);
             NativeMethods.AppendMenuW(menu, NativeMethods.MF_POPUP, (nuint)scale, "围绕 pet 的圆环大小");
 
             AddItem(colors, CommandOuterColor, "外环颜色…");
@@ -839,17 +856,20 @@ internal sealed class AppController : IDisposable
             case CommandPlacementRight:
                 _state.RingPlacement = RingPlacement.Right;
                 break;
-            case CommandScale75:
-                _state.AroundRingScale = 0.75;
+            case CommandScale25:
+                _state.AroundRingScale = 0.25;
+                break;
+            case CommandScale50:
+                _state.AroundRingScale = 0.5;
                 break;
             case CommandScale100:
                 _state.AroundRingScale = 1;
                 break;
-            case CommandScale125:
-                _state.AroundRingScale = 1.25;
-                break;
             case CommandScale150:
                 _state.AroundRingScale = 1.5;
+                break;
+            case CommandScale250:
+                _state.AroundRingScale = 2.5;
                 break;
             case CommandOuterColor:
                 _state.OuterRingColor = ChooseColor(_state.OuterRingColor);

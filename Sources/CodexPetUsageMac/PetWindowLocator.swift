@@ -6,6 +6,7 @@ import ScreenCaptureKit
 struct PetWindow {
     let windowID: CGWindowID
     let frame: CGRect
+    let containerFrame: CGRect?
     let geometrySource: PetGeometrySource
     let mascotSize: CGSize?
     let displayID: CGDirectDisplayID
@@ -112,6 +113,7 @@ final class PetWindowLocator {
             return Candidate(score: score,
                              window: PetWindow(windowID: windowID,
                                                frame: estimatedFrame,
+                                               containerFrame: container,
                                                geometrySource: .anchoredFallback,
                                                mascotSize: mascotSize,
                                                displayID: displayID,
@@ -140,6 +142,7 @@ final class PetWindowLocator {
                                               ))
         let resolvedPet = PetWindow(windowID: candidate.window.windowID,
                                     frame: resolution.frame,
+                                    containerFrame: candidate.window.containerFrame,
                                     geometrySource: resolution.source,
                                     mascotSize: candidate.window.mascotSize,
                                     displayID: candidate.window.displayID,
@@ -183,6 +186,7 @@ final class PetWindowLocator {
               !geometry.mascot.intersection(CGDisplayBounds(displayID)).isNull else { return nil }
         return PetWindow(windowID: 0,
                          frame: geometry.mascot,
+                         containerFrame: geometry.container,
                          geometrySource: .persistedFallback,
                          mascotSize: geometry.mascot.size,
                          displayID: displayID,

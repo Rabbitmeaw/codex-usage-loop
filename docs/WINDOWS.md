@@ -94,6 +94,13 @@ Windows 版本没有为这些操作注册快捷键或全局热键，因此不会
 网络连接由默认浏览器按其隐私策略处理，CodexUsageLoop 不发送用量、窗口几何
 或其他本机状态。
 
+围绕 pet 的圆环大小可选 25%、50%、100%、150% 或 250%，默认 100%。当
+Codex 只提供 pet 锚点或定位器必须从系统窗口估算时，圆环使用稳定的回退位置：
+普通位置以任务卡透明容器的水平中心对齐；容器贴到左右屏幕边缘时改以 pet
+代理框的水平中心对齐。回退圆环的顶点会比 pet 锚点高 16 DIP（随显示器 DPI
+等比换算），且使用较紧凑的
+固定估算直径。Codex 状态提供显式 mascot 矩形时，既有位置和直径计算不变。
+
 ## pet 定位与 DPI
 
 Windows Codex GUI 把 pet 布局写入
@@ -111,8 +118,10 @@ Electron 状态使用显示器逻辑坐标；Win32 叠加层在 Per-Monitor V2 �
 5. Codex 重建窗口造成瞬时缺失时保留上一次可信位置。
 
 Windows 不需要 macOS 的屏幕录制权限。当前版本不捕获 Codex 窗口像素：
-新版 Codex 已直接持久化 pet 锚点，窗口状态可满足正常定位，而且避免引入
-Windows Graphics Capture 的授权和额外 GPU 成本。若以后 Codex 移除该状态，
+它优先使用 Codex 持久化的 pet 布局；只有状态恰好包含 mascot 矩形时才会采用
+该矩形的尺寸。状态仅提供锚点或状态不可用时，应用使用上述估算回退，因此不承诺
+持续获得实际 pet 尺寸。这样可避免引入 Windows Graphics Capture 的授权和额外
+GPU 成本。若以后 Codex 移除该状态，
 可在 `PetLocator` 后增加只在内存中工作的 Windows Graphics Capture /
 Direct3D 检测器。
 
@@ -229,7 +238,8 @@ CodexUsageLoop.Windows.exe
 
 - Windows 商店版 Codex 的内置 CLI 没有外部执行入口；实时额度需要独立官方
   Codex CLI 或 `CODEX_EXECUTABLE`。
-- 当前 pet 精确位置来自 Codex GUI 的持久化布局，不做逐像素窗口捕获。
+- 不做逐像素窗口捕获；当 Codex 状态仅有锚点或状态不可读时，位置和尺寸属于
+  估算，不保证与实际 pet 边界完全一致。
 - 当前只发布 x64 framework-dependent 构建。
-- Windows 版本的围绕尺寸菜单使用 75%、100%、125%、150% 四个原生菜单
-  预设；macOS 版本仍保留连续滑块。
+- Windows 版本的围绕尺寸菜单使用 25%、50%、100%、150%、250% 五个原生菜单
+  预设；macOS 版本提供连续滑块。

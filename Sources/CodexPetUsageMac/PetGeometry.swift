@@ -211,13 +211,26 @@ enum OverlayRingPlacement {
     static func center(for petFrame: CGRect,
                        ringSize: CGFloat,
                        placement: RingPlacement,
-                       codexPlacement: String?) -> CGPoint {
+                       codexPlacement: String?,
+                       fallbackContainerFrame: CGRect? = nil,
+                       fallbackVisibleFrame: CGRect? = nil,
+                       geometrySource: PetGeometrySource = .measured) -> CGPoint {
         let taskCardAbove = codexPlacement?.localizedCaseInsensitiveContains("top") == true
         switch placement {
         case .around:
-            return AroundPetRingLayout.center(for: petFrame,
-                                              ringDiameter: ringSize,
-                                              taskCardAbove: taskCardAbove)
+            let center = AroundPetRingLayout.center(for: petFrame,
+                                                    ringDiameter: ringSize,
+                                                    taskCardAbove: taskCardAbove)
+            guard geometrySource == .anchoredFallback,
+                  let fallbackContainerFrame else { return center }
+            let topAlignedY = petFrame.maxY + FallbackRingTopClearance.value - ringSize / 2
+            if let fallbackVisibleFrame,
+               fallbackContainerFrame.minX <= fallbackVisibleFrame.minX
+                || fallbackContainerFrame.maxX >= fallbackVisibleFrame.maxX {
+                return CGPoint(x: petFrame.midX,
+                               y: topAlignedY)
+            }
+            return CGPoint(x: fallbackContainerFrame.midX, y: topAlignedY)
         case .left:
             return CGPoint(x: petFrame.minX - ringSize * 0.56,
                            y: petFrame.midY - (taskCardAbove ? ringSize * 0.45 : 0))
@@ -225,6 +238,19 @@ enum OverlayRingPlacement {
             return CGPoint(x: petFrame.maxX + ringSize * 0.56,
                            y: petFrame.midY - (taskCardAbove ? ringSize * 0.45 : 0))
         }
+    }
+}
+
+enum FallbackRingTopClearance {
+    // The persisted top-left anchor lands slightly below the visible hairline.
+    // Keep the ring's top visibly above the mascot in the unmeasured fallback.
+    static let value: CGFloat = 16
+}
+
+enum FallbackRingSizing {
+    static func aroundDiameter(_ estimatedDiameter: CGFloat,
+                               source: PetGeometrySource) -> CGFloat {
+        source == .anchoredFallback ? estimatedDiameter * (2.0 / 3.0) : estimatedDiameter
     }
 }
 

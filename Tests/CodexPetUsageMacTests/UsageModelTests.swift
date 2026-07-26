@@ -111,7 +111,7 @@ final class UsageModelTests: XCTestCase {
 
     func testAroundRingScaleStaysWithinSupportedRange() {
         XCTAssertEqual(AroundRingScale.clamped(0.2), AroundRingScale.minimum)
-        XCTAssertEqual(AroundRingScale.clamped(2), AroundRingScale.maximum)
+        XCTAssertEqual(AroundRingScale.clamped(3), AroundRingScale.maximum)
         XCTAssertEqual(AroundRingScale.clamped(1.25), 1.25)
     }
 

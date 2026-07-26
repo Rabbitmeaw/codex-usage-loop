@@ -291,7 +291,7 @@ final class AppController: NSObject, NSApplicationDelegate {
                               maxValue: Double(AroundRingScale.maximum),
                               target: self,
                               action: #selector(changeAroundRingScale(_:)))
-        slider.numberOfTickMarks = 7
+        slider.numberOfTickMarks = 10
         slider.allowsTickMarkValuesOnly = false
         let container = NSView(frame: NSRect(x: 0, y: 0, width: 220, height: 36))
         slider.frame = NSRect(x: 12, y: 8, width: 196, height: 20)
@@ -519,14 +519,18 @@ final class AppController: NSObject, NSApplicationDelegate {
         if let pet {
             let petFrame = appKitFrame(for: pet)
             let scale = max(1, screen(for: pet.displayID)?.backingScaleFactor ?? 1)
-            // Around-pet layout is derived directly from the measured mascot
-            // frame. Do not divide its AppKit points by backing scale or add a
-            // fixed diameter: both made resized pets use the wrong ring size.
+            // Pixel-measured layout is derived directly from the mascot frame.
+            // The untrusted fallback below intentionally uses a smaller fixed
+            // estimate until a real mascot size is available.
             let aroundRingSize = AroundPetRingLayout.diameter(for: petFrame,
                                                               scale: store.aroundRingScale)
+            let fallbackAroundRingSize = FallbackRingSizing.aroundDiameter(
+                aroundRingSize,
+                source: pet.geometrySource
+            )
             let sideReferenceRingSize = max(104, (max(petFrame.width, petFrame.height) / scale + 40) * 1.15)
             let baseRingSize = store.ringPlacement == .around
-                ? aroundRingSize
+                ? fallbackAroundRingSize
                 // Side placement keeps its established compact single-ring
                 // diameter. Dual-ring space is added outside this baseline.
                 : max(48, sideReferenceRingSize * 0.30)
@@ -538,10 +542,18 @@ final class AppController: NSObject, NSApplicationDelegate {
                                                           baseDiameter: baseRingSize)
             let ringSize = baseRingSize + (hasDualRing ? dualExpansion : 0)
             if store.ringSize != ringSize { store.ringSize = ringSize }
+            let fallbackContainerFrame = pet.containerFrame.map {
+                PetGeometry.appKitFrame(cgFrame: $0,
+                                        displayBounds: CGDisplayBounds(pet.displayID),
+                                        screenFrame: (screen(for: pet.displayID) ?? NSScreen.main!).frame)
+            }
             let ringCenter = OverlayRingPlacement.center(for: petFrame,
                                                          ringSize: baseRingSize,
                                                          placement: store.ringPlacement,
-                                                         codexPlacement: pet.placement)
+                                                         codexPlacement: pet.placement,
+                                                         fallbackContainerFrame: fallbackContainerFrame,
+                                                         fallbackVisibleFrame: (screen(for: pet.displayID) ?? NSScreen.main!).frame,
+                                                         geometrySource: pet.geometrySource)
             lastRingCenter = ringCenter
             logGeometryIfChanged(petFrame: petFrame,
                                  ringCenter: ringCenter,

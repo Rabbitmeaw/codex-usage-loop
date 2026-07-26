@@ -53,7 +53,7 @@ flowchart LR
 
 - `AppController` 启动 app-server 客户端，以 30 秒频率刷新用量、以 1 秒频率轻量检查宠物窗口几何；它是唯一可以操作 `NSPanel`、菜单和计时器的模块。
 - `CodexAppServerClient` 将 JSON-RPC `rateLimits` 响应映射为 `UsageSnapshot`，再通过主线程更新 `UsageStore`。
-- `PetWindowLocator` 用 CGWindowList 找到候选容器窗口；候选评分、宠物估算和坐标换算均为纯几何函数并有回归测试。`ScreenCaptureMascotLocator` 在已获授权时以实测可见 pet 边界细化矩形；首次定位或容器／布局变化时采集三帧短样本并取中位数，稳定时复用缓存，失败才回退至估算几何。
+- `PetWindowLocator` 用 CGWindowList 找到候选容器窗口；候选评分、宠物估算和坐标换算均为纯几何函数并有回归测试。未测量回退使用 Codex 公开的锚点与窗口容器：普通位置按容器中心对齐，边缘位置按 pet 代理中心对齐，围绕圆环的默认直径与顶边间隙由纯规则给出。`ScreenCaptureMascotLocator` 在已获授权时以实测可见 pet 边界替代这些估算；首次定位或容器／布局变化时采集三帧短样本并取中位数，稳定时复用缓存，失败才回退至估算几何。
 - `UsageView` 根据 `UsageStore` 渲染圆环和详情卡，不直接访问系统 API 或 app-server。
 - `UserDefaults` 仅持久化展示偏好：常驻、自由拖动、圆环位置、围绕缩放、颜色、菜单栏图标和随 Codex pet 启动；实时额度、窗口几何与截图永不落盘。
 - macOS `UsageStore.isRefreshing`／`statusText` 与 Windows

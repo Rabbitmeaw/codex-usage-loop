@@ -38,7 +38,62 @@ Check("around center", UsageGeometry.RingCenter(pet, diameter, RingPlacement.Aro
 Check(
     "side placement avoids top task card",
     UsageGeometry.RingCenter(pet, 100, RingPlacement.Right, "top-end").Y == 309.5);
-Check("scale clamped", UsageGeometry.ClampAroundScale(2) == 1.5);
+Check("scale accepts 25 percent", UsageGeometry.ClampAroundScale(0) == 0.25);
+Check("scale accepts 250 percent", UsageGeometry.ClampAroundScale(3) == 2.5);
+Check(
+    "anchored fallback around diameter is compact",
+    Math.Abs(UsageGeometry.FallbackAroundDiameter(194.35, isAnchoredFallback: true) - 129.5666667) < 0.001);
+Check(
+    "explicit mascot diameter remains unchanged",
+    UsageGeometry.FallbackAroundDiameter(194.35, isAnchoredFallback: false) == 194.35);
+var fallbackPet = new RectD(20, 300, 119, 129);
+var taskCardContainer = new RectD(100, 200, 356, 320);
+var fallbackDiameter = UsageGeometry.FallbackAroundDiameter(194.35, isAnchoredFallback: true);
+Check(
+    "anchored fallback uses task card container center away from edges",
+    UsageGeometry.RingCenter(
+        fallbackPet,
+        fallbackDiameter,
+        RingPlacement.Around,
+        fallbackContainer: taskCardContainer,
+        fallbackVisibleArea: new RectD(0, 0, 1_920, 1_080),
+        isAnchoredFallback: true)
+    == new PointD(278, 300 + 129 + 16 - fallbackDiameter / 2));
+Check(
+    "anchored fallback uses proxy mascot center at physical display left edge",
+    UsageGeometry.RingCenter(
+        fallbackPet,
+        fallbackDiameter,
+        RingPlacement.Around,
+        fallbackContainer: new RectD(-12, 200, 356, 320),
+        fallbackVisibleArea: new RectD(0, 0, 1_920, 1_080),
+        isAnchoredFallback: true).X == fallbackPet.CenterX);
+Check(
+    "anchored fallback uses proxy mascot center at right edge",
+    UsageGeometry.RingCenter(
+        fallbackPet,
+        fallbackDiameter,
+        RingPlacement.Around,
+        fallbackContainer: new RectD(1_580, 200, 356, 320),
+        fallbackVisibleArea: new RectD(0, 0, 1_920, 1_080),
+        isAnchoredFallback: true).X == fallbackPet.CenterX);
+Check(
+    "anchored fallback clearance scales from 16 DIP",
+    UsageGeometry.RingCenter(
+        fallbackPet,
+        fallbackDiameter,
+        RingPlacement.Around,
+        fallbackContainer: taskCardContainer,
+        isAnchoredFallback: true,
+        fallbackTopClearance: 20).Y
+    == fallbackPet.Bottom + 20 - fallbackDiameter / 2);
+Check(
+    "anchored fallback without a live container keeps the proxy mascot center",
+    UsageGeometry.RingCenter(
+        fallbackPet,
+        fallbackDiameter,
+        RingPlacement.Around,
+        isAnchoredFallback: true).X == fallbackPet.CenterX);
 
 var card = UsageGeometry.CardOrigin(
     new PointD(970, 500),

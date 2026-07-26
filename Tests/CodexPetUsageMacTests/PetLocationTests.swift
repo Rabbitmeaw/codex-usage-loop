@@ -243,6 +243,156 @@ final class PetLocationTests: XCTestCase {
         XCTAssertEqual(right, CGPoint(x: 612, y: 270))
     }
 
+    func testAnchoredFallbackAroundRingUsesTaskCardHorizontalCenter() {
+        let pet = CGRect(x: 1_271, y: 154, width: 136.382022, height: 161.25)
+        let taskCard = CGRect(x: 1_074, y: 146, width: 408, height: 400)
+
+        let center = OverlayRingPlacement.center(
+            for: pet,
+            ringSize: 235,
+            placement: .around,
+            codexPlacement: "bottom-end",
+            fallbackContainerFrame: taskCard,
+            geometrySource: .anchoredFallback
+        )
+
+        XCTAssertEqual(center.x, taskCard.midX, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.maxY + 16 - 235 / 2, accuracy: 0.001)
+    }
+
+    func testAnchoredFallbackUsesConvertedSecondaryDisplayTaskCardCenter() {
+        let container = PetGeometry.appKitFrame(
+            cgFrame: CGRect(x: 1_800, y: -50, width: 408, height: 400),
+            displayBounds: CGRect(x: 1_470, y: -124, width: 1_920, height: 1_080),
+            screenFrame: CGRect(x: 1_470, y: 0, width: 1_920, height: 1_080)
+        )
+        let pet = CGRect(x: 1_900, y: 300, width: 136, height: 161)
+
+        let center = OverlayRingPlacement.center(
+            for: pet,
+            ringSize: 235,
+            placement: .around,
+            codexPlacement: "bottom-end",
+            fallbackContainerFrame: container,
+            geometrySource: .anchoredFallback
+        )
+
+        XCTAssertEqual(container.midX, 2_004, accuracy: 0.001)
+        XCTAssertEqual(center.x, container.midX, accuracy: 0.001)
+    }
+
+    func testAnchoredFallbackUsesPetCenterWhenTaskCardContainerTouchesScreenEdges() {
+        let visibleFrame = CGRect(x: 0, y: 0, width: 1_470, height: 956)
+        let leftPet = CGRect(x: 0, y: 300, width: 136, height: 161)
+        let rightPet = CGRect(x: 1_334, y: 300, width: 136, height: 161)
+
+        let leftCenter = OverlayRingPlacement.center(
+            for: leftPet,
+            ringSize: 157,
+            placement: .around,
+            codexPlacement: "bottom-start",
+            fallbackContainerFrame: CGRect(x: -12, y: 250, width: 408, height: 400),
+            fallbackVisibleFrame: visibleFrame,
+            geometrySource: .anchoredFallback
+        )
+        let rightCenter = OverlayRingPlacement.center(
+            for: rightPet,
+            ringSize: 157,
+            placement: .around,
+            codexPlacement: "bottom-end",
+            fallbackContainerFrame: CGRect(x: 1_074, y: 250, width: 408, height: 400),
+            fallbackVisibleFrame: visibleFrame,
+            geometrySource: .anchoredFallback
+        )
+
+        XCTAssertEqual(leftCenter.x, leftPet.midX, accuracy: 0.001)
+        XCTAssertEqual(rightCenter.x, rightPet.midX, accuracy: 0.001)
+        XCTAssertEqual(leftCenter.y, leftPet.maxY + 16 - 157 / 2, accuracy: 0.001)
+        XCTAssertEqual(rightCenter.y, rightPet.maxY + 16 - 157 / 2, accuracy: 0.001)
+    }
+
+    func testAnchoredFallbackUsesPetCenterAtSecondaryDisplayEdge() {
+        let visibleFrame = CGRect(x: 1_470, y: -124, width: 1_920, height: 1_080)
+        let pet = CGRect(x: 1_470, y: 300, width: 136, height: 161)
+
+        let center = OverlayRingPlacement.center(
+            for: pet,
+            ringSize: 157,
+            placement: .around,
+            codexPlacement: "bottom-start",
+            fallbackContainerFrame: CGRect(x: 1_458, y: 250, width: 408, height: 400),
+            fallbackVisibleFrame: visibleFrame,
+            geometrySource: .anchoredFallback
+        )
+
+        XCTAssertEqual(center.x, pet.midX, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.maxY + 16 - 157 / 2, accuracy: 0.001)
+    }
+
+    func testAnchoredFallbackAroundRingUsesTwoThirdsEstimatedDiameter() {
+        XCTAssertEqual(
+            FallbackRingSizing.aroundDiameter(235.212898, source: .anchoredFallback),
+            156.808598,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            FallbackRingSizing.aroundDiameter(235.212898, source: .measured),
+            235.212898,
+            accuracy: 0.001
+        )
+    }
+
+    func testMeasuredAroundRingIgnoresFallbackTaskCardCenter() {
+        let pet = CGRect(x: 900, y: 300, width: 136, height: 161)
+        let taskCard = CGRect(x: 1_074, y: 146, width: 408, height: 400)
+
+        let center = OverlayRingPlacement.center(
+            for: pet,
+            ringSize: 235,
+            placement: .around,
+            codexPlacement: "bottom-end",
+            fallbackContainerFrame: taskCard,
+            geometrySource: .measured
+        )
+
+        XCTAssertEqual(center.x, pet.midX, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.midY, accuracy: 0.001)
+    }
+
+    func testPersistedFallbackAroundRingDoesNotApplyAnchoredVisualCorrection() {
+        let pet = CGRect(x: 900, y: 300, width: 136, height: 161)
+        let container = CGRect(x: 700, y: 250, width: 408, height: 400)
+
+        let center = OverlayRingPlacement.center(
+            for: pet,
+            ringSize: 157,
+            placement: .around,
+            codexPlacement: "bottom-end",
+            fallbackContainerFrame: container,
+            geometrySource: .persistedFallback
+        )
+
+        XCTAssertEqual(center.x, pet.midX, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.midY, accuracy: 0.001)
+        XCTAssertEqual(FallbackRingSizing.aroundDiameter(235, source: .persistedFallback), 235, accuracy: 0.001)
+    }
+
+    func testAnchoredFallbackSidePlacementDoesNotApplyVisualCorrection() {
+        let pet = CGRect(x: 900, y: 300, width: 136, height: 161)
+
+        let center = OverlayRingPlacement.center(
+            for: pet,
+            ringSize: 120,
+            placement: .left,
+            codexPlacement: "bottom-end",
+            fallbackContainerFrame: CGRect(x: 700, y: 250, width: 408, height: 400),
+            geometrySource: .anchoredFallback
+        )
+
+        XCTAssertEqual(center.x, pet.minX - 120 * 0.56, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.midY, accuracy: 0.001)
+    }
+
     func testAroundRingLayoutScalesDiameterAndCenterWithPetSize() {
         let smallPet = CGRect(x: 400, y: 300, width: 100, height: 120)
         let largePet = CGRect(x: 800, y: 600, width: 200, height: 240)

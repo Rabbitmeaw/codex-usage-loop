@@ -95,8 +95,8 @@ enum PetHiddenOverlayPolicy {
 }
 
 enum AroundRingScale {
-    static let minimum: CGFloat = 0.75
-    static let maximum: CGFloat = 1.50
+    static let minimum: CGFloat = 0.25
+    static let maximum: CGFloat = 2.50
     static let `default`: CGFloat = 1
 
     static func clamped(_ value: CGFloat) -> CGFloat {
