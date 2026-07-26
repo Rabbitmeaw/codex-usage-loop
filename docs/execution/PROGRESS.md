@@ -45,15 +45,18 @@
 | B40 | 安装权限提示与定位边界澄清 | 已完成 | README、Agent 项目指令与安装脚本突出 macOS 14+ 像素定位授权，严谨区分图像、本应用、Codex app-server 与浏览器边界，并将屏幕边缘提醒限定为估算定位 |
 | B41 | 日常 CI 与 tag Release 分离 | 已完成 | 日常 CI 仅覆盖 `main` push 与 PR；`vX.Y.Z` tag 独立校验主分支归属、版本化说明、双平台测试与工件后创建 GitHub Release |
 | B42 | Computer Use 期间冻结圆环几何 | 已完成 | 活跃会话按可见窗口识别并冻结可信几何；排除辅助窗口与延迟捕获；结束后恢复跟踪，手动重测显示非抢焦点提示 |
-| B43 | `v0.1.2` 正式发布收口 | 进行中 | 汇总 v0.1.1 后全部跨平台更新，macOS build 提升至 4，更新用户与发布文档，重建旧预发布 tag／Release 并核验正式双平台工件 |
+| B43 | `v0.1.2` 正式发布收口 | 已完成 | 汇总 v0.1.1 后全部跨平台更新，macOS build 提升至 4，正式 tag 指向 `7e1829e`；双平台工件、SHA-256、元数据及本机安装版均已核验 |
 
 ## 当前批次
 
-B43 进行中。旧 `v0.1.2` 预发布和指向提交 `2b5c3c8` 的 tag 已移除；首个
-正式版本提交 `5b06e83`（`CFBundleShortVersionString=0.1.2`、
-`CFBundleVersion=4`）已通过 main CI，并曾以新的 annotated tag 触发
-Release workflow。该 workflow 暴露 Ubuntu validate runner 未安装 zsh，
-在打包前中止；现已先用失败的工作流契约测试复现，再将版本校验器及调用方式
-最小改为可移植 Bash，并让日常 CI 的 Ubuntu contract job 持续执行契约与
-Bash 语法门禁。待修复提交通过 main CI 后，需再次删除当前指向
-`5b06e83` 的 tag，将其重建到新的最终提交，再生成并核验双平台正式工件。
+B43 已完成。旧 `v0.1.2` 预发布和指向提交 `2b5c3c8` 的 tag 已移除。首个
+正式 tag workflow 暴露 Ubuntu validate runner 未安装 zsh；已先用失败的
+工作流契约测试复现，再将版本校验器及调用方式最小改为可移植 Bash，并让
+日常 CI 的 Ubuntu contract job 持续执行契约与 Bash 语法门禁。
+
+最终 annotated `v0.1.2` tag 解引用到提交 `7e1829e`；Release workflow
+`30199218432` 的 validate、macOS、Windows 与 publish jobs 全部通过。正式
+Release 为非 draft、非 prerelease，共包含 5 个双平台工件；相邻 SHA-256、
+GitHub asset digest 与 `RELEASE_METADATA.txt` 的版本和提交均一致。macOS
+工件为 `0.1.2 (4)` 且通过严格签名校验。本机 `/Applications` 安装版已使用
+稳定 Apple Development 签名重建、替换并重启，版本为 `0.1.2 (4)`。
