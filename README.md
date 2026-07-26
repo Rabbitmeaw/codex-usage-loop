@@ -43,6 +43,21 @@ CodexUsageLoop 进程不发起自有 HTTP 请求，用量仅通过本机
 请在理解用途并确认软件来源后自行决定是否授权。不授权不会阻止应用运行，但
 定位会使用估算模式。
 
+### macOS 安装方式与后续升级
+
+两种安装方式使用相同的 Bundle ID `com.codexusageloop.mac`，运行时的本地
+处理与网络边界也相同；主要差异是签名身份以及升级后屏幕录制权限能否延续。
+
+| 安装方式 | 当前签名方式 | 未来升级时的权限表现 |
+| --- | --- | --- |
+| 从[官方 Release](https://github.com/Rabbitmeaw/codex-usage-loop/releases)下载 | ad-hoc 签名 | 安装最简单；升级后 macOS 可能要求重新确认屏幕录制权限 |
+| 从仓库运行 `zsh scripts/install.sh` | 优先使用用户本机已有的 Apple Development 证书；未找到时回退到 ad-hoc | 如果持续使用同一证书、Bundle ID 和安装路径，权限通常可以保留；回退到 ad-hoc 时仍可能需要重新授权 |
+
+“通常可以保留”不是保证：系统升级、证书变化、应用路径变化或用户重置隐私权限
+后，macOS 仍可能要求重新授权。相同 Bundle ID 本身也不等于相同的系统授权
+身份。如果由 Agent 帮助安装或升级，Agent 应说明所选方式的上述差异，但不得
+替用户开启屏幕录制权限。
+
 ## 兼容策略
 
 macOS 13 的兼容目标是窗口几何估算且不承诺像素级精度；macOS 14+ 才可由
@@ -232,6 +247,25 @@ expose screen content, so these implementation boundaries are not a promise of
 absolute zero risk. Grant it only after understanding the purpose and verifying
 the software source. The app remains usable without it in estimated positioning
 mode.
+
+### macOS installation methods and future upgrades
+
+Both methods use the same Bundle ID, `com.codexusageloop.mac`, and have the same
+runtime local-processing and network boundaries. Their main difference is the
+signing identity and whether Screen Recording authorization is likely to carry
+over to a future upgrade.
+
+| Installation method | Current signing behavior | Permission behavior on future upgrades |
+| --- | --- | --- |
+| Download from the [official Release](https://github.com/Rabbitmeaw/codex-usage-loop/releases) | Ad-hoc signed | Simplest installation; macOS may require Screen Recording authorization again after an upgrade |
+| Run `zsh scripts/install.sh` from the repository | Prefers an existing Apple Development identity on the user's Mac; falls back to ad-hoc signing when none is found | Authorization will usually carry over when the same identity, Bundle ID, and installation path continue to be used; the ad-hoc fallback may still require authorization again |
+
+**Usually** is not a guarantee: macOS may request authorization again after an
+OS update, signing-identity change, application-path change, or privacy reset.
+The same Bundle ID alone does not constitute the same system authorization
+identity. If an Agent helps with installation or upgrades, it should explain
+these differences for the selected method but must not grant Screen Recording
+access on the user's behalf.
 
 ## Compatibility policy
 
