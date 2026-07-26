@@ -298,7 +298,8 @@
 - [x] 核对现有 v0.1.2 tag、预发布、Release 规则和版本来源。
 - [x] 先更新 README、CHANGELOG、版本化 Release Notes 与发布文档。
 - [x] 将 v0.1.1 后全部用户可见更新整合为最终 v0.1.2 说明。
-- [ ] 创建 v0.1.2 正式版本提交并等待 main CI 通过。
+- [x] 创建首个 v0.1.2 正式版本提交并等待 main CI 通过。
+- [ ] 提交 Ubuntu Release validator 的 Bash 可移植性修复并等待 main CI。
 - [ ] 删除旧预发布并将 annotated v0.1.2 tag 重建到最终提交。
 - [ ] 等待 Release workflow 生成并核验双平台工件、校验和与元数据。
 - [ ] 使用最终提交构建并更新本机安装版。
@@ -321,6 +322,7 @@
 |------|------|---------|
 | 新测试首次编译找不到布局与互斥 API | 1 | 已按测试实现 `UsageCardLayout` 与演示可用性状态。 |
 | release 构建报告 Swift 并发迁移警告 | 1 | 本次未触碰无关定位并发代码；已记录到 findings.md，后续单独处理。 |
+| v0.1.2 tag workflow 的 Ubuntu validate job 找不到 zsh | 1 | 先增加 shell 可移植性契约测试，再将 validator 与工作流调用改为 Bash。 |
 
 ## 备注
 

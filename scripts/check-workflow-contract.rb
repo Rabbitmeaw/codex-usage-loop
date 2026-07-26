@@ -32,6 +32,12 @@ fail_contract("CI must run for pull requests") unless ci_triggers.key?("pull_req
 
 ci_text = File.read(ci_path)
 fail_contract("daily CI must not package release assets") if ci_text.match?(/package-(release|windows)|upload-artifact/)
+fail_contract("daily CI must run the workflow contract") unless ci_text.include?(
+  "ruby scripts/check-workflow-contract.rb"
+)
+fail_contract("daily CI must syntax-check the portable release validator") unless ci_text.include?(
+  "bash -n scripts/validate-release-ref.sh"
+)
 
 release_triggers = triggers(release)
 fail_contract("Release must run only for v* tags") unless release_triggers == { "push" => { "tags" => ["v*"] } }
@@ -66,6 +72,12 @@ fail_contract("Release validator must require stable vX.Y.Z tags") unless valida
 )
 fail_contract("Release validator must require versioned notes") unless validator_text.include?(
   'docs/releases/${TAG}.md'
+)
+fail_contract("Release validator must be portable to the Ubuntu runner") unless validator_text.start_with?(
+  "#!/usr/bin/env bash"
+)
+fail_contract("Ubuntu validate job must invoke the validator with bash") unless release_text.include?(
+  'bash scripts/validate-release-ref.sh "$GITHUB_REF_NAME"'
 )
 
 puts "workflow contract passed"

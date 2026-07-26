@@ -10,6 +10,15 @@ permissions:
   contents: read
 
 jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check workflow and release validator contracts
+        run: |
+          ruby scripts/check-workflow-contract.rb
+          bash -n scripts/validate-release-ref.sh
+
   macos:
     runs-on: macos-15
     steps:

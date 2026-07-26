@@ -30,6 +30,9 @@ _暂无。_
   提示检测已暂停，会话结束后自动恢复正常定位。
 - macOS 与 Windows 的“立即刷新”不再同时触发 pet 重测；macOS 移除与前台应用冲突的 ⌘R，Windows 保持无快捷键。两端的刷新中及保留旧数据时的失败状态现在可见。
 - Windows Release 的 SHA-256 文件统一使用跨平台 LF 换行，可直接由 macOS、Linux 和 Windows 校验工具读取。
+- Release 版本校验器改为 Ubuntu runner 可直接执行的 Bash，避免 tag workflow
+  因缺少 zsh 在打包前中止；日常 CI 新增轻量 contract job，发布前持续检查
+  workflow 契约和 validator 的 Bash 语法。
 
 ### 已变更
 

@@ -49,9 +49,11 @@
 
 ## 当前批次
 
-B43 进行中。当前 `v0.1.2` tag 和 GitHub 预发布仍指向旧提交 `2b5c3c8`，
-而 `main` 已包含其后的文档、CI 分离和 Computer Use 圆环冻结修复。正式发布
-必须先更新 README、CHANGELOG、版本化 Release Notes 与执行文档，创建最终
-版本提交（`CFBundleShortVersionString=0.1.2`、`CFBundleVersion=4`）并通过
-main CI；随后精确删除旧预发布、将同名 annotated tag 重建到
-最终提交，再由 tag-only Release workflow 重新生成并核验双平台工件。
+B43 进行中。旧 `v0.1.2` 预发布和指向提交 `2b5c3c8` 的 tag 已移除；首个
+正式版本提交 `5b06e83`（`CFBundleShortVersionString=0.1.2`、
+`CFBundleVersion=4`）已通过 main CI，并曾以新的 annotated tag 触发
+Release workflow。该 workflow 暴露 Ubuntu validate runner 未安装 zsh，
+在打包前中止；现已先用失败的工作流契约测试复现，再将版本校验器及调用方式
+最小改为可移植 Bash，并让日常 CI 的 Ubuntu contract job 持续执行契约与
+Bash 语法门禁。待修复提交通过 main CI 后，需再次删除当前指向
+`5b06e83` 的 tag，将其重建到新的最终提交，再生成并核验双平台正式工件。
