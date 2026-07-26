@@ -282,10 +282,10 @@
 
 - [x] 收口 macOS 与 Windows 回退定位、尺寸微调和用户文档改动。
 - [x] 更新版本字段、CHANGELOG 与版本化 Release 说明。
-- [ ] 推送版本快照并等待日常 CI 通过。
-- [ ] 创建并推送 annotated `v0.1.3` tag。
-- [ ] 核验 Release workflow、双平台工件、SHA-256 与生成的 GitHub Release。
-- **状态：** in_progress
+- [x] 推送版本快照并等待日常 CI 通过。
+- [x] 创建并推送 annotated `v0.1.3` tag。
+- [x] 核验 Release workflow、双平台工件、SHA-256 与生成的 GitHub Release。
+- **状态：** complete
 
 ### 阶段 32：安装权限提示与定位边界澄清
 
