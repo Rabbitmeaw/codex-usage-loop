@@ -19,7 +19,7 @@ macOS 会检查互联网下载的应用是否来自已识别的开发者、是�
 发布前在干净工作区执行：
 
 ```bash
-zsh scripts/package-release.sh 0.1.2
+zsh scripts/package-release.sh 0.1.3
 ```
 
 该脚本会重建应用、校验 ad-hoc 签名，并生成 `CodexUsageLoop-<version>.zip`、`SHA256SUMS.txt` 与 `RELEASE_METADATA.txt`。这里的 ad-hoc 签名只用于校验应用包内部完整性，不提供开发者身份保证。

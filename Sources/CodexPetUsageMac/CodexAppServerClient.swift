@@ -133,7 +133,7 @@ final class CodexAppServerClient {
         do {
             try process.run()
             send(["id": 1, "method": "initialize", "params": [
-                "clientInfo": ["name": "codexusageloop-mac", "title": "CodexUsageLoop", "version": "0.1.2"],
+                "clientInfo": ["name": "codexusageloop-mac", "title": "CodexUsageLoop", "version": "0.1.3"],
                 "capabilities": ["experimentalApi": true]
             ]])
         } catch {

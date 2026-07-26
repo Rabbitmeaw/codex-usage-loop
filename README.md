@@ -9,7 +9,7 @@
 Codex 宠物的本地用量伴随层，在 macOS 和 Windows 上显示 5 小时与 7 天
 剩余额度。
 
-当前正式版：[v0.1.2](https://github.com/Rabbitmeaw/codex-usage-loop/releases/tag/v0.1.2)。
+当前正式版：[v0.1.3](https://github.com/Rabbitmeaw/codex-usage-loop/releases/tag/v0.1.3)。
 请从官方 Release 下载对应平台工件并核对相邻的 SHA-256 文件。
 
 ## 平台
@@ -204,7 +204,7 @@ A local Codex pet companion that displays the remaining 5-hour and 7-day usage
 allowances on macOS and Windows.
 
 Current stable release:
-[v0.1.2](https://github.com/Rabbitmeaw/codex-usage-loop/releases/tag/v0.1.2).
+[v0.1.3](https://github.com/Rabbitmeaw/codex-usage-loop/releases/tag/v0.1.3).
 Download the matching platform asset from the official Release and verify its
 adjacent SHA-256 file.
 

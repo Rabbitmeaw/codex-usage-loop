@@ -65,7 +65,7 @@ internal sealed class CodexAppServerClient : IDisposable
                     {
                         name = "codexusageloop-windows",
                         title = "CodexUsageLoop",
-                        version = "0.1.2"
+                        version = "0.1.3"
                     },
                     capabilities = new { experimentalApi = true }
                 }
