@@ -48,8 +48,22 @@
 | B43 | `v0.1.2` 正式发布收口 | 已完成 | 汇总 v0.1.1 后全部跨平台更新，macOS build 提升至 4，正式 tag 指向 `7e1829e`；双平台工件、SHA-256、元数据及本机安装版均已核验 |
 | B44 | 回退围绕模式的任务卡对齐与缩小 | 已完成 | 未测量的 `anchoredFallback` 普通位置保持透明容器中心；圆环顶边高于 pet 锚点 16 pt；左右边缘改用 pet 代理中心；固定估算直径缩小至 2/3；无授权实机视觉确认通过，并同步 Windows 回退规则与用户文档 |
 | B45 | `v0.1.3` 回退定位正式发布 | 已完成 | `d2afa61` 的 main CI 与 `v0.1.3` tag Release workflow 均通过；正式 Release 已创建，含 macOS／Windows 工件、SHA-256 和构建元数据，tag 解引用至 `d2afa61` |
+| B46 | Codex 可执行文件自动发现 | 已完成 | macOS 定位器覆盖 ChatGPT.app 新旧内置布局、nvm／volta／asdf／mise／pnpm 与登录 shell 兜底，错误附已搜索路径，80 项测试通过；Windows 同步新内置布局并缓存定位结果，构建与集成验证留待 Windows CI |
 
 ## 当前批次
+
+B46 已完成。新版 ChatGPT.app 将内置 Codex 从 `Contents/Resources/codex`
+迁移到 `Contents/Resources/codex-cli/bin/codex`，固定路径列表因此全部落空并
+报“没有找到 Codex 可执行文件”。实测本机 codex 0.153.4（nvm）与 ChatGPT.app
+内置 0.158.0-alpha 的 `account/rateLimits/read` 响应结构一致，无需改协议。
+macOS 新增可注入的 `CodexExecutableLocator`：先查双端桌面应用新／旧内置布局，
+再查 homebrew、`.local/bin`、nvm 各版本（取最新）、volta、asdf、mise、pnpm，
+最后以登录 shell `command -v codex` 兜底（2 秒超时）；定位结果缓存，失败时报错
+附带实际搜索过的路径。Windows 在静态候选与运行中进程扫描中加入
+`resources/codex-cli/bin/codex.exe` 新布局并缓存定位结果。本机缺少 Windows
+.NET 工具链，Windows 构建与集成验证留待 Windows CI／实机执行。
+
+## 此前批次
 
 B44 已完成。根据 2026-07-26 的无屏幕录制实机观察，Codex 公开的窗口和状态输入
 能稳定提供位置，但 pet 实际尺寸不会反映到 fallback。实机对比已确认透明容器中心

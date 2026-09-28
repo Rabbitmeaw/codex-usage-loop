@@ -58,6 +58,8 @@ final class CodexAppServerClient {
     private var buffer = Data()
     private var requestID = 10
     private var stopping = false
+    private var locatedExecutable: URL?
+    private var searchedPaths: [String] = []
 
     func start() { queue.async { [weak self] in self?.startLocked() } }
 
@@ -84,8 +86,17 @@ final class CodexAppServerClient {
         guard process?.isRunning != true else { return }
         stopping = false
         buffer.removeAll()
-        guard let executable = locateCodexExecutable() else {
-            dispatchError(NSError(domain: "CodexUsageLoop", code: 1, userInfo: [NSLocalizedDescriptionKey: "没有找到 Codex 可执行文件"]))
+        if locatedExecutable == nil {
+            let outcome = CodexExecutableLocator().locate()
+            locatedExecutable = outcome.executable
+            searchedPaths = outcome.searchedPaths
+        }
+        guard let executable = locatedExecutable else {
+            let detail = searchedPaths.isEmpty
+                ? ""
+                : "，已搜索：\(searchedPaths.joined(separator: "、"))"
+            dispatchError(NSError(domain: "CodexUsageLoop", code: 1,
+                                  userInfo: [NSLocalizedDescriptionKey: "没有找到 Codex 可执行文件\(detail)"]))
             return
         }
 
@@ -186,15 +197,5 @@ final class CodexAppServerClient {
 
     private func dispatchError(_ error: Error) {
         DispatchQueue.main.async { [weak self] in self?.onError?(error) }
-    }
-
-    private func locateCodexExecutable() -> URL? {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let paths = [
-            "/Applications/Codex.app/Contents/Resources/codex",
-            "/Applications/ChatGPT.app/Contents/Resources/codex",
-            "/opt/homebrew/bin/codex", "/usr/local/bin/codex", "\(home)/.local/bin/codex"
-        ]
-        return paths.lazy.map(URL.init(fileURLWithPath:)).first { FileManager.default.isExecutableFile(atPath: $0.path) }
     }
 }

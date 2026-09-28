@@ -12,6 +12,8 @@ internal sealed class CodexAppServerClient : IDisposable
     private CancellationTokenSource? _cancellation;
     private int _requestId = 10;
     private bool _stopping;
+    private string? _locatedExecutable;
+    private string _discoveryError = "没有找到独立 Codex CLI；请安装官方 Codex CLI 或设置 CODEX_EXECUTABLE";
 
     internal event Action<UsageSnapshot>? SnapshotReceived;
     internal event Action<string>? ErrorReceived;
@@ -23,10 +25,15 @@ internal sealed class CodexAppServerClient : IDisposable
             return;
         }
 
-        var executable = LocateCodexExecutable(out var discoveryError);
+        if (_locatedExecutable is null)
+        {
+            _locatedExecutable = LocateCodexExecutable(out var discoveryError);
+            _discoveryError = discoveryError;
+        }
+        var executable = _locatedExecutable;
         if (executable is null)
         {
-            ErrorReceived?.Invoke(discoveryError);
+            ErrorReceived?.Invoke(_discoveryError);
             return;
         }
 
@@ -256,6 +263,9 @@ internal sealed class CodexAppServerClient : IDisposable
             return overridePath;
         }
 
+        var codexInstallRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Programs", "Codex", "resources");
         var candidates = new List<string>
         {
             Path.Combine(
@@ -263,9 +273,8 @@ internal sealed class CodexAppServerClient : IDisposable
                 "npm", "node_modules", "@openai", "codex", "node_modules",
                 "@openai", "codex-win32-x64", "vendor", "x86_64-pc-windows-msvc",
                 "codex", "codex.exe"),
-            Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Programs", "Codex", "resources", "codex.exe"),
+            Path.Combine(codexInstallRoot, "codex-cli", "bin", "codex.exe"),
+            Path.Combine(codexInstallRoot, "codex.exe"),
             Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "Microsoft", "WindowsApps", "codex.exe")
@@ -301,17 +310,25 @@ internal sealed class CodexAppServerClient : IDisposable
                             return processPath;
                         }
                         var directory = Path.GetDirectoryName(processPath);
-                        var bundled = directory is null
-                            ? null
-                            : Path.Combine(directory, "resources", "codex.exe");
-                        if (File.Exists(bundled))
+                        if (directory is null)
                         {
-                            if (IsProtectedPackagePath(bundled))
+                            continue;
+                        }
+                        foreach (var bundled in new[]
+                        {
+                            Path.Combine(directory, "resources", "codex-cli", "bin", "codex.exe"),
+                            Path.Combine(directory, "resources", "codex.exe")
+                        })
+                        {
+                            if (File.Exists(bundled))
                             {
-                                foundProtectedBundle = true;
-                                continue;
+                                if (IsProtectedPackagePath(bundled))
+                                {
+                                    foundProtectedBundle = true;
+                                    continue;
+                                }
+                                return bundled;
                             }
-                            return bundled;
                         }
                     }
                     catch (System.ComponentModel.Win32Exception)
