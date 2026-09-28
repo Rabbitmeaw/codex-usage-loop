@@ -138,7 +138,8 @@ enum PersistedPetGeometry {
         let placement: String?
     }
 
-    static func geometry(from state: [String: Any]) -> Geometry? {
+    static func geometry(from state: [String: Any],
+                         anchorSize: CGSize = CGSize(width: 119, height: 129)) -> Geometry? {
         guard let x = number(state["x"]), let y = number(state["y"]) else { return nil }
         guard x.isFinite, y.isFinite else { return nil }
         let placement = state["placement"] as? String
@@ -147,8 +148,12 @@ enum PersistedPetGeometry {
         let height = number(state["height"])
         if width == nil || height == nil {
             // Recent Codex builds persist a direct top-left mascot anchor here,
-            // not the old transparent 356x320 overlay container.
-            let mascot = CGRect(x: x, y: y, width: 119, height: 129)
+            // not the old transparent 356x320 overlay container. The mascot
+            // size comes from the desktop settings (avatar-overlay-mascot-width-px)
+            // because these builds no longer persist a mascot rect.
+            let mascot = CGRect(x: x, y: y,
+                                width: max(16, anchorSize.width),
+                                height: max(16, anchorSize.height))
             return Geometry(container: mascot, mascot: mascot, placement: placement)
         }
         guard let width, let height,
@@ -218,19 +223,12 @@ enum OverlayRingPlacement {
         let taskCardAbove = codexPlacement?.localizedCaseInsensitiveContains("top") == true
         switch placement {
         case .around:
-            let center = AroundPetRingLayout.center(for: petFrame,
-                                                    ringDiameter: ringSize,
-                                                    taskCardAbove: taskCardAbove)
-            guard geometrySource == .anchoredFallback,
-                  let fallbackContainerFrame else { return center }
-            let topAlignedY = petFrame.maxY + FallbackRingTopClearance.value - ringSize / 2
-            if let fallbackVisibleFrame,
-               fallbackContainerFrame.minX <= fallbackVisibleFrame.minX
-                || fallbackContainerFrame.maxX >= fallbackVisibleFrame.maxX {
-                return CGPoint(x: petFrame.midX,
-                               y: topAlignedY)
-            }
-            return CGPoint(x: fallbackContainerFrame.midX, y: topAlignedY)
+            // Native-mode pets report their own anchor; every geometry source
+            // centers the around ring on the pet itself. The container-based
+            // top-aligned rule from the transparent-overlay era is retired.
+            return AroundPetRingLayout.center(for: petFrame,
+                                              ringDiameter: ringSize,
+                                              taskCardAbove: taskCardAbove)
         case .left:
             return CGPoint(x: petFrame.minX - ringSize * 0.56,
                            y: petFrame.midY - (taskCardAbove ? ringSize * 0.45 : 0))
@@ -239,12 +237,6 @@ enum OverlayRingPlacement {
                            y: petFrame.midY - (taskCardAbove ? ringSize * 0.45 : 0))
         }
     }
-}
-
-enum FallbackRingTopClearance {
-    // The persisted top-left anchor lands slightly below the visible hairline.
-    // Keep the ring's top visibly above the mascot in the unmeasured fallback.
-    static let value: CGFloat = 16
 }
 
 enum FallbackRingSizing {

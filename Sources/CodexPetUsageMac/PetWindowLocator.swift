@@ -34,6 +34,7 @@ final class PetWindowLocator {
     private var lastMeasuredPet: PetWindow?
     private var lastTrustedPet: PetWindow?
     private var previousComputerUseIsActive = false
+    private var mascotSizeCache: (path: String, mtime: Date?, size: CGSize)?
 
     init(windowInfoProvider: @escaping () -> [[String: Any]] = {
         (CGWindowListCopyWindowInfo(
@@ -179,7 +180,10 @@ final class PetWindowLocator {
 
     private func fallbackPet(from state: [String: Any]?, isOpen: Bool) -> PetWindow? {
         guard isOpen, let state,
-              let geometry = PersistedPetGeometry.geometry(from: state),
+              let geometry = PersistedPetGeometry.geometry(
+                  from: state,
+                  anchorSize: configuredMascotSize()
+              ),
               let displayBounds = persistedDisplayBounds(from: state),
               !geometry.container.intersection(displayBounds).isNull,
               let displayID = activeDisplayID(overlapping: geometry.container),
@@ -193,6 +197,17 @@ final class PetWindowLocator {
                          placement: geometry.placement,
                          owner: "Codex persisted state",
                          title: "Pet state fallback")
+    }
+
+    private func configuredMascotSize() -> CGSize {
+        let path = NSHomeDirectory() + "/.codex/config.toml"
+        let mtime = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
+        if let cache = mascotSizeCache, cache.path == path, cache.mtime == mtime {
+            return cache.size
+        }
+        let size = MascotSizeSettings.size(configAt: path)
+        mascotSizeCache = (path: path, mtime: mtime, size: size)
+        return size
     }
 
     private func persistedOverlayState() -> PersistedOverlay? {

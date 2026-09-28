@@ -556,11 +556,7 @@ internal sealed class AppController : IDisposable
                 pet.Frame,
                 baseDiameter,
                 _state.RingPlacement,
-                pet.Placement,
-                pet.ContainerFrame,
-                pet.DisplayBounds,
-                pet.IsAnchoredFallback,
-                UsageGeometry.AnchoredFallbackTopClearance * pet.Scale);
+                pet.Placement);
             originX = (int)Math.Round(center.X - canvasSize / 2.0);
             originY = (int)Math.Round(center.Y - canvasSize / 2.0);
         }

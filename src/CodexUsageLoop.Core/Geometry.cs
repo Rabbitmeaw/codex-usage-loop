@@ -23,7 +23,6 @@ public static class UsageGeometry
     public const double AroundDiameterRatio = 194.35 / 129.0;
     public const double AroundDualExpansionRatio = 22.0 / 194.35;
     public const double AnchoredFallbackAroundDiameterRatio = 2.0 / 3.0;
-    public const double AnchoredFallbackTopClearance = 16;
 
     public static double ClampAroundScale(double value) =>
         Math.Clamp(value, MinimumAroundScale, MaximumAroundScale);
@@ -69,6 +68,16 @@ public static class UsageGeometry
             ? estimatedDiameter * AnchoredFallbackAroundDiameterRatio
             : estimatedDiameter;
 
+    // Mirrors the Codex desktop renderer: width is clamped to 80...224 and the
+    // height follows the mascot aspect ratio 192:208.
+    public static SizeD MascotSize(double? widthSetting)
+    {
+        const double defaultWidth = 112, minWidth = 80, maxWidth = 224;
+        var width = Math.Round(Math.Min(maxWidth, Math.Max(minWidth, widthSetting ?? defaultWidth)));
+        var height = Math.Ceiling(width / (192.0 / 208.0));
+        return new SizeD(width, height);
+    }
+
     public static double DualExpansion(bool hasDualRing, RingPlacement placement, double baseDiameter)
     {
         if (!hasDualRing)
@@ -93,26 +102,13 @@ public static class UsageGeometry
         RectD pet,
         double baseRingDiameter,
         RingPlacement placement,
-        string? codexPlacement = null,
-        RectD? fallbackContainer = null,
-        RectD? fallbackVisibleArea = null,
-        bool isAnchoredFallback = false,
-        double fallbackTopClearance = AnchoredFallbackTopClearance)
+        string? codexPlacement = null)
     {
         var taskCardAbove = codexPlacement?.Contains(
             "top",
             StringComparison.OrdinalIgnoreCase) == true;
-        var sideY = pet.CenterY + (taskCardAbove ? baseRingDiameter * 0.45 : 0);
-        if (placement == RingPlacement.Around
-            && isAnchoredFallback
-            && fallbackContainer is { } container)
-        {
-            var topAlignedY = pet.Bottom + fallbackTopClearance - baseRingDiameter / 2;
-            var isAtHorizontalEdge = fallbackVisibleArea is { } visible
-                && (container.Left <= visible.Left || container.Right >= visible.Right);
-            return new PointD(isAtHorizontalEdge ? pet.CenterX : container.CenterX, topAlignedY);
-        }
 
+        var sideY = pet.CenterY + (taskCardAbove ? baseRingDiameter * 0.45 : 0);
         return placement switch
         {
             RingPlacement.Left => new PointD(

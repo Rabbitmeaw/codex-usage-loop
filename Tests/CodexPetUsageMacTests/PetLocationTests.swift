@@ -243,7 +243,7 @@ final class PetLocationTests: XCTestCase {
         XCTAssertEqual(right, CGPoint(x: 612, y: 270))
     }
 
-    func testAnchoredFallbackAroundRingUsesTaskCardHorizontalCenter() {
+    func testAnchoredFallbackAroundRingUsesPetCenter() {
         let pet = CGRect(x: 1_271, y: 154, width: 136.382022, height: 161.25)
         let taskCard = CGRect(x: 1_074, y: 146, width: 408, height: 400)
 
@@ -256,11 +256,11 @@ final class PetLocationTests: XCTestCase {
             geometrySource: .anchoredFallback
         )
 
-        XCTAssertEqual(center.x, taskCard.midX, accuracy: 0.001)
-        XCTAssertEqual(center.y, pet.maxY + 16 - 235 / 2, accuracy: 0.001)
+        XCTAssertEqual(center.x, pet.midX, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.midY, accuracy: 0.001)
     }
 
-    func testAnchoredFallbackUsesConvertedSecondaryDisplayTaskCardCenter() {
+    func testAnchoredFallbackUsesPetCenterOnSecondaryDisplay() {
         let container = PetGeometry.appKitFrame(
             cgFrame: CGRect(x: 1_800, y: -50, width: 408, height: 400),
             displayBounds: CGRect(x: 1_470, y: -124, width: 1_920, height: 1_080),
@@ -277,11 +277,11 @@ final class PetLocationTests: XCTestCase {
             geometrySource: .anchoredFallback
         )
 
-        XCTAssertEqual(container.midX, 2_004, accuracy: 0.001)
-        XCTAssertEqual(center.x, container.midX, accuracy: 0.001)
+        XCTAssertEqual(center.x, pet.midX, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.midY, accuracy: 0.001)
     }
 
-    func testAnchoredFallbackUsesPetCenterWhenTaskCardContainerTouchesScreenEdges() {
+    func testAnchoredFallbackAroundRingIgnoresScreenEdgeContainers() {
         let visibleFrame = CGRect(x: 0, y: 0, width: 1_470, height: 956)
         let leftPet = CGRect(x: 0, y: 300, width: 136, height: 161)
         let rightPet = CGRect(x: 1_334, y: 300, width: 136, height: 161)
@@ -307,11 +307,11 @@ final class PetLocationTests: XCTestCase {
 
         XCTAssertEqual(leftCenter.x, leftPet.midX, accuracy: 0.001)
         XCTAssertEqual(rightCenter.x, rightPet.midX, accuracy: 0.001)
-        XCTAssertEqual(leftCenter.y, leftPet.maxY + 16 - 157 / 2, accuracy: 0.001)
-        XCTAssertEqual(rightCenter.y, rightPet.maxY + 16 - 157 / 2, accuracy: 0.001)
+        XCTAssertEqual(leftCenter.y, leftPet.midY, accuracy: 0.001)
+        XCTAssertEqual(rightCenter.y, rightPet.midY, accuracy: 0.001)
     }
 
-    func testAnchoredFallbackUsesPetCenterAtSecondaryDisplayEdge() {
+    func testAnchoredFallbackAroundRingAtSecondaryDisplayEdgeUsesPetCenter() {
         let visibleFrame = CGRect(x: 1_470, y: -124, width: 1_920, height: 1_080)
         let pet = CGRect(x: 1_470, y: 300, width: 136, height: 161)
 
@@ -326,7 +326,7 @@ final class PetLocationTests: XCTestCase {
         )
 
         XCTAssertEqual(center.x, pet.midX, accuracy: 0.001)
-        XCTAssertEqual(center.y, pet.maxY + 16 - 157 / 2, accuracy: 0.001)
+        XCTAssertEqual(center.y, pet.midY, accuracy: 0.001)
     }
 
     func testAnchoredFallbackAroundRingUsesTwoThirdsEstimatedDiameter() {

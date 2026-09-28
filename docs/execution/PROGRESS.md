@@ -49,8 +49,31 @@
 | B44 | 回退围绕模式的任务卡对齐与缩小 | 已完成 | 未测量的 `anchoredFallback` 普通位置保持透明容器中心；圆环顶边高于 pet 锚点 16 pt；左右边缘改用 pet 代理中心；固定估算直径缩小至 2/3；无授权实机视觉确认通过，并同步 Windows 回退规则与用户文档 |
 | B45 | `v0.1.3` 回退定位正式发布 | 已完成 | `d2afa61` 的 main CI 与 `v0.1.3` tag Release workflow 均通过；正式 Release 已创建，含 macOS／Windows 工件、SHA-256 和构建元数据，tag 解引用至 `d2afa61` |
 | B46 | Codex 可执行文件自动发现 | 已完成 | macOS 定位器覆盖 ChatGPT.app 新旧内置布局、nvm／volta／asdf／mise／pnpm 与登录 shell 兜底，错误附已搜索路径，80 项测试通过；Windows 同步新内置布局并缓存定位结果，构建与集成验证留待 Windows CI |
+| B47 | 回退圆环改为宠物正中定位 | 已完成 | macOS／Windows 同步移除 B44 回退顶对齐规则，around 圆环各几何来源统一以宠物框中心为圆心；macOS 从 `config.toml` 的 `avatar-overlay-mascot-width-px` 按渲染器公式（高 = ceil(宽×208/192)，宽限 80–224）恢复真实宠物尺寸，圆环随宠物缩放；用户实机视觉验收通过；85 项 macOS 测试通过，Windows Core 同步，构建留待 Windows CI |
 
 ## 当前批次
+
+B47 已完成。2026-09-26 的 ChatGPT.app 更新把宠物改为 native 页渲染：
+独立的透明 overlay 窗口从窗口列表消失，消息角标由渲染器相对宠物矩形摆放（移到
+宠物正下方），持久化状态不再写 width／height／mascot／tray，只剩
+`x, y = anchor + presentationOffset`。实测状态锚点仍等于宠物左上角，应用完全走
+持久化回退路径。按用户决定，macOS 与 Windows 同步移除 B44 引入的回退顶对齐
+规则（圆环顶边高于锚点 16pt、容器中心 X、屏幕边缘代理），around 圆环在所有
+几何来源下统一以宠物框中心为圆心；未测量回退的 2/3 直径收缩保留。
+
+用户视觉反馈暴露出真正根因：新版不再持久化宠物尺寸，而宠物大小可在
+Codex 设置中调节（`avatar-overlay-mascot-width-px`，本机为 96），应用固定的
+119x129 估算使圆心偏右约 11.5pt、偏下约 12.5pt，圆环也不再随宠物缩放。
+从 app.asar 解包确认渲染器公式 `qd(width) = {width: clamp(round(width), 80, 224),
+height: ceil(width / (192/208))}` 后，macOS 新增 `MascotSizeSettings` 从
+`~/.codex/config.toml` 读取该键并按同公式计算（默认宽 112），由
+`PetWindowLocator` 按文件修改时间缓存后注入持久化回退的锚点尺寸；状态里旧格式
+的 mascot 矩形仍优先。用户已实机验收：圆环回到宠物正中并随宠物缩放。Windows Core
+同步纯规则与测试样例，Windows 平台层接线留待具备工具链时跟进；本机无 .NET 工具链，
+Windows 构建与集成验证留待 Windows CI／实机执行。另观察到 Codex 在宠物不渲染时仍
+保留锚点（如聊天视图下锚点留在副屏），圆环忠实跟随锚点，暂不加可见性猜测逻辑。
+
+## 此前批次
 
 B46 已完成。新版 ChatGPT.app 将内置 Codex 从 `Contents/Resources/codex`
 迁移到 `Contents/Resources/codex-cli/bin/codex`，固定路径列表因此全部落空并
