@@ -6,6 +6,17 @@
 
 _暂无。_
 
+## 0.1.4 — 2026-09-28
+
+### 已修复
+
+- 修复“没有找到 Codex 可执行文件”：macOS 自动发现 ChatGPT.app／Codex.app 新旧内置布局（新版 `codex-cli/bin/codex`）、Homebrew、`~/.local/bin`、nvm 各版本、volta／asdf／mise／pnpm，以及登录 shell 的 `command -v codex` 兜底；找不到时报错附带实际搜索过的位置。Windows 同步新增内置布局候选并缓存定位结果。
+- 修复 Codex 桌面端改为 native 页渲染后，围绕 pet 圆环偏右下、且不随宠物大小缩放：应用从 `config.toml` 读取 `avatar-overlay-mascot-width-px`，按 Codex 渲染器公式恢复宠物真实尺寸；同时移除旧版透明 overlay 时代的回退顶对齐规则，圆环在各几何来源下统一以宠物框中心为圆心。macOS 已实机验收，Windows 同步接线。
+
+### 已变更
+
+- 无。
+
 ## 0.1.3 — 2026-07-27
 
 ### 已修复
