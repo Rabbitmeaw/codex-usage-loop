@@ -19,6 +19,11 @@ internal sealed class PetLocator
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".codex",
         ".codex-global-state.json");
+    private readonly string _configPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".codex",
+        "config.toml");
+    private (DateTime MTime, double? WidthSetting)? _configCache;
 
     internal bool IsExplicitlyHidden { get; private set; }
 
@@ -82,8 +87,12 @@ internal sealed class PetLocator
             double storedHeight = 0;
             var hasContainerDimensions = TryNumber(state, "width", out storedWidth)
                 && TryNumber(state, "height", out storedHeight);
-            var width = hasContainerDimensions ? storedWidth : 119;
-            var height = hasContainerDimensions ? storedHeight : 129;
+            // Anchor-only states come from current Codex builds, which no longer
+            // persist a mascot rect. The size lives in config.toml instead and
+            // follows the renderer formula.
+            var anchorSize = UsageGeometry.MascotSize(ConfiguredWidthSetting());
+            var width = hasContainerDimensions ? storedWidth : anchorSize.Width;
+            var height = hasContainerDimensions ? storedHeight : anchorSize.Height;
             var mascot = default(JsonElement);
             double left = 0;
             double top = 0;
@@ -146,6 +155,40 @@ internal sealed class PetLocator
         {
             return null;
         }
+    }
+
+    private double? ConfiguredWidthSetting()
+    {
+        DateTime mtime;
+        try
+        {
+            mtime = File.GetLastWriteTimeUtc(_configPath);
+        }
+        catch (IOException)
+        {
+            return _configCache?.WidthSetting;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return _configCache?.WidthSetting;
+        }
+        if (_configCache is { } cache && cache.MTime == mtime)
+        {
+            return cache.WidthSetting;
+        }
+        double? parsed = null;
+        try
+        {
+            parsed = UsageGeometry.MascotSizeWidthSetting(File.ReadAllText(_configPath));
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+        _configCache = (mtime, parsed);
+        return parsed;
     }
 
     private static PetLocation? LocateFromWindow()

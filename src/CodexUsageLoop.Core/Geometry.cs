@@ -78,6 +78,34 @@ public static class UsageGeometry
         return new SizeD(width, height);
     }
 
+    public static double? MascotSizeWidthSetting(string config)
+    {
+        foreach (var rawLine in config.Split('\n'))
+        {
+            var line = rawLine.Trim();
+            if (line.StartsWith("#", StringComparison.Ordinal))
+            {
+                continue;
+            }
+            var index = line.IndexOf('=');
+            if (index < 0
+                || line[..index].Trim() != "avatar-overlay-mascot-width-px")
+            {
+                continue;
+            }
+            var raw = line[(index + 1)..].Trim();
+            if (double.TryParse(
+                    raw,
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var value))
+            {
+                return value;
+            }
+        }
+        return null;
+    }
+
     public static double DualExpansion(bool hasDualRing, RingPlacement placement, double baseDiameter)
     {
         if (!hasDualRing)

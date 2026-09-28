@@ -698,8 +698,9 @@ internal sealed class AppController : IDisposable
             info.rcMonitor.top,
             info.rcMonitor.Width,
             info.rcMonitor.Height);
+        var defaultPet = UsageGeometry.MascotSize(null);
         return new PetLocation(
-            new RectD(work.Left + 70, work.Bottom - 170, 119, 129),
+            new RectD(work.Left + 70, work.Bottom - 170, defaultPet.Width, defaultPet.Height),
             work,
             display,
             null,

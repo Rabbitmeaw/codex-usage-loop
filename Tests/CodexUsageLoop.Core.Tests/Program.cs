@@ -70,6 +70,13 @@ Check(
     && UsageGeometry.MascotSize(null) == new SizeD(112, 122)
     && UsageGeometry.MascotSize(10) == new SizeD(80, 87)
     && UsageGeometry.MascotSize(999) == new SizeD(224, 243));
+Check(
+    "mascot width setting parses from config text",
+    UsageGeometry.MascotSizeWidthSetting("avatar-overlay-mascot-width-px = 96") == 96
+    && UsageGeometry.MascotSizeWidthSetting("# avatar-overlay-mascot-width-px = 96") is null
+    && UsageGeometry.MascotSizeWidthSetting("avatar-overlay-mascot-width-px = \"96\"") is null
+    && UsageGeometry.MascotSizeWidthSetting("selected-avatar-id = \"x\"") is null
+    && UsageGeometry.MascotSizeWidthSetting("") is null);
 
 var card = UsageGeometry.CardOrigin(
     new PointD(970, 500),
