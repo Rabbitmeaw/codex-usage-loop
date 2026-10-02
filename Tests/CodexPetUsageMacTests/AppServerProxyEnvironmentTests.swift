@@ -17,7 +17,7 @@ final class AppServerProxyEnvironmentTests: XCTestCase {
         ])
 
         XCTAssertEqual(mapped["HTTP_PROXY"], "http://127.0.0.1:7890")
-        XCTAssertEqual(mapped["http_proxy"], "http://127.0.0.1:7890")
+        XCTAssertNil(mapped["http_proxy"])
         XCTAssertNil(mapped["HTTPS_PROXY"])
         XCTAssertNil(mapped["ALL_PROXY"])
     }
