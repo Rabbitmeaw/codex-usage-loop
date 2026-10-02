@@ -7,6 +7,28 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+
+# Embed the nearest-release describe for source builds; release CI checkouts
+# may not fetch tags, and the v-prefix guard keeps hash-only output from being
+# embedded so release artifacts fall back to the assembly version.
+$sourceVersionPath = Join-Path $root 'src\CodexUsageLoop.Windows\SourceVersion.txt'
+Push-Location $root
+try {
+    $describe = git describe --tags --always --dirty 2>$null
+}
+finally {
+    Pop-Location
+}
+$embedded = $false
+if ($describe -match '^v[0-9]') {
+    [System.IO.File]::WriteAllText(
+        $sourceVersionPath,
+        "$describe`n",
+        (New-Object System.Text.UTF8Encoding($false)))
+    $embedded = $true
+}
+
+try {
 & (Join-Path $PSScriptRoot 'build-windows.ps1') -Configuration Release -Publish
 
 $dist = Join-Path $root 'dist'
@@ -24,3 +46,9 @@ $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvar
 Write-Output "Release artifacts:"
 Write-Output "  $archive"
 Write-Output "  $checksum"
+}
+finally {
+    if ($embedded -and (Test-Path -LiteralPath $sourceVersionPath)) {
+        Remove-Item -LiteralPath $sourceVersionPath -Force
+    }
+}

@@ -77,6 +77,16 @@ Check(
     && UsageGeometry.MascotSizeWidthSetting("avatar-overlay-mascot-width-px = \"96\"") is null
     && UsageGeometry.MascotSizeWidthSetting("selected-avatar-id = \"x\"") is null
     && UsageGeometry.MascotSizeWidthSetting("") is null);
+Check("version label exact tag", ReleaseVersionLabel.Format("v0.1.5", "0.1.5") == "版本 v0.1.5");
+Check(
+    "version label ahead of tag shows lead count",
+    ReleaseVersionLabel.Format("v0.1.5-3-g7f64e42", "0.1.5") == "版本 v0.1.5-3-g7f64e42(源码,领先 3 个提交)");
+Check(
+    "version label dirty appends uncommitted marker",
+    ReleaseVersionLabel.Format("v0.1.5-3-g7f64e42-dirty", "0.1.5") == "版本 v0.1.5-3-g7f64e42(源码,领先 3 个提交,含未提交修改)"
+    && ReleaseVersionLabel.Format("v0.1.5-dirty", "0.1.5") == "版本 v0.1.5(源码,含未提交修改)");
+Check("version label falls back to bundle version", ReleaseVersionLabel.Format(null, "0.1.5") == "版本 0.1.5");
+Check("version label marks undescribable output as source", ReleaseVersionLabel.Format("7f64e42", "0.1.5") == "版本 7f64e42(源码)");
 
 var card = UsageGeometry.CardOrigin(
     new PointD(970, 500),

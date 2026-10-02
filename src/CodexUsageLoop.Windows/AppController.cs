@@ -801,6 +801,7 @@ internal sealed class AppController : IDisposable
             AddItem(menu, CommandRecalibrate, "重新检测宠物位置/大小");
             NativeMethods.AppendMenuW(menu, NativeMethods.MF_SEPARATOR, 0, null);
             AddItem(menu, CommandOpenReleases, "在浏览器查看 GitHub Releases…");
+            AddItem(menu, 0, VersionLabelText(), isDisabled: true);
             NativeMethods.AppendMenuW(menu, NativeMethods.MF_SEPARATOR, 0, null);
             AddItem(menu, CommandQuit, "退出");
 
@@ -818,6 +819,25 @@ internal sealed class AppController : IDisposable
         {
             NativeMethods.DestroyMenu(menu);
         }
+    }
+
+    private static string VersionLabelText()
+    {
+        string? describe = null;
+        var assembly = typeof(AppController).Assembly;
+        using (var stream = assembly.GetManifestResourceStream("CodexUsageLoop.Windows.SourceVersion.txt"))
+        {
+            if (stream is not null)
+            {
+                using var reader = new StreamReader(stream);
+                describe = reader.ReadToEnd();
+            }
+        }
+        var version = assembly.GetName().Version;
+        var fallback = version is null
+            ? "未知"
+            : $"{version.Major}.{version.Minor}.{version.Build}";
+        return ReleaseVersionLabel.Format(describe, fallback);
     }
 
     private static void AddItem(

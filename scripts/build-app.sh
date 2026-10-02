@@ -51,6 +51,16 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict></plist>
 PLIST
 
+# Embed the nearest-release describe for source builds before signing. CI
+# checkouts may not fetch tags; the v-prefix guard keeps hash-only output from
+# being embedded so release artifacts fall back to the bundle version.
+if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  describe="$(git -C "$ROOT" describe --tags --always --dirty 2>/dev/null)"
+  case "$describe" in
+    v[0-9]*) print -r -- "$describe" > "$APP/Contents/Resources/SourceVersion.txt" ;;
+  esac
+fi
+
 SIGN_IDENTITY="${CODESIGN_IDENTITY:--}"
 codesign --force --deep --sign "$SIGN_IDENTITY" "$APP" >/dev/null
 

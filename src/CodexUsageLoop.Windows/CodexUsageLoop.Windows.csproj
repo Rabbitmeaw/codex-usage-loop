@@ -16,4 +16,9 @@
   <ItemGroup>
     <ProjectReference Include="..\CodexUsageLoop.Core\CodexUsageLoop.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Written by scripts/package-windows.ps1 before publishing; absent on a
+         fresh clone, in which case the menu falls back to the assembly version. -->
+    <EmbeddedResource Include="SourceVersion.txt" Condition="Exists('SourceVersion.txt')" />
+  </ItemGroup>
 </Project>

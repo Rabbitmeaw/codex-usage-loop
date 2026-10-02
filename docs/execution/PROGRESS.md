@@ -50,9 +50,20 @@
 | B45 | `v0.1.3` 回退定位正式发布 | 已完成 | `d2afa61` 的 main CI 与 `v0.1.3` tag Release workflow 均通过；正式 Release 已创建，含 macOS／Windows 工件、SHA-256 和构建元数据，tag 解引用至 `d2afa61` |
 | B46 | Codex 可执行文件自动发现 | 已完成 | macOS 定位器覆盖 ChatGPT.app 新旧内置布局、nvm／volta／asdf／mise／pnpm 与登录 shell 兜底，错误附已搜索路径，80 项测试通过；Windows 同步新内置布局并缓存定位结果，构建与集成验证留待 Windows CI |
 | B47 | 回退圆环改为宠物正中定位 | 已完成 | macOS／Windows 同步移除 B44 回退顶对齐规则，around 圆环各几何来源统一以宠物框中心为圆心；双平台从 `config.toml` 的 `avatar-overlay-mascot-width-px` 按渲染器公式（高 = ceil(宽×208/192)，宽限 80–224）恢复真实宠物尺寸，圆环随宠物缩放；用户实机视觉验收通过；85 项 macOS 测试通过，Windows Core 测试同步，Windows 构建留待 CI |
-| B48 | app-server 代理环境注入 | 已完成 | macOS 启动本机 codex app-server 时把系统代理设置（HTTP／HTTPS／SOCKS 任意主机端口）注入为子进程环境变量，不覆盖已有变量；实证闭环验证修复直连不可用时 rateLimits 静默超时的问题；90 项 macOS 测试通过，实机 smoke 通过，Windows 无改动 |
+| B48 | app-server 代理环境注入 | 已完成 | macOS 启动本机 codex app-server 时把系统代理设置（HTTP／HTTPS／SOCKS 任意主机端口）注入为子进程环境变量，不覆盖已有变量；实证闭环验证修复直连不可用时 rateLimits 静默超时的问题；90 项 macOS 测试通过，实机 smoke 通过，Windows 无改动；已发布 v0.1.5 |
+| B49 | 菜单版本项 | 待用户验收 | macOS 菜单栏与 Windows 托盘菜单增加不可点击「版本 …」项：Release 构建显示正式版本号，源码构建显示 `git describe` 完整输出并标注领先最近 release 的提交数与未提交修改；构建时嵌入 SourceVersion（macOS 写入 Resources，Windows 打包时嵌入资源），缺失时回退包版本；Windows 代码未经本机编译，验证留待 CI |
 
 ## 当前批次
+
+B49 待用户验收。菜单栏／托盘菜单新增版本项：`build-app.sh` 与
+`scripts/package-windows.ps1` 构建时以 `git describe --tags --always --dirty`
+生成 SourceVersion（v 前缀守卫避免无 tag 的 CI 检出嵌入哈希），应用按
+「精确 tag → 版本 vX.Y.Z；领先 tag → 完整 describe（源码,领先 N 个提交）；
+带 -dirty → 追加含未提交修改；无嵌入信息 → 回退包版本」渲染不可点击菜单项。
+解析规则在 Swift 与 Core（Windows 复用）各实现一份并配测试样例。本机 CLT 27
+不再附带 XCTest，macOS 单测由 CI 执行。
+
+## 此前批次
 
 B48 已完成。用户报告“最新版又抓不到用量”：本机实证 `codex app-server` 只认
 `HTTP_PROXY`／`HTTPS_PROXY`／`ALL_PROXY` 环境变量、不读 macOS 系统代理设置；

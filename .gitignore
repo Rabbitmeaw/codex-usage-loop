@@ -25,3 +25,4 @@ dist/
 **/bin/
 **/obj/
 windows-runtime*.log
+src/CodexUsageLoop.Windows/SourceVersion.txt
