@@ -106,6 +106,7 @@ final class CodexAppServerClient {
         let stderr = Pipe()
         process.executableURL = executable
         process.arguments = ["app-server", "--stdio"]
+        process.environment = AppServerProxyEnvironment.mergedWithSystemProxies()
         process.standardInput = stdin
         process.standardOutput = stdout
         process.standardError = stderr
@@ -144,7 +145,7 @@ final class CodexAppServerClient {
         do {
             try process.run()
             send(["id": 1, "method": "initialize", "params": [
-                "clientInfo": ["name": "codexusageloop-mac", "title": "CodexUsageLoop", "version": "0.1.4"],
+                "clientInfo": ["name": "codexusageloop-mac", "title": "CodexUsageLoop", "version": "0.1.5"],
                 "capabilities": ["experimentalApi": true]
             ]])
         } catch {

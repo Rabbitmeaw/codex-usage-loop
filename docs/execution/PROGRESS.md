@@ -50,8 +50,21 @@
 | B45 | `v0.1.3` 回退定位正式发布 | 已完成 | `d2afa61` 的 main CI 与 `v0.1.3` tag Release workflow 均通过；正式 Release 已创建，含 macOS／Windows 工件、SHA-256 和构建元数据，tag 解引用至 `d2afa61` |
 | B46 | Codex 可执行文件自动发现 | 已完成 | macOS 定位器覆盖 ChatGPT.app 新旧内置布局、nvm／volta／asdf／mise／pnpm 与登录 shell 兜底，错误附已搜索路径，80 项测试通过；Windows 同步新内置布局并缓存定位结果，构建与集成验证留待 Windows CI |
 | B47 | 回退圆环改为宠物正中定位 | 已完成 | macOS／Windows 同步移除 B44 回退顶对齐规则，around 圆环各几何来源统一以宠物框中心为圆心；双平台从 `config.toml` 的 `avatar-overlay-mascot-width-px` 按渲染器公式（高 = ceil(宽×208/192)，宽限 80–224）恢复真实宠物尺寸，圆环随宠物缩放；用户实机视觉验收通过；85 项 macOS 测试通过，Windows Core 测试同步，Windows 构建留待 CI |
+| B48 | app-server 代理环境注入 | 已完成 | macOS 启动本机 codex app-server 时把系统代理设置（HTTP／HTTPS／SOCKS 任意主机端口）注入为子进程环境变量，不覆盖已有变量；实证闭环验证修复直连不可用时 rateLimits 静默超时的问题；90 项 macOS 测试通过，实机 smoke 通过，Windows 无改动 |
 
 ## 当前批次
+
+B48 已完成。用户报告“最新版又抓不到用量”：本机实证 `codex app-server` 只认
+`HTTP_PROXY`／`HTTPS_PROXY`／`ALL_PROXY` 环境变量、不读 macOS 系统代理设置；
+菜单栏 GUI 环境不带这些变量，直连 Codex 服务不可用时 `account/rateLimits/read`
+静默无响应（0.153.4 与内置 0.159.2 均复现），直连恢复后又不治而愈，表现为
+时好时坏。修复：新增 `AppServerProxyEnvironment`，启动 app-server 前读取系统
+代理设置（`SCDynamicStoreCopyProxies`）并把已启用的 HTTP／HTTPS／SOCKS 代理
+按标准格式注入子进程环境，应用自身环境已有变量时不覆盖；不新增应用网络
+边界。边界声明：PAC 自动配置与带认证代理不支持；Windows 的 app-server 自行
+读取注册表代理，无需改动。发布 v0.1.5。
+
+## 此前批次
 
 B47 已完成。2026-09-26 的 ChatGPT.app 更新把宠物改为 native 页渲染：
 独立的透明 overlay 窗口从窗口列表消失，消息角标由渲染器相对宠物矩形摆放（移到
