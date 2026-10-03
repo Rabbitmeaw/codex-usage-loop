@@ -51,11 +51,21 @@
 | B46 | Codex 可执行文件自动发现 | 已完成 | macOS 定位器覆盖 ChatGPT.app 新旧内置布局、nvm／volta／asdf／mise／pnpm 与登录 shell 兜底，错误附已搜索路径，80 项测试通过；Windows 同步新内置布局并缓存定位结果，构建与集成验证留待 Windows CI |
 | B47 | 回退圆环改为宠物正中定位 | 已完成 | macOS／Windows 同步移除 B44 回退顶对齐规则，around 圆环各几何来源统一以宠物框中心为圆心；双平台从 `config.toml` 的 `avatar-overlay-mascot-width-px` 按渲染器公式（高 = ceil(宽×208/192)，宽限 80–224）恢复真实宠物尺寸，圆环随宠物缩放；用户实机视觉验收通过；85 项 macOS 测试通过，Windows Core 测试同步，Windows 构建留待 CI |
 | B48 | app-server 代理环境注入 | 已完成 | macOS 启动本机 codex app-server 时把系统代理设置（HTTP／HTTPS／SOCKS 任意主机端口）注入为子进程环境变量，不覆盖已有变量；实证闭环验证修复直连不可用时 rateLimits 静默超时的问题；90 项 macOS 测试通过，实机 smoke 通过，Windows 无改动；已发布 v0.1.5 |
-| B49 | 菜单版本项 | 待用户验收 | macOS 菜单栏与 Windows 托盘菜单增加不可点击「版本 …」项：Release 构建显示正式版本号，源码构建显示 `git describe` 完整输出并标注领先最近 release 的提交数与未提交修改；构建时嵌入 SourceVersion（macOS 写入 Resources，Windows 打包时嵌入资源），缺失时回退包版本；Windows 代码未经本机编译，验证留待 CI |
+| B49 | 菜单版本项 | 已完成 | macOS 菜单栏与 Windows 托盘菜单增加不可点击「版本 …」项：Release 构建显示正式版本号，源码构建显示 `git describe` 完整输出并标注领先最近 release 的提交数与未提交修改；构建时嵌入 SourceVersion（macOS 写入 Resources，Windows 打包时嵌入资源），缺失时回退包版本；用户菜单验收通过，Windows 代码由 CI 验证 |
+| B50 | 移除空 Settings 场景 | 已完成 | macOS 26 在应用更新后自动弹出「CodexUsageLoop Settings」空窗口（初始化遗留的 `Settings { EmptyView() }` 场景所致）；改为无场景 App，验证仍只有圆环窗口、app-server 正常 |
 
 ## 当前批次
 
-B49 待用户验收。菜单栏／托盘菜单新增版本项：`build-app.sh` 与
+B50 已完成。用户两次报告安装新版本后出现标题为「CodexUsageLoop Settings」的
+空白窗口：溯源为初始化提交遗留的空 `Settings { EmptyView() }` 场景，macOS 26
+（Tahoe）在应用更新后的首次启动会自动呈现该设置窗口。`CodexPetUsageMacApp`
+改为无场景 body（`SceneBuilder` 支持空块），应用仍由
+`@NSApplicationDelegateAdaptor(AppController)` 驱动；实测应用在屏窗口只剩
+圆环本体，app-server 正常。单测由 CI 执行。
+
+## 此前批次
+
+B49 已完成。菜单栏／托盘菜单新增版本项：`build-app.sh` 与
 `scripts/package-windows.ps1` 构建时以 `git describe --tags --always --dirty`
 生成 SourceVersion（v 前缀守卫避免无 tag 的 CI 检出嵌入哈希），应用按
 「精确 tag → 版本 vX.Y.Z；领先 tag → 完整 describe（源码,领先 N 个提交）；

@@ -256,6 +256,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         releases.target = self
         releases.toolTip = "仅在你主动选择后由默认浏览器打开官方 Releases；应用不会检查、下载或安装更新。"
         menu.addItem(releases)
+        let version = NSMenuItem(title: AppVersionLabel.current(), action: nil, keyEquivalent: "")
+        version.isEnabled = false
+        menu.addItem(version)
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -688,5 +691,7 @@ final class AppController: NSObject, NSApplicationDelegate {
 struct CodexPetUsageMacApp: App {
     @NSApplicationDelegateAdaptor(AppController.self) private var appController
 
-    var body: some Scene { Settings { EmptyView() } }
+    // No scene: an empty Settings scene used to back the implicit settings
+    // window, which macOS began auto-presenting after app updates.
+    var body: some Scene { }
 }
